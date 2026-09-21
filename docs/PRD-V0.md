@@ -88,8 +88,17 @@ Multi-tenancy é requisito transversal da V0:
   RLS como segunda barreira para os dados pertencentes a tenants;
 - funcionalidades de planos, cobrança, onboarding comercial, administração
   avançada e permissões complexas estão fora do escopo;
-- a regra de associação inicial entre usuário e tenant permanece uma decisão de
-  onboarding a ser detalhada no PRD de execução.
+
+O fluxo de associação inicial entre usuário e tenant está definido pelo
+ADR-015 e não é mais uma pendência arquitetural da V0:
+
+- o tenant é criado pelo contexto de Platform Administration;
+- o usuário recebe um convite e um membership ativo após o provisionamento;
+- um usuário autenticado sem membership ativo é bloqueado com mensagem de
+  acesso não provisionado;
+- o usuário não cria o próprio tenant automaticamente;
+- o envio efetivo do e-mail de convite pode ser detalhado na implementação sem
+  alterar essa decisão de domínio e autorização.
 
 ## 5. Linguagem do domínio
 
@@ -528,13 +537,12 @@ desenvolvimento ou secrets.
 Os pontos abaixo não ampliam o escopo, mas precisam ser fechados no detalhamento
 do PRD e nos critérios de implementação:
 
-1. Definir o fluxo de associação inicial do usuário ao tenant.
-2. Definir lote, data de produção e validade para preparações armazenadas.
-3. Definir como preservar o histórico de cancelamentos depois de uma compra.
-4. Formalizar a diferença entre Produção Disponível, Preparação e Marmita Final.
-5. Definir arredondamento e apresentação comercial quando a compra exigir uma
+1. Definir lote, data de produção e validade para preparações armazenadas.
+2. Definir como preservar o histórico de cancelamentos depois de uma compra.
+3. Formalizar a diferença entre Produção Disponível, Preparação e Marmita Final.
+4. Definir arredondamento e apresentação comercial quando a compra exigir uma
    embalagem inteira.
-6. Definir o provedor de hospedagem compatível com o plano gratuito da V0.
+5. Definir o provedor de hospedagem compatível com o plano gratuito da V0.
 
 ## 13. Estado atual do projeto
 

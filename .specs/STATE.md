@@ -291,17 +291,17 @@
 
 ## Handoff
 
-- **Feature**: Architecture baseline and V0 boundaries
-- **Phase / Task**: Specify — resolve architectural decisions
+- **Feature**: V0 roadmap and feature specifications
+- **Phase / Task**: Specify — transition from architecture to roadmap
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
   transaction boundaries, ADR-019 for versioned reversible migrations, and
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
-  without Teams in V0, and ADR-022 for startup migration execution
+  without Teams in V0, ADR-022 for startup migration execution, and the PRD
+  synchronization for the resolved user-to-tenant provisioning decision
 - **In-progress**: none
-- **Next step**: Select the next unresolved architecture topic before creating
-  the V0 roadmap and feature specifications
+- **Next step**: Create the V0 roadmap and the first feature specification
 - **Blockers**: none
 - **Uncommitted files**: none after the current atomic commit
 - **Branch**: `main`
