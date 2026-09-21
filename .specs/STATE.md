@@ -232,13 +232,29 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-019
+- **Decision**: The database schema is managed exclusively through versioned,
+  Git-tracked migrations. Each migration includes an application script and a
+  reviewed reversal script when technically reversible; failed executions are
+  rolled back by their transaction when supported, while rollback of an
+  already-applied migration is explicit and controlled.
+- **Reason**: Keep schema, RLS, grants, constraints, indexes, and data changes
+  reproducible, auditable, and recoverable across environments.
+- **Trade-off**: Destructive changes require backup or a data-recovery plan,
+  and every schema change requires migration review and validation.
+- **Scope**: PostgreSQL schema, Supabase migrations, RLS, permissions, and
+  foundation/deployment workflow.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries
 - **Phase / Task**: Specify — resolve architectural decisions
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
-  technology baseline, ADR-015 for bounded contexts, and ADR-016 for
-  application plus PostgreSQL RLS tenant isolation
+  technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
+  application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
+  transaction boundaries, and ADR-019 for versioned reversible migrations
 - **In-progress**: none
 - **Next step**: Select the next unresolved architecture topic before creating
   the V0 roadmap and feature specifications

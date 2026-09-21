@@ -56,6 +56,9 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
   operacional; nunca confie no `tenant_id` enviado pelo cliente.
 - Cada caso de uso que altera o domínio deve ser uma transação ACID local: se
   uma etapa falhar, nenhuma alteração parcial pode permanecer persistida.
+- O schema, RLS, policies, grants, constraints e índices devem evoluir por
+  migrations versionadas no Git, com script de aplicação e reversão controlada;
+  não altere o banco remoto manualmente no fluxo normal.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
