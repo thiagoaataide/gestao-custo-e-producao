@@ -310,9 +310,9 @@
 
 ## Handoff
 
-- **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T12 concluída; verificação independente
-  aprovada
+- **Feature**: F-01 — Platform provisioning
+- **Phase / Task**: Specify — draft da especificação e do contexto aguardando
+  confirmação do usuário
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -370,9 +370,14 @@
   from the final image, documents the environment contract, and confirms that
   missing `DB_URL` fails startup explicitly. The final verification records 48
   passing tests, a successful multi-stage Docker build, non-root runtime
-  execution and a clean documentation/build gate.
-- **Next step**: Select the next V0 feature from `docs/ROADMAP-V0.md`.
-- **Blockers**: none. No DDL was applied directly to the Supabase
+  execution and a clean documentation/build gate. The F-01 discovery decisions
+  cover bootstrap, separate platform identities, owner/admin roles, tenant
+  lifecycle, invitation channels and expiry, one active membership per user,
+  and administrative audit.
+- **Next step**: Confirm `.specs/features/f-01-platform-provisioning/spec.md`
+  and `context.md`; then create the F-01 design and task breakdown.
+- **Blockers**: none. No F-01 code or DDL has been added. No DDL was applied
+  directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after the verification commit
+- **Uncommitted files**: F-01 specification, context and this handoff update
 - **Branch**: `main`
