@@ -82,10 +82,9 @@ T9 → T10 → T11 → T12
 
 ### T1: Validar pré-requisitos externos da fundação
 
-**Status:** Bloqueada em 21 de setembro de 2026. O projeto alvo foi
-identificado, mas ainda não existe uma credencial JDBC de runtime comprovada
-sem `BYPASSRLS`, e o modo de assinatura/JWKS não pôde ser confirmado pelo
-ambiente local. Ver evidência em `context.md`.
+**Status:** Parcialmente validada em 21 de setembro de 2026. A role
+`app_runtime` foi criada e confirmada sem `BYPASSRLS`; permanece pendente a
+confirmação do modo de assinatura/JWKS. Ver evidência em `context.md`.
 
 **What:** Confirmar o modo de assinatura JWT do projeto Supabase, issuer/JWKS,
 credencial de runtime PostgreSQL e capacidade de manter essa credencial sem
