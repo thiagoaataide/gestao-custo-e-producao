@@ -291,8 +291,8 @@
 
 ## Handoff
 
-- **Feature**: V0 roadmap and feature specifications
-- **Phase / Task**: Specify — transition from architecture to roadmap
+- **Feature**: F-00 — Technical foundation and secure access
+- **Phase / Task**: Specify — draft specification awaiting confirmation
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -300,10 +300,10 @@
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
   without Teams in V0, ADR-022 for startup migration execution, the PRD
   synchronization for the resolved user-to-tenant provisioning decision, and
-  `docs/ROADMAP-V0.md`
-- **In-progress**: none
-- **Next step**: Create and confirm the specification for F-00 — Technical
-  foundation and secure access
+  `docs/ROADMAP-V0.md`, and the draft specification and context for F-00
+- **In-progress**: F-00 specification and context, awaiting user confirmation
+- **Next step**: Confirm or adjust the F-00 specification, then create its
+  technical design
 - **Blockers**: none
 - **Uncommitted files**: none after the current atomic commit
 - **Branch**: `main`
