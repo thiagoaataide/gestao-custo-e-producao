@@ -202,6 +202,21 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-017
+- **Decision**: The backend is the trusted source for the tenant context. It
+  resolves the active membership and tenant, establishes that context for each
+  operational transaction, and uses a database connection subject to RLS.
+  Transactions without a valid tenant context fail safely.
+- **Reason**: Prevent the client from selecting a tenant and ensure that RLS
+  remains effective on the normal application path.
+- **Trade-off**: The foundation must define and test transaction-scoped
+  context propagation without allowing context leakage through the connection
+  pool.
+- **Scope**: Tenant resolution, transaction boundary, PostgreSQL RLS, database
+  roles, and tenant-scoped V0 operations.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries

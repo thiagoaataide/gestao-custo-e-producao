@@ -52,6 +52,8 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
 - A aplicação é a camada principal de autorização e resolução de tenant; o
   PostgreSQL deve aplicar RLS como segunda barreira nos dados pertencentes a
   tenants.
+- O backend deve estabelecer o contexto de tenant resolvido em cada transação
+  operacional; nunca confie no `tenant_id` enviado pelo cliente.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
