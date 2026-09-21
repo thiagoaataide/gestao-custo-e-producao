@@ -276,6 +276,19 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-022
+- **Decision**: Pending Flyway migrations run automatically during application
+  startup. The application is not considered ready until migrations succeed;
+  a migration failure causes startup failure.
+- **Reason**: Keep the V0 deployment simple and reproducible with one monolith,
+  one primary database, low volume, and accepted cold starts.
+- **Trade-off**: A bad or slow migration delays or blocks startup; multi-instance
+  deployment will require a future review of this strategy.
+- **Scope**: Application startup, Flyway execution, deployment, and schema
+  compatibility.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries
@@ -284,8 +297,8 @@
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
   transaction boundaries, ADR-019 for versioned reversible migrations, and
-  ADR-020 for Flyway as the migration engine, and ADR-021 for Flyway Community
-  without Teams in V0
+  ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
+  without Teams in V0, and ADR-022 for startup migration execution
 - **In-progress**: none
 - **Next step**: Select the next unresolved architecture topic before creating
   the V0 roadmap and feature specifications

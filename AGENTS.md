@@ -63,6 +63,8 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
   misture o histórico do Flyway com migrations do Supabase CLI.
 - A V0 usa Flyway Community sem depender do comando `flyway undo` do Teams;
   reversões devem seguir procedimento explícito, revisado e controlado.
+- As migrations pendentes devem ser executadas na inicialização da aplicação;
+  uma falha de migration deve impedir o startup considerado bem-sucedido.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
