@@ -4,6 +4,31 @@
 **Especificação:** `.specs/features/f-00-foundation-access/spec.md`
 **Status:** Decisões confirmadas — design aprovado e pronto para tasks
 
+## Validação ambiental da T1 — 21 de setembro de 2026
+
+- O projeto Supabase alvo foi identificado como **Gestão de Custos e
+  Produção**, `project ref` `clcgyhsjbenywugcagjo`, região `us-east-1`, status
+  `ACTIVE_HEALTHY`.
+- O banco informado pelo projeto é PostgreSQL 17.6.1.166 e não há migrations
+  registradas no projeto.
+- O issuer esperado pela URL do projeto é
+  `https://clcgyhsjbenywugcagjo.supabase.co`; o endpoint JWKS padrão é
+  `/auth/v1/.well-known/jwks.json`. A disponibilidade e o modo de assinatura
+  JWT ainda não foram confirmados pelo ambiente de execução local.
+- A sessão administrativa de consulta usa `postgres`, com login e
+  `BYPASSRLS=true`. Isso não pode ser usado como credencial de runtime da
+  aplicação.
+- As roles `anon` e `authenticated` existentes não possuem login; `service_role`
+  possui `BYPASSRLS`; e não foi encontrada uma role de runtime dedicada,
+  sujeita a RLS, para a conexão JDBC da aplicação.
+- Não foi executado DDL remoto, não foi aplicada migration e nenhum segredo foi
+  salvo no repositório.
+
+**Resultado:** T1 bloqueada até definir/provisionar a credencial de runtime
+sem `BYPASSRLS` e confirmar o modo de assinatura/JWKS que será configurado no
+Spring Security. A implementação não deve usar `postgres` ou `service_role`
+como credencial normal de operações de tenant.
+
 ## Limite da feature
 
 A F-00 entrega a base executável de autenticação, resolução segura de tenant,

@@ -311,8 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Tasks — F-00 atomic task decomposition draft awaiting
-  confirmation
+- **Phase / Task**: Execute — F-00 / T1 validation blocked by external
+  Supabase runtime-role and JWT configuration prerequisites
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -323,9 +323,16 @@
   `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, the
   approved F-00 technical design, and the approved transaction-local tenant
   context approach, and the draft F-00 task decomposition in
-  `.specs/features/f-00-foundation-access/tasks.md`
-- **In-progress**: F-00 atomic task decomposition awaiting confirmation
-- **Next step**: Confirm the tasks and execution tools, then execute T1
-- **Blockers**: none
-- **Uncommitted files**: none after the current atomic commit
+  `.specs/features/f-00-foundation-access/tasks.md`, and the T1 environmental
+  validation evidence for Supabase project `clcgyhsjbenywugcagjo`
+- **In-progress**: T1 validation recorded; implementation is stopped before T2
+  until a runtime database role subject to RLS and the Supabase JWT signing
+  mode/JWKS are confirmed
+- **Next step**: Define/provision the non-BYPASSRLS JDBC runtime role and
+  confirm the JWT issuer/JWKS configuration, then complete T1
+- **Blockers**: No dedicated login role for application runtime was found;
+  the available `postgres` session has `BYPASSRLS`; JWT mode/JWKS was not
+  confirmed from the local environment
+- **Uncommitted files**: T1 evidence updates in `context.md`, `tasks.md`, and
+  `STATE.md`, pending atomic commit
 - **Branch**: `main`

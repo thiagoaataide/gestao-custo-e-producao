@@ -8,7 +8,7 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Rascunho aguardando confirmação
+**Status:** Execução iniciada — T1 bloqueada por pré-requisito ambiental
 
 ## Test Coverage Matrix
 
@@ -81,6 +81,11 @@ T9 → T10 → T11 → T12
 ## Task Breakdown
 
 ### T1: Validar pré-requisitos externos da fundação
+
+**Status:** Bloqueada em 21 de setembro de 2026. O projeto alvo foi
+identificado, mas ainda não existe uma credencial JDBC de runtime comprovada
+sem `BYPASSRLS`, e o modo de assinatura/JWKS não pôde ser confirmado pelo
+ambiente local. Ver evidência em `context.md`.
 
 **What:** Confirmar o modo de assinatura JWT do projeto Supabase, issuer/JWKS,
 credencial de runtime PostgreSQL e capacidade de manter essa credencial sem
