@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 a T10 concluídas; próxima tarefa
-operacional: T11
+**Status:** Execução em andamento — T1 a T11 concluídas; próxima tarefa
+operacional: T12
 
 ## Test Coverage Matrix
 
@@ -502,6 +502,14 @@ operacional bloqueado.
 
 ### T11: Validar a fundação ponta a ponta em PostgreSQL real
 
+**Status:** Concluída em 21 de setembro de 2026. A suíte ponta a ponta foi
+adicionada e validada contra PostgreSQL 17.11 real. Ela cria uma base isolada
+vazia, aplica as migrations disponíveis uma única vez, confirma idempotência,
+exercita a resolução de tenant contra tentativa por parâmetro, bloqueia
+identidades sem acesso e confirma a negação de escrita cross-tenant por RLS.
+As demais fronteiras da suíte completa cobrem ausência de contexto, reuso de
+conexão, membership ambígua e rollback transacional.
+
 **What:** Criar a suíte de integração que exercita startup, autenticação,
 membership, RLS, reuso de conexão, isolamento entre dois tenants e rollback
 de uma operação composta.
@@ -518,17 +526,22 @@ uma tabela exclusiva de teste.
 
 **Done when:**
 
-- [ ] O banco inicia vazio e recebe migrations uma única vez.
-- [ ] Usuários provisionados não atravessam tenants por parâmetro, URL ou
+- [x] O banco inicia vazio e recebe migrations uma única vez.
+- [x] Usuários provisionados não atravessam tenants por parâmetro, URL ou
       consulta direta.
-- [ ] Usuários sem vínculo e com vínculo ambíguo são bloqueados.
-- [ ] Ausência de contexto é negada pelo RLS.
-- [ ] Contexto não vaza entre conexões/transações reutilizadas.
-- [ ] Falha deliberada não deixa estado parcial persistido.
-- [ ] Toda a suíte passa no gate full sem testes desabilitados ou removidos.
+- [x] Usuários sem vínculo e com vínculo ambíguo são bloqueados.
+- [x] Ausência de contexto é negada pelo RLS.
+- [x] Contexto não vaza entre conexões/transações reutilizadas.
+- [x] Falha deliberada não deixa estado parcial persistido.
+- [x] Toda a suíte passa no gate full sem testes desabilitados ou removidos.
 
-**Tests:** integration
-**Gate:** full
+**Tests:** integration — `FoundationEndToEndIntegrationTests` (4 testes) e
+suíte existente de startup, RLS, identidade, tenancy e UI.
+**Validação:** `mvnw.cmd -Dtest=FoundationEndToEndIntegrationTests test` e
+`mvnw.cmd verify` passaram com Java 21 contra PostgreSQL 17.11 local; o gate
+full executou 48 testes, sem falhas, erros ou skips, e concluiu o build
+frontend Vaadin e o Jar. `git diff --check` também passou.
+**Gate:** full — aprovado
 **Commit:** `test(f00): verify foundation isolation and rollback`
 
 ---

@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T10 concluída; próxima tarefa T11
+- **Phase / Task**: Execute — F-00 / T11 concluída; próxima tarefa T12
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -336,8 +336,11 @@
   and the T7 access decision resolver with unit-test evidence, and the T8
   transaction-local RLS context writer with PostgreSQL integration-test
   evidence, and the T9 tenant-scoped transaction executor with commit,
-  deny-before-operation and rollback integration-test evidence
-- **In-progress**: T9 is complete. The application requires the database URL,
+  deny-before-operation and rollback integration-test evidence, and the T11
+  end-to-end PostgreSQL integration suite with isolated empty-database
+  migration/idempotency, tenant-parameter isolation, denied identities, RLS,
+  connection reuse and rollback evidence
+- **In-progress**: T11 is complete. The application requires the database URL,
   runtime credential, separate migration credential and Supabase JWT settings
   from the environment; Flyway runs on startup with `classpath:db/migration`.
   The Resource Server validates issuer, ES256 signature, expiration and
@@ -358,11 +361,13 @@
   states without operational commands in blocked states, keeps platform access
   outside tenant operations, and permits only the public shell/login routes in
   the HTTP security chain. Its integration test covers the four required
-  states against the Spring context and PostgreSQL fixture.
-- **Next step**: Execute T11 to validate the foundation end to end in real
-  PostgreSQL, including startup, authentication, membership, RLS, connection
-  reuse and rollback.
-- **Blockers**: none for T10. No DDL was applied directly to the Supabase
+  states against the Spring context and PostgreSQL fixture. T11 adds the
+  cross-boundary integration suite; the full gate passes with 48 tests, no
+  failures, errors or skips, and the Vaadin frontend/Jar build completes.
+- **Next step**: Execute T12 to create the multi-stage Docker runtime image and
+  document its environment contract without embedding secrets.
+- **Blockers**: none for T11. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after the T10 implementation commit
+- **Uncommitted files**: T11 integration test and state/task updates pending
+  the atomic T11 commit
 - **Branch**: `main`
