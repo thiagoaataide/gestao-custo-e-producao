@@ -82,9 +82,10 @@ T9 → T10 → T11 → T12
 
 ### T1: Validar pré-requisitos externos da fundação
 
-**Status:** Parcialmente validada em 21 de setembro de 2026. A role
-`app_runtime` foi criada e confirmada sem `BYPASSRLS`; permanece pendente a
-confirmação do modo de assinatura/JWKS. Ver evidência em `context.md`.
+**Status:** Concluída em 21 de setembro de 2026. A role `app_runtime` foi
+confirmada sem `BYPASSRLS`; o projeto usa ECC P-256 (`ES256`), possui chave
+publicável ativa e expõe JWKS protegido pelo header `apikey`. Ver evidência em
+`context.md`.
 
 **What:** Confirmar o modo de assinatura JWT do projeto Supabase, issuer/JWKS,
 credencial de runtime PostgreSQL e capacidade de manter essa credencial sem
@@ -105,14 +106,14 @@ credencial de runtime PostgreSQL e capacidade de manter essa credencial sem
 
 **Done when:**
 
-- [ ] O issuer e o endpoint JWKS ou a limitação do modo simétrico estão
+- [x] O issuer e o endpoint JWKS ou a limitação do modo simétrico estão
       documentados.
-- [ ] A role de runtime está comprovadamente sujeita a RLS e não é
+- [x] A role de runtime está comprovadamente sujeita a RLS e não é
       `service_role`, superuser ou role com `BYPASSRLS`.
-- [ ] A role/contexto de migration está identificado separadamente ou a
+- [x] A role/contexto de migration está identificado separadamente ou a
       limitação do provedor está registrada como risco bloqueador.
-- [ ] Nenhum token, chave, senha ou segredo foi salvo nos documentos ou no Git.
-- [ ] A validação foi executada de fato ou marcada como bloqueada com evidência.
+- [x] Nenhum token, chave, senha ou segredo foi salvo nos documentos ou no Git.
+- [x] A validação foi executada de fato ou marcada como bloqueada com evidência.
 
 **Tests:** none — validação documental/ambiental
 **Gate:** build/documentation review

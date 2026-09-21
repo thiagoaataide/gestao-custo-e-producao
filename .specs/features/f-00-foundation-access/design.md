@@ -153,6 +153,10 @@ a resolução de tenant para dentro das telas.
   `ExternalIdentity authenticate(Jwt token)`.
 - **Dependências:** Spring Security Resource Server, issuer/JWKS do Supabase e
   configurações externas.
+- **Projeto V0:** o Supabase usa ECC P-256 (`ES256`). O issuer é
+  `https://clcgyhsjbenywugcagjo.supabase.co/auth/v1` e o JWKS é obtido em
+  `/auth/v1/.well-known/jwks.json` com o header `apikey` usando a chave
+  publicável ativa do projeto.
 - **Regra:** o conversor usa o `sub` como identificador externo; não usa
   `user_metadata` nem transforma automaticamente claims do provedor em
   permissões de domínio.
@@ -414,7 +418,7 @@ reutilizar no estado atual.
 | --- | --- | --- |
 | Role do runtime ignora RLS | A segunda barreira seria falsa. | Validar `NOBYPASSRLS`, evitar superuser/owner e testar com PostgreSQL real; bloquear a execução se não for possível. |
 | Contexto gravado na conexão errada | Pode negar acesso válido ou expor outro tenant em caso de `SET` de sessão. | `set_config(..., true)` depois do início da transação, adapter baseado na conexão transacional e teste de reuso de pool. |
-| Supabase ainda usa JWT simétrico legado | JWKS pode não fornecer chaves para validar tokens localmente. | Validar o projeto antes da implementação; preferir signing keys assimétricas e não copiar JWT secret para o runtime. |
+| JWKS protegido por API key | A descoberta automática pode falhar se o cliente não enviar o header exigido. | Usar um cliente JWKS configurado com a chave publicável ativa; validar `iss`, `exp`, assinatura e `kid` sem usar segredo JWT. |
 | Ponte entre sessão Supabase e shell Vaadin | Usuário autenticado no browser pode não chegar corretamente ao Resource Server. | Isolar a integração em adapter de autenticação, testar o fluxo real e não espalhar token pela camada de domínio. |
 | Membership consultada antes do tenant context | A consulta pode ser inadvertidamente protegida por policy inadequada. | Manter metadados em schema de plataforma com grants explícitos e separar repositórios de plataforma dos operacionais. |
 | Migrations no startup em múltiplas instâncias | Instâncias podem disputar o início durante evolução futura. | V0 aceita o trade-off; deployment futuro deve revisar ADR-022 antes de escalar horizontalmente. |
@@ -426,7 +430,7 @@ reutilizar no estado atual.
 | --- | --- | --- |
 | Modo de execução | Monólito modular | Está definido no baseline e mantém a V0 simples. |
 | Autenticação no backend | Spring Security Resource Server com JWT Supabase | Valida a identidade sem mover o domínio para o provedor. |
-| Chave de validação JWT | Preferir issuer + JWKS assimétrico; confirmar configuração real do projeto | Evita armazenar segredo JWT e permite rotação por chaves públicas. |
+| Chave de validação JWT | ES256 com JWKS do Supabase e header `apikey` na leitura | Evita armazenar segredo JWT, permite rotação por chaves públicas e mantém a validação local no backend. |
 | Contexto de tenant | GUC PostgreSQL local à transação | É a abordagem aprovada e evita vazamento por pool. |
 | Isolamento | Filtro de aplicação + PostgreSQL RLS | Defesa em profundidade exigida pelos ADRs. |
 | Migration | Flyway no startup | É o executor único definido nos ADRs. |

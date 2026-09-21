@@ -11,10 +11,13 @@
   `ACTIVE_HEALTHY`.
 - O banco informado pelo projeto é PostgreSQL 17.6.1.166 e não há migrations
   registradas no projeto.
-- O issuer esperado pela URL do projeto é
-  `https://clcgyhsjbenywugcagjo.supabase.co`; o endpoint JWKS padrão é
-  `/auth/v1/.well-known/jwks.json`. A disponibilidade e o modo de assinatura
-  JWT ainda não foram confirmados pelo ambiente de execução local.
+- O issuer esperado nos tokens Supabase é
+  `https://clcgyhsjbenywugcagjo.supabase.co/auth/v1` e o endpoint JWKS é
+  `https://clcgyhsjbenywugcagjo.supabase.co/auth/v1/.well-known/jwks.json`.
+- O projeto usa chave assimétrica ECC P-256 (`ES256`). O endpoint JWKS exige o
+  header `apikey`; há uma chave publicável ativa no projeto para essa leitura.
+  Essa chave não substitui a validação criptográfica do JWT e não será usada
+  como identidade ou autorização de domínio.
 - A sessão administrativa de consulta usa `postgres`, com login e
   `BYPASSRLS=true`. Ela permanece reservada para administração e migrations,
   não para operações normais da aplicação.
@@ -26,10 +29,9 @@
 - Não foi executado DDL remoto, não foi aplicada migration e nenhum segredo foi
   salvo no repositório.
 
-**Resultado:** a credencial de runtime foi validada. Permanece pendente apenas
-a confirmação do modo de assinatura/JWKS que será configurado no Spring
-Security. A implementação não deve usar `postgres` ou `service_role` como
-credencial normal de operações de tenant.
+**Resultado:** os pré-requisitos externos da T1 foram validados. A
+implementação não deve usar `postgres`, `service_role`, `JWT_SECRET` ou
+`sb_secret` como credencial normal de operações de tenant.
 
 ## Limite da feature
 

@@ -311,7 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T1 validation pending JWT configuration
+- **Phase / Task**: Execute — F-00 / T1 completed; ready for T2 dependency
+  baseline
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -324,12 +325,11 @@
   context approach, and the draft F-00 task decomposition in
   `.specs/features/f-00-foundation-access/tasks.md`, and the T1 environmental
   validation evidence for Supabase project `clcgyhsjbenywugcagjo`
-- **In-progress**: T1 validation recorded; `app_runtime` is confirmed subject
-  to RLS, while the Supabase JWT signing mode/JWKS remains pending
-- **Next step**: Confirm the JWT issuer/JWKS configuration, complete T1, then
-  execute T2
-- **Blockers**: JWT mode/JWKS was not confirmed from the local environment;
-  `postgres` remains restricted to administration and migrations
+- **In-progress**: T1 completed; `app_runtime` is subject to RLS and Supabase
+  JWT validation is defined as ES256/JWKS with the required `apikey` header
+- **Next step**: Execute T2 and add the foundation dependency baseline
+- **Blockers**: none; `postgres` remains restricted to administration and
+  migrations
 - **Uncommitted files**: T1 evidence updates in `context.md`, `tasks.md`, and
   `STATE.md`, pending atomic commit
 - **Branch**: `main`
