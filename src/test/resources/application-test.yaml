@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:55432}/${DB_NAME:gestao_producao}
+    username: ${APP_RUNTIME_USER:app_runtime}
+    password: ${APP_RUNTIME_PASSWORD:local-runtime-change-me}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:55432}/${DB_NAME:gestao_producao}
+    user: ${MIGRATION_DB_USER:postgres}
+    password: ${POSTGRES_ADMIN_PASSWORD:local-admin-change-me}
+    locations: classpath:db/migration
+    clean-disabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never

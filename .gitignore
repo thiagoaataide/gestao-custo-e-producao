@@ -32,6 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
+### Local environment ###
+.env
+.env.*
+!.env.example
+
 ### Vaadin generated frontend ###
 /src/main/frontend/generated/
 /src/main/frontend/index.html

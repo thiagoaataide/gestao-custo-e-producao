@@ -311,8 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T3 implemented; PostgreSQL gate blocked
-  before T4
+- **Phase / Task**: Execute — F-00 / T3 implemented; local PostgreSQL harness
+  ready and gate awaiting Docker
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -329,14 +329,17 @@
   and reviewed reversal procedure
 - **In-progress**: T3 implementation is complete. `platform` and `operations`
   objects, membership uniqueness, minimum runtime grants, transaction-local
-  RLS policies and the non-destructive reversal procedure are versioned. The
-  full PostgreSQL gate has not run.
-- **Next step**: Run the T3 migration/RLS gate on PostgreSQL real; then execute
-  T4 to configure datasource and Flyway startup
-- **Blockers**: local validation is blocked because `psql`/`pg_ctl` are absent
-  and the Docker daemon is unavailable. No DDL was applied directly to the
-  Supabase project; `postgres` remains restricted to administration and
-  migrations.
-- **Uncommitted files**: T3 migration/revert scripts and updates to `tasks.md`
-  and `STATE.md`, pending atomic commit
+  RLS policies, the non-destructive reversal procedure, Compose, the test
+  profile and integration assertions are versioned locally. The full
+  PostgreSQL gate has not run.
+- **Next step**: Start the local Compose database and run `mvnw.cmd test` to
+  complete the T3 migration/RLS gate; then execute T4 to configure startup
+  datasource and Flyway behavior.
+- **Blockers**: the Docker daemon is unavailable in the current session. No DDL
+  was applied directly to the Supabase project; the executed test gate reports
+  connection refusal at `127.0.0.1:55432`; `postgres` remains restricted to
+  administration and migrations.
+- **Uncommitted files**: local PostgreSQL harness, test profile, integration
+  data/tests and updates to `AGENTS.md`, `tasks.md` and `STATE.md`, pending
+  atomic commit
 - **Branch**: `main`

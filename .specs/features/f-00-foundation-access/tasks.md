@@ -9,7 +9,7 @@ tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
 **Status:** Execução em andamento — T1 e T2 concluídas; T3 implementada com
-gate PostgreSQL bloqueado pela indisponibilidade de runtime local
+Compose/perfil de testes preparados e gate PostgreSQL aguardando o daemon local
 
 ## Test Coverage Matrix
 
@@ -173,8 +173,9 @@ apenas para fazer o teste passar.
 schemas `platform` e `operations`, identidade externa, tenant, membership,
 `operations.tenant_settings`, grants mínimos, role de runtime sem bypass e
 policies explícitas de RLS. A reversão é separada e não remove a role de
-ambiente. O gate full ainda está bloqueado porque o ambiente não possui
-`psql`/`pg_ctl` e o daemon Docker não está disponível.
+ambiente. O Compose local, a role de teste separada, o perfil `test` e os
+testes de integração foram preparados. O gate full ainda aguarda o daemon
+Docker local.
 
 **What:** Criar a migration inicial com schemas `platform` e `operations`,
 identidade externa, tenant, membership, a tabela real `operations.tenant_settings`,
@@ -208,10 +209,23 @@ constraints, índices, grants, roles necessários e policies RLS por operação.
       real.
 
 **Validação da implementação:** `mvnw.cmd -DskipTests package` passou com
-Java 21 e os dois scripts foram confirmados dentro do Jar. A validação em
-PostgreSQL real não foi executada: `psql`/`pg_ctl` não estão instalados e o
-daemon Docker não está ativo. Não foi aplicado DDL diretamente no Supabase;
-isso permanece responsabilidade do Flyway na T4.
+Java 21, `docker compose --env-file .env.example config` passou, o script de
+provisionamento passou no `bash -n` e os dois scripts de produção foram
+confirmados dentro do Jar. `mvnw.cmd test` também foi executado com o perfil
+`test`, mas os seis testes falharam por conexão recusada em
+`127.0.0.1:55432`, porque o daemon Docker não está ativo nesta sessão. Não foi
+aplicado DDL diretamente no Supabase; isso permanece responsabilidade do
+Flyway na T4.
+
+Quando o daemon estiver disponível, executar:
+
+```text
+docker compose --env-file .env.example up -d
+./mvnw.cmd test
+```
+
+O perfil de teste usa `app_runtime` para a aplicação e `postgres` somente para
+o Flyway, mantendo a validação de RLS em PostgreSQL real.
 
 **Tests:** integration
 **Gate:** full

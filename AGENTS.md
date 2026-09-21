@@ -25,6 +25,8 @@ Estas instruções não autorizam a expansão do escopo da V0.
 - **PRD da V0:** `docs/PRD-V0.md`
 - **Build descriptor:** `pom.xml`
 - **Configuração atual:** `src/main/resources/application.yaml`
+- **PostgreSQL local:** `compose.yaml`
+- **Perfil de testes:** `src/test/resources/application-test.yaml`
 - **Nome da aplicação:** `gestao-producao`
 
 O contexto HTTP (`server.servlet.context-path`) ainda não foi definido. Não
@@ -182,6 +184,7 @@ para o estado atual do projeto. A data de referência é 20 de setembro de 2026.
 | Flyway starter | `org.springframework.boot:spring-boot-starter-flyway` | 4.1.1 | dependência direta, versão gerenciada |
 | Spring Boot test starter | `org.springframework.boot:spring-boot-starter-test` | 4.1.1 | dependência direta de teste, versão gerenciada |
 | Spring Boot Maven plugin | `org.springframework.boot:spring-boot-maven-plugin` | 4.1.1 | plugin, versão gerenciada |
+| PostgreSQL local de teste | `postgres:17` em `compose.yaml` | 17 | somente ambiente local de testes |
 | Vaadin BOM | `com.vaadin:vaadin-bom` | 25.2.8 | BOM importado pelo projeto |
 | Vaadin Spring Boot starter | `com.vaadin:vaadin-spring-boot-starter` | 25.2.8 | dependência direta, versão gerenciada pelo BOM |
 | Vaadin development tools | `com.vaadin:vaadin-dev` | 25.2.8 | dependência direta opcional |
@@ -265,6 +268,12 @@ ou outro componente transversal sem uma necessidade explícita da V0.
 - Não considere o RLS efetivo se a conexão usada pela aplicação bypassar as
   políticas sem uma decisão explícita, restrita e auditada.
 - Não use credenciais, tokens ou segredos em código, documentação ou commits.
+- O Compose local é apenas infraestrutura descartável de desenvolvimento e
+  testes; não representa o banco gerenciado de produção.
+- O perfil `test` usa `app_runtime` para a aplicação e `postgres` somente para
+  o Flyway. Nunca simplifique o teste usando uma role com `BYPASSRLS`.
+- O arquivo `.env` local não é versionado. O `.env.example` contém somente
+  valores de demonstração e não deve ser usado como segredo de implantação.
 - Prefira mudanças pequenas, verificáveis e coerentes com o PRD.
 - Não altere arquivos preexistentes sem verificar o diff e sem preservar
   mudanças do usuário.
@@ -285,6 +294,13 @@ dependências e o effective POM foram gerados durante a T2. O empacotamento com
 configuração de datasource/Flyway prevista para a T4 e essa dependência de
 validação deve permanecer explícita, sem excluir auto-configurações para
 mascarar a ausência da configuração.
+
+Para validar a fundação localmente, o PostgreSQL deve ser iniciado com
+`docker compose --env-file .env.example up -d`; depois, com Java 21 ativo,
+execute `mvnw.cmd test`. O Compose usa PostgreSQL 17, provisiona `app_runtime`
+sem `BYPASSRLS` e expõe a porta local 55432 por padrão. Se os valores do
+`.env.example` forem alterados, as mesmas variáveis devem estar disponíveis no
+processo Maven do host.
 
 ## Atualização obrigatória deste arquivo
 
