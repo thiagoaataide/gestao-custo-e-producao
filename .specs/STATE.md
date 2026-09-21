@@ -311,8 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T3 implemented; local PostgreSQL harness
-  ready and gate awaiting Docker
+- **Phase / Task**: Execute — F-00 / T3 concluída; próxima tarefa T4
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -325,21 +324,17 @@
   context approach, and the F-00 task decomposition in
   `.specs/features/f-00-foundation-access/tasks.md`, the T1 environmental
   validation evidence for Supabase project `clcgyhsjbenywugcagjo`, and the T2
-  dependency baseline with its Maven validation evidence, and the T3 migration
-  and reviewed reversal procedure
-- **In-progress**: T3 implementation is complete. `platform` and `operations`
-  objects, membership uniqueness, minimum runtime grants, transaction-local
-  RLS policies, the non-destructive reversal procedure, Compose, the test
-  profile and integration assertions are versioned locally. The full
-  PostgreSQL gate has not run.
-- **Next step**: Start the local Compose database and run `mvnw.cmd test` to
-  complete the T3 migration/RLS gate; then execute T4 to configure startup
-  datasource and Flyway behavior.
-- **Blockers**: the Docker daemon is unavailable in the current session. No DDL
-  was applied directly to the Supabase project; the executed test gate reports
-  connection refusal at `127.0.0.1:55432`; `postgres` remains restricted to
-  administration and migrations.
-- **Uncommitted files**: local PostgreSQL harness, test profile, integration
-  data/tests and updates to `AGENTS.md`, `tasks.md` and `STATE.md`, pending
-  atomic commit
+  dependency baseline with its Maven validation evidence, the T3 migration and
+  reviewed reversal procedure, the local PostgreSQL Compose harness, the test
+  profile and the PostgreSQL/RLS integration gate evidence
+- **In-progress**: T3 is complete. PostgreSQL 17.11 local was initialized from
+  an empty volume, Flyway applied V1 and test data V9999, and `mvnw.cmd verify`
+  passed with the application using `app_runtime` and Flyway using the
+  migration credential. T4 is ready to start.
+- **Next step**: Execute T4 to configure startup datasource and Flyway behavior
+  in the application runtime, preserving the separate migration/runtime roles.
+- **Blockers**: none for T4. No DDL was applied directly to the Supabase
+  project; `postgres` remains restricted to administration and migrations.
+- **Uncommitted files**: the corrected local PostgreSQL init script and the
+  corresponding task/state evidence, pending atomic commit
 - **Branch**: `main`

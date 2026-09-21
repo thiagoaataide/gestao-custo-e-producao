@@ -7,5 +7,14 @@ psql \
   --username "${POSTGRES_USER}" \
   --dbname "${POSTGRES_DB}" \
   --set=ON_ERROR_STOP=1 \
-  --set=app_runtime_password="${APP_RUNTIME_PASSWORD}" \
-  -c "CREATE ROLE app_runtime LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS PASSWORD :'app_runtime_password';"
+  --set=app_runtime_password="${APP_RUNTIME_PASSWORD}" <<'SQL'
+CREATE ROLE app_runtime
+    LOGIN
+    NOSUPERUSER
+    NOCREATEDB
+    NOCREATEROLE
+    NOINHERIT
+    NOREPLICATION
+    NOBYPASSRLS
+    PASSWORD :'app_runtime_password';
+SQL

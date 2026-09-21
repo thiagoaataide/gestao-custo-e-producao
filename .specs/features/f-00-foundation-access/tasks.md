@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 e T2 concluídas; T3 implementada com
-Compose/perfil de testes preparados e gate PostgreSQL aguardando o daemon local
+**Status:** Execução em andamento — T1, T2 e T3 concluídas; próxima tarefa
+operacional: T4
 
 ## Test Coverage Matrix
 
@@ -169,13 +169,13 @@ apenas para fazer o teste passar.
 
 ### T3: Criar o schema de identidade, membership e RLS
 
-**Status:** Implementada em 21 de setembro de 2026. A migration cria os
+**Status:** Concluída em 21 de setembro de 2026. A migration cria os
 schemas `platform` e `operations`, identidade externa, tenant, membership,
 `operations.tenant_settings`, grants mínimos, role de runtime sem bypass e
 policies explícitas de RLS. A reversão é separada e não remove a role de
 ambiente. O Compose local, a role de teste separada, o perfil `test` e os
-testes de integração foram preparados. O gate full ainda aguarda o daemon
-Docker local.
+testes de integração foram executados contra PostgreSQL real. O gate full
+passou com Java 21 e PostgreSQL 17.11 local.
 
 **What:** Criar a migration inicial com schemas `platform` e `operations`,
 identidade externa, tenant, membership, a tabela real `operations.tenant_settings`,
@@ -195,7 +195,7 @@ constraints, índices, grants, roles necessários e policies RLS por operação.
 
 **Done when:**
 
-- [ ] A migration é executável em PostgreSQL vazio e cria os objetos na ordem
+- [x] A migration é executável em PostgreSQL vazio e cria os objetos na ordem
       correta.
 - [x] A unicidade normal de uma membership ativa por identidade está protegida
       por constraint/índice apropriado.
@@ -205,23 +205,22 @@ constraints, índices, grants, roles necessários e policies RLS por operação.
       comparação nula na policy.
 - [x] O runtime não recebe privilégios de bypass; grants são mínimos.
 - [x] O script de reversão é revisado e não é tratado como `flyway undo`.
-- [ ] Testes de migration e RLS incluídos nesta tarefa passam em PostgreSQL
+- [x] Testes de migration e RLS incluídos nesta tarefa passam em PostgreSQL
       real.
 
-**Validação da implementação:** `mvnw.cmd -DskipTests package` passou com
-Java 21, `docker compose --env-file .env.example config` passou, o script de
-provisionamento passou no `bash -n` e os dois scripts de produção foram
-confirmados dentro do Jar. `mvnw.cmd test` também foi executado com o perfil
-`test`, mas os seis testes falharam por conexão recusada em
-`127.0.0.1:55432`, porque o daemon Docker não está ativo nesta sessão. Não foi
-aplicado DDL diretamente no Supabase; isso permanece responsabilidade do
-Flyway na T4.
+**Validação da implementação:** `mvnw.cmd -DskipTests package`,
+`docker compose --env-file .env.example config`, `bash -n` do script de
+provisionamento e `mvnw.cmd verify` passaram com Java 21. O gate full subiu o
+PostgreSQL 17.11 local, criou a role `app_runtime` sem `BYPASSRLS`, aplicou as
+migrações V1 e V9999 pelo Flyway e executou os testes de isolamento RLS com
+contexto ausente, dois tenants, INSERT, UPDATE e verificação da role de
+runtime. Não foi aplicado DDL diretamente no Supabase.
 
-Quando o daemon estiver disponível, executar:
+Para repetir o gate local:
 
 ```text
 docker compose --env-file .env.example up -d
-./mvnw.cmd test
+./mvnw.cmd verify
 ```
 
 O perfil de teste usa `app_runtime` para a aplicação e `postgres` somente para
