@@ -506,6 +506,7 @@ As decisões tecnológicas iniciais da V0 são:
 - Maven;
 - Vaadin como interface web da aplicação;
 - PostgreSQL gerenciado;
+- Flyway como executor único das migrations do schema;
 - Supabase Storage para comprovantes e outros anexos;
 - Supabase Auth para autenticação;
 - Spring Security como camada de proteção da aplicação;

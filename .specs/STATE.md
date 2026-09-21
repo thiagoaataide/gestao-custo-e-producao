@@ -247,6 +247,21 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-020
+- **Decision**: Flyway is the single migration executor and schema history for
+  the application. Supabase CLI is not used as a second migration history.
+  Flyway dependencies will use the Spring Boot 4.1.1 managed baseline; undo
+  execution is not assumed to require the paid Teams edition in V0.
+- **Reason**: Preserve database-provider portability while keeping one
+  versioned, Git-tracked source of truth for PostgreSQL schema changes.
+- **Trade-off**: Supabase-specific RLS/Auth behavior remains provider-aware,
+  and rollback execution needs a controlled procedure if Flyway Teams is not
+  adopted.
+- **Scope**: Database migrations, schema history, RLS, permissions, build
+  foundation, and deployment workflow.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries
@@ -254,7 +269,8 @@
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
-  transaction boundaries, and ADR-019 for versioned reversible migrations
+  transaction boundaries, ADR-019 for versioned reversible migrations, and
+  ADR-020 for Flyway as the migration engine
 - **In-progress**: none
 - **Next step**: Select the next unresolved architecture topic before creating
   the V0 roadmap and feature specifications
