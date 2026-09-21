@@ -289,15 +289,27 @@ Antes de concluir uma mudança relevante:
 - não declare aceitação com base somente em inspeção estática.
 
 O Maven Wrapper foi revalidado no ambiente local com Java 21. A árvore de
-dependências e o effective POM foram gerados durante a T2. O empacotamento com
-`mvnw.cmd -DskipTests package` passou; o teste de contexto ainda exige a
-configuração de datasource/Flyway prevista para a T4 e essa dependência de
-validação deve permanecer explícita, sem excluir auto-configurações para
-mascarar a ausência da configuração.
+dependências e o effective POM foram gerados durante a T2. O empacotamento e o
+gate de integração com PostgreSQL real passaram; a configuração obrigatória de
+datasource/Flyway permanece explícita e não há exclusão de auto-configuração
+para mascarar sua ausência.
+
+O startup da aplicação exige as seguintes variáveis de ambiente, sem defaults
+de produção no `application.yaml`:
+
+- `DB_URL`: JDBC URL do PostgreSQL;
+- `APP_RUNTIME_USER` e `APP_RUNTIME_PASSWORD`: credencial sem `BYPASSRLS` para
+  o datasource da aplicação;
+- `MIGRATION_DB_USER` e `MIGRATION_DB_PASSWORD`: credencial separada usada pelo
+  Flyway no startup.
+
+O `spring.flyway.url` usa o mesmo `DB_URL`, mas mantém usuário e senha
+separados. O perfil `test` possui defaults locais controlados para executar o
+Compose descartável; eles não devem ser usados como segredo de implantação.
 
 Para validar a fundação localmente, o PostgreSQL deve ser iniciado com
 `docker compose --env-file .env.example up -d`; depois, com Java 21 ativo,
-execute `mvnw.cmd test`. O Compose usa PostgreSQL 17, provisiona `app_runtime`
+execute `mvnw.cmd verify`. O Compose usa PostgreSQL 17, provisiona `app_runtime`
 sem `BYPASSRLS` e expõe a porta local 55432 por padrão. Se os valores do
 `.env.example` forem alterados, as mesmas variáveis devem estar disponíveis no
 processo Maven do host.

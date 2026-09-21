@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T3 concluída; próxima tarefa T4
+- **Phase / Task**: Execute — F-00 / T4 concluída; próxima tarefa T5
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -326,15 +326,18 @@
   validation evidence for Supabase project `clcgyhsjbenywugcagjo`, and the T2
   dependency baseline with its Maven validation evidence, the T3 migration and
   reviewed reversal procedure, the local PostgreSQL Compose harness, the test
-  profile and the PostgreSQL/RLS integration gate evidence
-- **In-progress**: T3 is complete. PostgreSQL 17.11 local was initialized from
-  an empty volume, Flyway applied V1 and test data V9999, and `mvnw.cmd verify`
-  passed with the application using `app_runtime` and Flyway using the
-  migration credential. T4 is ready to start.
-- **Next step**: Execute T4 to configure startup datasource and Flyway behavior
-  in the application runtime, preserving the separate migration/runtime roles.
-- **Blockers**: none for T4. No DDL was applied directly to the Supabase
+  profile and the PostgreSQL/RLS integration gate evidence, the T4 startup
+  datasource/Flyway configuration and its failure/restart integration tests
+- **In-progress**: T4 is complete. The application requires the database URL,
+  runtime credential and separate migration credential from the environment;
+  Flyway runs on startup with `classpath:db/migration`. PostgreSQL 17.11 local
+  passed the valid startup, already-updated schema, invalid database and broken
+  migration scenarios. The runtime continues to use `app_runtime` without
+  `BYPASSRLS`.
+- **Next step**: Execute T5 to integrate the Supabase JWT Resource Server while
+  preserving the domain-owned tenant resolution boundary.
+- **Blockers**: none for T5. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: the corrected local PostgreSQL init script and the
-  corresponding task/state evidence, pending atomic commit
+- **Uncommitted files**: T4 configuration, startup tests, environment contract
+  and corresponding task/state evidence, pending atomic commit
 - **Branch**: `main`

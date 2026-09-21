@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1, T2 e T3 concluídas; próxima tarefa
-operacional: T4
+**Status:** Execução em andamento — T1, T2, T3 e T4 concluídas; próxima
+tarefa operacional: T5
 
 ## Test Coverage Matrix
 
@@ -234,6 +234,11 @@ o Flyway, mantendo a validação de RLS em PostgreSQL real.
 
 ### T4: Configurar startup, datasource e Flyway
 
+**Status:** Concluída em 21 de setembro de 2026. O startup exige a URL do
+PostgreSQL e as credenciais separadas de runtime e migration; o Flyway usa
+`classpath:db/migration`, valida o histórico e falha o startup quando a
+configuração ou uma migration não pode ser aplicada.
+
 **What:** Configurar propriedades externas, datasource de runtime, contexto de
 migration, localização de migrations e falha de startup quando configuração ou
 migration obrigatória não puder ser aplicada.
@@ -251,13 +256,22 @@ migration obrigatória não puder ser aplicada.
 
 **Done when:**
 
-- [ ] Migrations pendentes executam no startup via Flyway.
-- [ ] A mesma migration não é reaplicada após reinicialização com schema
+- [x] Migrations pendentes executam no startup via Flyway.
+- [x] A mesma migration não é reaplicada após reinicialização com schema
       atualizado.
-- [ ] Configuração de banco ausente ou inválida impede startup bem-sucedido.
-- [ ] Falha de migration impede que a aplicação seja tratada como disponível.
-- [ ] Configurações sensíveis vêm do ambiente e não entram no Git.
-- [ ] Testes de startup válido, schema atualizado e falha de migration passam.
+- [x] Configuração de banco ausente ou inválida impede startup bem-sucedido.
+- [x] Falha de migration impede que a aplicação seja tratada como disponível.
+- [x] Configurações sensíveis vêm do ambiente e não entram no Git.
+- [x] Testes de startup válido, schema atualizado e falha de migration passam.
+
+**Validação da implementação:** `mvnw.cmd verify` passou com Java 21 contra
+PostgreSQL 17.11 local. O Flyway validou o histórico, informou o schema como
+atualizado e a aplicação conectou com `app_runtime`; o teste de startup válido
+foi executado duas vezes sem reaplicar migrations. Os testes de configuração
+inválida e migration SQL quebrada confirmaram falha de startup. Foram
+executados 9 testes, sem falhas, erros ou skips. O contrato de variáveis e os
+valores de demonstração foram atualizados em `.env.example` e `AGENTS.md`; não
+há segredo de implantação versionado.
 
 **Tests:** integration
 **Gate:** full

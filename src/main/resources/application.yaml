@@ -1,3 +1,23 @@
 spring:
   application:
     name: gestao-producao
+  datasource:
+    url: ${DB_URL}
+    username: ${APP_RUNTIME_USER}
+    password: ${APP_RUNTIME_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    url: ${DB_URL}
+    user: ${MIGRATION_DB_USER}
+    password: ${MIGRATION_DB_PASSWORD}
+    locations: classpath:db/migration
+    clean-disabled: true
+    validate-on-migrate: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  sql:
+    init:
+      mode: never
