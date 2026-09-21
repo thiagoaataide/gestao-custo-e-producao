@@ -311,7 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T11 concluída; próxima tarefa T12
+- **Phase / Task**: Execute — F-00 / T12 concluída; pendente verificação
+  independente da feature
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -363,11 +364,14 @@
   the HTTP security chain. Its integration test covers the four required
   states against the Spring context and PostgreSQL fixture. T11 adds the
   cross-boundary integration suite; the full gate passes with 48 tests, no
-  failures, errors or skips, and the Vaadin frontend/Jar build completes.
-- **Next step**: Execute T12 to create the multi-stage Docker runtime image and
-  document its environment contract without embedding secrets.
-- **Blockers**: none for T11. No DDL was applied directly to the Supabase
+  failures, errors or skips, and the Vaadin frontend/Jar build completes. T12
+  adds the multi-stage Temurin 21 runtime image, excludes source/cache/secrets
+  from the final image, documents the environment contract, and confirms that
+  missing `DB_URL` fails startup explicitly.
+- **Next step**: Run the independent verification of F-00 against the complete
+  task/spec/design checklist and record the result.
+- **Blockers**: none for T12. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T11 integration test and state/task updates pending
-  the atomic T11 commit
+- **Uncommitted files**: T12 Docker/runtime files and state/task updates
+  pending the atomic T12 commit
 - **Branch**: `main`

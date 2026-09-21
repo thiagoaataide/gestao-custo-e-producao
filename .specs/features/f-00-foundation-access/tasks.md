@@ -548,6 +548,12 @@ frontend Vaadin e o Jar. `git diff --check` também passou.
 
 ### T12: Empacotar runtime e contrato de configuração
 
+**Status:** Concluída em 21 de setembro de 2026. A imagem multi-stage foi
+criada com Eclipse Temurin 21 JDK para build e JRE para runtime, executando
+como usuário não-root e copiando somente o Jar repacotado. O `.dockerignore`
+remove arquivos `.env`, código de documentação, Git, `target` e caches do
+contexto; o contrato de variáveis foi registrado no `AGENTS.md`.
+
 **What:** Criar a imagem Docker multi-stage e documentar o contrato de
 variáveis de ambiente necessário para runtime, sem incluir segredos na imagem.
 **Where:** `Dockerfile`, `.dockerignore`, `AGENTS.md` e documentação da F-00
@@ -565,16 +571,22 @@ quando necessária.
 
 **Done when:**
 
-- [ ] A imagem usa etapa de build e etapa de runtime separadas.
-- [ ] A etapa de runtime não contém código-fonte, caches ou segredos.
-- [ ] Java 21 é usado de forma coerente com `pom.xml` e `AGENTS.md`.
-- [ ] Variáveis obrigatórias de banco, Supabase e contexto são documentadas.
-- [ ] O build da imagem e o artefato Jar passam, quando Docker estiver
+- [x] A imagem usa etapa de build e etapa de runtime separadas.
+- [x] A etapa de runtime não contém código-fonte, caches ou segredos.
+- [x] Java 21 é usado de forma coerente com `pom.xml` e `AGENTS.md`.
+- [x] Variáveis obrigatórias de banco, Supabase e contexto são documentadas.
+- [x] O build da imagem e o artefato Jar passam, quando Docker estiver
       disponível.
-- [ ] Falhas de validação de ambiente não são mascaradas pelo container.
+- [x] Falhas de validação de ambiente não são mascaradas pelo container.
 
 **Tests:** none — build/container
-**Gate:** build
+**Validação:** `mvnw.cmd clean verify` passou com Java 21, executando 48 testes
+sem falhas, erros ou skips, frontend Vaadin e Jar. `docker build
+--tag gestao-producao:local .` passou; a inspeção confirmou usuário `app:app`,
+entrypoint direto e somente `app.jar` no runtime, sem workspace ou cache Maven.
+`docker run --rm gestao-producao:local` falhou explicitamente por ausência de
+`DB_URL`, sem mascarar a configuração obrigatória.
+**Gate:** build — aprovado
 **Commit:** `build(f00): add multi-stage runtime image`
 
 ## Parallel Execution Map

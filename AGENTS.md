@@ -190,6 +190,8 @@ para o estado atual do projeto. A data de referência é 20 de setembro de 2026.
 | Vaadin Spring Boot starter | `com.vaadin:vaadin-spring-boot-starter` | 25.2.8 | dependência direta, versão gerenciada pelo BOM |
 | Vaadin development tools | `com.vaadin:vaadin-dev` | 25.2.8 | dependência direta opcional |
 | Vaadin Maven plugin | `com.vaadin:vaadin-maven-plugin` | 25.2.8 | plugin direto do projeto |
+| Docker build image | `eclipse-temurin:21-jdk-jammy` | Java 21 | etapa de compilação da imagem |
+| Docker runtime image | `eclipse-temurin:21-jre-jammy` | Java 21 | etapa de execução da imagem |
 
 As versões das dependências sem `<version>` devem continuar sendo gerenciadas
 pelo parent/BOM do Spring Boot. Não fixe versões individuais sem justificativa
@@ -329,6 +331,30 @@ execute `mvnw.cmd verify`. O Compose usa PostgreSQL 17, provisiona `app_runtime`
 sem `BYPASSRLS` e expõe a porta local 55432 por padrão. Se os valores do
 `.env.example` forem alterados, as mesmas variáveis devem estar disponíveis no
 processo Maven do host.
+
+### Contrato do container
+
+O `Dockerfile` usa duas etapas: `eclipse-temurin:21-jdk-jammy` compila o Jar com
+o Maven Wrapper, e `eclipse-temurin:21-jre-jammy` executa somente o artefato
+empacotado como o usuário não-root `app`. A imagem de runtime não recebe o
+diretório-fonte, o cache Maven, os testes, os documentos ou arquivos `.env`.
+
+O container não define credenciais nem valores de conexão. As variáveis
+obrigatórias do datasource, Flyway e Supabase listadas acima devem ser
+fornecidas pelo ambiente de execução. Como o entrypoint chama diretamente o
+processo Java, uma variável obrigatória ausente continua provocando falha de
+startup do Spring Boot; ela não é substituída por um valor silencioso pelo
+container.
+
+Para construir e executar localmente:
+
+```text
+docker build -t gestao-producao:local .
+docker run --rm -p 8080:8080 --env-file .env gestao-producao:local
+```
+
+O arquivo `.env` usado nesse exemplo é local e não deve ser versionado. Não
+use `.env.example` como segredo de implantação.
 
 ## Atualização obrigatória deste arquivo
 

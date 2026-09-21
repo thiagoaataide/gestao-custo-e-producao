@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env*
+.idea
+.vscode
+.codex
+.agents
+target
+node_modules
+*.log
+
+.specs
+docs
+AGENTS.md
+HELP.md
+compose.yaml
+docker
