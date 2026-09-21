@@ -84,6 +84,8 @@ Multi-tenancy é requisito transversal da V0:
 - os dados de tenants diferentes devem permanecer logicamente isolados;
 - cada usuário acessa apenas o tenant ao qual está vinculado;
 - o usuário não alterna entre tenants na V0;
+- a aplicação aplica o contexto e a autorização do tenant, e o PostgreSQL usa
+  RLS como segunda barreira para os dados pertencentes a tenants;
 - funcionalidades de planos, cobrança, onboarding comercial, administração
   avançada e permissões complexas estão fora do escopo;
 - a regra de associação inicial entre usuário e tenant permanece uma decisão de

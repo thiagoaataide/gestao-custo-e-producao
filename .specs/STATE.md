@@ -186,16 +186,32 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-016
+- **Decision**: Tenant isolation is enforced in two layers: application
+  authorization and PostgreSQL Row Level Security (RLS). The application
+  resolves the tenant from the authenticated identity and active membership;
+  RLS provides a second barrier for tenant-owned data.
+- **Reason**: Prevent cross-tenant access caused by an omitted application
+  filter while preserving application ownership of roles, use cases, and
+  business rules.
+- **Trade-off**: The foundation must define how the application connection
+  carries the resolved tenant context and must test both allowed and denied
+  access paths.
+- **Scope**: Tenant isolation, PostgreSQL access policies, authorization, and
+  all tenant-owned V0 data.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Project foundation and V0 roadmap
-- **Phase / Task**: Specify — initialize persistent project memory
+- **Feature**: Architecture baseline and V0 boundaries
+- **Phase / Task**: Specify — resolve architectural decisions
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
-  technology baseline, ADR decisions acknowledged by the user
+  technology baseline, ADR-015 for bounded contexts, and ADR-016 for
+  application plus PostgreSQL RLS tenant isolation
 - **In-progress**: none
-- **Next step**: Confirm the Git repository state, then create the V0 roadmap
-  and the first feature specification
-- **Blockers**: `C:\proj\gestao-producao` currently has no `.git` directory and
-  `git -C C:\proj\gestao-producao` reports that it is not a repository
-- **Uncommitted files**: `AGENTS.md`, `docs/PRD-V0.md`, `.specs/STATE.md`
-- **Branch**: not detected
+- **Next step**: Select the next unresolved architecture topic before creating
+  the V0 roadmap and feature specifications
+- **Blockers**: none
+- **Uncommitted files**: none after the current atomic commit
+- **Branch**: `main`

@@ -49,6 +49,9 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
   tenant.
 - Separe autenticação gerenciada pelo Supabase da identificação de tenant no
   domínio.
+- A aplicação é a camada principal de autorização e resolução de tenant; o
+  PostgreSQL deve aplicar RLS como segunda barreira nos dados pertencentes a
+  tenants.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
@@ -236,6 +239,8 @@ ou outro componente transversal sem uma necessidade explícita da V0.
 - Preserve unidades, conversões, rendimentos, lotes, arredondamentos de compra,
   margem de segurança, consumo real, perdas e destinações.
 - Toda leitura ou escrita de dado de negócio deve respeitar o tenant do usuário.
+- Não considere o RLS efetivo se a conexão usada pela aplicação bypassar as
+  políticas sem uma decisão explícita, restrita e auditada.
 - Não use credenciais, tokens ou segredos em código, documentação ou commits.
 - Prefira mudanças pequenas, verificáveis e coerentes com o PRD.
 - Não altere arquivos preexistentes sem verificar o diff e sem preservar
