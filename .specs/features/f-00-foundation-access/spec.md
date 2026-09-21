@@ -1,6 +1,6 @@
 # F-00 — Fundação técnica e acesso seguro
 
-**Status:** Rascunho aguardando confirmação
+**Status:** Confirmada
 **Escopo:** V0
 **Fonte:** `docs/PRD-V0.md`, `docs/ROADMAP-V0.md` e ADR-015 a ADR-022
 **Data:** 21 de setembro de 2026

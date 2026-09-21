@@ -289,10 +289,29 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-023
+- **Decision**: Tenant isolation uses a transaction-local PostgreSQL setting.
+  After the backend resolves exactly one active membership, the tenant ID is
+  written with `set_config('app.tenant_id', ..., true)` on the same JDBC
+  connection and transaction that executes tenant operations. RLS policies
+  compare the row tenant ID with `current_setting('app.tenant_id', true)`.
+  The runtime database role must not have `BYPASSRLS`; Flyway uses a separate
+  controlled migration credential when provider capabilities allow it.
+- **Reason**: Preserve backend ownership of tenant resolution, make the
+  context transaction-scoped, and prevent context leakage through pooled
+  connections while keeping PostgreSQL as a second isolation barrier.
+- **Trade-off**: The design requires a reliable transaction-bound connection
+  adapter, a runtime role that is subject to RLS, and integration tests against
+  real PostgreSQL rather than an in-memory substitute.
+- **Scope**: Tenant context propagation, PostgreSQL RLS, connection pooling,
+  database roles, all tenant-owned V0 operations, and future feature design.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Specify — draft specification awaiting confirmation
+- **Phase / Task**: Design — F-00 technical design draft awaiting confirmation
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -300,10 +319,11 @@
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
   without Teams in V0, ADR-022 for startup migration execution, the PRD
   synchronization for the resolved user-to-tenant provisioning decision, and
-  `docs/ROADMAP-V0.md`, and the draft specification and context for F-00
-- **In-progress**: F-00 specification and context, awaiting user confirmation
-- **Next step**: Confirm or adjust the F-00 specification, then create its
-  technical design
+  `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, and
+  the approved transaction-local tenant context approach
+- **In-progress**: F-00 technical design draft
+- **Next step**: Confirm or adjust the F-00 design, then decompose it into
+  atomic implementation tasks
 - **Blockers**: none
 - **Uncommitted files**: none after the current atomic commit
 - **Branch**: `main`

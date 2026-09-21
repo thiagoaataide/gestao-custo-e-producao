@@ -2,7 +2,7 @@
 
 **Coletado:** 21 de setembro de 2026
 **Especificação:** `.specs/features/f-00-foundation-access/spec.md`
-**Status:** Rascunho aguardando confirmação da especificação
+**Status:** Decisões confirmadas — pronta para design
 
 ## Limite da feature
 
@@ -41,6 +41,19 @@ não implementa as operações de produção.
 - Falha de migration impede o startup considerado bem-sucedido.
 - Casos de uso de domínio usam transação ACID local.
 - JTA e transação distribuída não fazem parte da V0.
+
+### Contexto do tenant no RLS
+
+- A aplicação grava o tenant resolvido com `set_config` configurado como local
+  para a transação.
+- As policies usam `current_setting` para comparar o tenant da linha com o
+  contexto da transação.
+- O contexto deve ser estabelecido na mesma conexão JDBC que executará as
+  consultas de domínio.
+- A credencial de runtime não pode possuir `BYPASSRLS` nem ser a credencial
+  `service_role` do Supabase.
+- A credencial usada pelo Flyway pode ter privilégios de migration, mas não é
+  utilizada por operações de tenant.
 
 ### Interface inicial
 
