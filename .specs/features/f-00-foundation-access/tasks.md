@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 a T8 concluídas; próxima tarefa
-operacional: T9
+**Status:** Execução em andamento — T1 a T9 concluídas; próxima tarefa
+operacional: T10
 
 ## Test Coverage Matrix
 
@@ -428,6 +428,10 @@ local; 36 testes, 0 falhas, 0 erros e 0 skips.
 
 ### T9: Integrar contexto, autorização e transação de caso de uso
 
+**Status:** Concluída em 21 de setembro de 2026. O executor resolve a decisão
+de acesso antes da transação, aplica o contexto RLS e executa o caso de uso na
+mesma transação local, com commit ou rollback integral.
+
 **What:** Integrar a decisão de acesso e o escritor RLS ao limite transacional
 dos casos de uso, garantindo que operações tenant-scoped tenham contexto antes
 da primeira consulta e rollback completo em falha.
@@ -444,15 +448,18 @@ da primeira consulta e rollback completo em falha.
 
 **Done when:**
 
-- [ ] Um caso de uso tenant-scoped só inicia após decisão de acesso válida.
-- [ ] O tenant do contexto não pode ser substituído por parâmetro do comando.
-- [ ] Commit confirma alterações locais como uma unidade.
-- [ ] Falha em etapa posterior reverte todas as alterações da operação.
-- [ ] A solução não adiciona JTA, Spring Cloud ou transação distribuída.
-- [ ] Testes de integração cobrem acesso permitido, acesso negado e rollback.
+- [x] Um caso de uso tenant-scoped só inicia após decisão de acesso válida.
+- [x] O tenant do contexto não pode ser substituído por parâmetro do comando.
+- [x] Commit confirma alterações locais como uma unidade.
+- [x] Falha em etapa posterior reverte todas as alterações da operação.
+- [x] A solução não adiciona JTA, Spring Cloud ou transação distribuída.
+- [x] Testes de integração cobrem acesso permitido, acesso negado e rollback.
 
-**Tests:** integration
+**Tests:** integration — `TenantScopedTransactionExecutorIntegrationTests` (4
+testes; PostgreSQL real).
 **Gate:** full
+**Validação:** `mvnw.cmd verify` passou com Java 21 contra PostgreSQL 17.11
+local; 40 testes, 0 falhas, 0 erros e 0 skips.
 **Commit:** `feat(f00): enforce tenant transaction boundary`
 
 ---

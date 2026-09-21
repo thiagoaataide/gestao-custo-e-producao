@@ -3,6 +3,8 @@ package br.com.taas.saas.gestaoproducao.platform.access.application;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.stereotype.Service;
+
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.ExternalIdentityRepository;
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.MembershipRepository;
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.TenantRepository;
@@ -13,6 +15,7 @@ import br.com.taas.saas.gestaoproducao.platform.identity.model.Tenant;
 import br.com.taas.saas.gestaoproducao.tenancy.model.TenantAccessContext;
 import br.com.taas.saas.gestaoproducao.tenancy.model.TenantId;
 
+@Service
 public final class AccessDecisionResolver {
 
     private final ExternalIdentityRepository externalIdentityRepository;

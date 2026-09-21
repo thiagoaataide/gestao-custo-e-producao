@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T8 concluída; próxima tarefa T9
+- **Phase / Task**: Execute — F-00 / T9 concluída; próxima tarefa T10
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -335,8 +335,9 @@
   external-subject relocation, PostgreSQL fixture and integration-test evidence,
   and the T7 access decision resolver with unit-test evidence, and the T8
   transaction-local RLS context writer with PostgreSQL integration-test
-  evidence
-- **In-progress**: T8 is complete. The application requires the database URL,
+  evidence, and the T9 tenant-scoped transaction executor with commit,
+  deny-before-operation and rollback integration-test evidence
+- **In-progress**: T9 is complete. The application requires the database URL,
   runtime credential, separate migration credential and Supabase JWT settings
   from the environment; Flyway runs on startup with `classpath:db/migration`.
   The Resource Server validates issuer, ES256 signature, expiration and
@@ -349,10 +350,13 @@
   adapter accepts only the domain `TenantId`, validates an open transaction-
   bound connection, and executes `set_config('app.tenant_id', ..., true)` on
   that same connection; PostgreSQL integration tests prove isolation and pool
-  reuse without context leakage.
-- **Next step**: Execute T9 to integrate the resolved access decision and RLS
-  writer into the transaction boundary of tenant-scoped use cases.
-- **Blockers**: none for T8. No DDL was applied directly to the Supabase
+  reuse without context leakage. The T9 executor resolves access before
+  starting the tenant transaction, rejects non-tenant decisions before the
+  operation callback, and uses Spring's local transaction boundary for commit
+  and rollback.
+- **Next step**: Execute T10 to implement the user-facing access shell while
+  preserving the tenant decision and transaction boundaries.
+- **Blockers**: none for T9. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after the T8 implementation commit
+- **Uncommitted files**: none after the T9 implementation commit
 - **Branch**: `main`
