@@ -1,11 +1,8 @@
-package br.com.taas.saas.gestaoproducao.platform.access.security;
+package br.com.taas.saas.gestaoproducao.platform.identity.model;
 
 import java.util.Objects;
 
-/**
- * Minimal external identity key used to bridge provider authentication and
- * domain-owned authorization.
- */
+/** The provider and subject pair used to identify an external user locally. */
 public record ExternalSubject(String provider, String value) {
 
     public static final String SUPABASE_PROVIDER = "SUPABASE";

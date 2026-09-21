@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1, T2, T3, T4 e T5 concluídas; próxima
-tarefa operacional: T6
+**Status:** Execução em andamento — T1, T2, T3, T4, T5 e T6 concluídas;
+próxima tarefa operacional: T7
 
 ## Test Coverage Matrix
 
@@ -320,6 +320,11 @@ tenant ou `user_metadata` para autorização.
 
 ### T6: Implementar o modelo de identidade e membership
 
+**Status:** Concluída em 21 de setembro de 2026. O modelo de domínio mantém
+identificador externo e interno separados, os adapters consultam a identidade
+e memberships ativas sem aceitar tenant do cliente, e a persistência foi
+validada contra PostgreSQL real com o gate completo.
+
 **What:** Implementar entidades/value objects e repositórios de identidade,
 tenant e membership, incluindo status, papel mínimo e consulta de memberships
 ativas.
@@ -335,14 +340,15 @@ ativas.
 
 **Done when:**
 
-- [ ] O identificador externo é distinto do identificador interno da aplicação.
-- [ ] O repositório consulta membership por identidade externa sem aceitar
+- [x] O identificador externo é distinto do identificador interno da aplicação.
+- [x] O repositório consulta membership por identidade externa sem aceitar
       tenant escolhido pelo cliente.
-- [ ] Status inativo/revogado não é retornado como vínculo operacional.
-- [ ] A constraint de identidade ativa é refletida no modelo e nos testes.
-- [ ] Testes de persistência executam contra PostgreSQL real.
+- [x] Status inativo/revogado não é retornado como vínculo operacional.
+- [x] A constraint de identidade ativa é refletida no modelo e nos testes.
+- [x] Testes de persistência executam contra PostgreSQL real.
 
-**Tests:** integration
+**Tests:** integration — `IdentityMembershipPersistenceIntegrationTests`
+ (5 testes; PostgreSQL real)
 **Gate:** full
 **Commit:** `feat(f00): add identity and membership persistence`
 

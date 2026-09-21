@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
+
 class SupabaseJwtAuthenticationConverterTests {
 
     private final SupabaseJwtAuthenticationConverter converter = new SupabaseJwtAuthenticationConverter();

@@ -5,6 +5,8 @@ import java.util.Collections;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
+import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
+
 /**
  * Authenticated token whose principal is the provider-neutral external
  * subject. Domain authorization is deliberately not represented by JWT

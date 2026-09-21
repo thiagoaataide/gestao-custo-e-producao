@@ -6,6 +6,8 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
+
 /**
  * Converts a cryptographically validated Supabase JWT into the minimum
  * external identity required by the domain boundary.

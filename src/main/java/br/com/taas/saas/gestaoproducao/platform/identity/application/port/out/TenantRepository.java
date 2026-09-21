@@ -1,0 +1,11 @@
+package br.com.taas.saas.gestaoproducao.platform.identity.application.port.out;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import br.com.taas.saas.gestaoproducao.platform.identity.model.Tenant;
+
+public interface TenantRepository {
+
+    Optional<Tenant> findById(UUID tenantId);
+}
