@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
+import com.vaadin.flow.spring.security.VaadinSecurityConfigurer;
+
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(SupabaseJwtProperties.class)
 public class SupabaseResourceServerSecurityConfiguration {
@@ -44,7 +46,13 @@ public class SupabaseResourceServerSecurityConfiguration {
             HttpSecurity http,
             SupabaseJwtAuthenticationConverter authenticationConverter) throws Exception {
         http
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .with(VaadinSecurityConfigurer.vaadin(), vaadin -> vaadin
+                        .enableAuthorizedRequestsConfiguration(false))
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/", "/login").permitAll()
+                        .requestMatchers(VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher())
+                        .permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
         return http.build();

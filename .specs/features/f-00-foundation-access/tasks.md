@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 a T9 concluídas; próxima tarefa
-operacional: T10
+**Status:** Execução em andamento — T1 a T10 concluídas; próxima tarefa
+operacional: T11
 
 ## Test Coverage Matrix
 
@@ -466,6 +466,12 @@ local; 40 testes, 0 falhas, 0 erros e 0 skips.
 
 ### T10: Criar o shell Vaadin de autenticação e provisionamento
 
+**Status:** Concluída em 21 de setembro de 2026. O shell Vaadin expõe os
+estados não autenticado, provisionado, não provisionado, membership ambígua e
+acesso de plataforma sem decidir tenant nem acessar repositórios diretamente.
+As rotas públicas foram integradas à cadeia de segurança e os quatro estados
+exigidos têm cobertura de integração.
+
 **What:** Criar o shell mínimo que apresenta os estados não autenticado,
 provisionado, não provisionado e membership ambígua, sem expor conteúdo
 operacional bloqueado.
@@ -481,12 +487,12 @@ operacional bloqueado.
 
 **Done when:**
 
-- [ ] Usuário não autenticado é conduzido ao fluxo de autenticação.
-- [ ] Usuário provisionado visualiza o estado de acesso permitido.
-- [ ] Usuário não provisionado recebe mensagem clara sem dados de terceiros.
-- [ ] Membership ambígua recebe bloqueio seguro.
-- [ ] Nenhum comando operacional aparece em estados bloqueados.
-- [ ] Testes de smoke/integrados cobrem os quatro estados.
+- [x] Usuário não autenticado é conduzido ao fluxo de autenticação.
+- [x] Usuário provisionado visualiza o estado de acesso permitido.
+- [x] Usuário não provisionado recebe mensagem clara sem dados de terceiros.
+- [x] Membership ambígua recebe bloqueio seguro.
+- [x] Nenhum comando operacional aparece em estados bloqueados.
+- [x] Testes de smoke/integrados cobrem os quatro estados.
 
 **Tests:** integration
 **Gate:** full
@@ -642,6 +648,6 @@ usar?**
 
 ## Próximo passo
 
-Após a aprovação deste `tasks.md` e da lista de ferramentas, executar T1. Cada
+Após a aprovação deste `tasks.md` e da lista de ferramentas, executar T11. Cada
 tarefa deverá terminar com seu gate, inspeção de diff, um commit atômico e
 atualização do estado antes da próxima tarefa.

@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T9 concluída; próxima tarefa T10
+- **Phase / Task**: Execute — F-00 / T10 concluída; próxima tarefa T11
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -353,10 +353,16 @@
   reuse without context leakage. The T9 executor resolves access before
   starting the tenant transaction, rejects non-tenant decisions before the
   operation callback, and uses Spring's local transaction boundary for commit
-  and rollback.
-- **Next step**: Execute T10 to implement the user-facing access shell while
-  preserving the tenant decision and transaction boundaries.
-- **Blockers**: none for T9. No DDL was applied directly to the Supabase
+  and rollback. T10 adds the Vaadin access shell under `ui/access`, exposes
+  unauthenticated, provisioned, not-provisioned and ambiguous-membership
+  states without operational commands in blocked states, keeps platform access
+  outside tenant operations, and permits only the public shell/login routes in
+  the HTTP security chain. Its integration test covers the four required
+  states against the Spring context and PostgreSQL fixture.
+- **Next step**: Execute T11 to validate the foundation end to end in real
+  PostgreSQL, including startup, authentication, membership, RLS, connection
+  reuse and rollback.
+- **Blockers**: none for T10. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after the T9 implementation commit
+- **Uncommitted files**: none after the T10 implementation commit
 - **Branch**: `main`

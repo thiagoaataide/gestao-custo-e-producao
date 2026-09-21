@@ -230,7 +230,7 @@ verificar a mensagem e os comandos disponíveis em cada caso.
 | F00-13 | Confirmar alterações como uma única transação local. | Atomicidade | ADR-018 | Pending |
 | F00-14 | Reverter alterações parciais quando uma etapa falhar. | Atomicidade | ADR-018 | Pending |
 | F00-15 | Não depender de JTA ou transação distribuída. | Atomicidade | ADR-018 | Pending |
-| F00-16 | Exibir estado provisionado, bloqueado ou não autenticado sem dados protegidos. | Shell | PRD seção 4.2 | Pending |
+| F00-16 | Exibir estado provisionado, bloqueado ou não autenticado sem dados protegidos. | Shell | PRD seção 4.2 | Implementado em T10; gate transversal pendente em T11 |
 
 **Cobertura:** 16 requisitos identificados, 16 mapeados no rascunho de
 `tasks.md`, com implementação ainda pendente. Os status individuais avançam
