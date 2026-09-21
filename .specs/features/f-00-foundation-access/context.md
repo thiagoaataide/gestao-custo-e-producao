@@ -2,7 +2,7 @@
 
 **Coletado:** 21 de setembro de 2026
 **Especificação:** `.specs/features/f-00-foundation-access/spec.md`
-**Status:** Decisões confirmadas — pronta para design
+**Status:** Decisões confirmadas — design aprovado e pronto para tasks
 
 ## Limite da feature
 

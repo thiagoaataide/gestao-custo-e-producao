@@ -2,7 +2,7 @@
 
 **Especificação:**
 `.specs/features/f-00-foundation-access/spec.md`
-**Status:** Rascunho aguardando confirmação
+**Status:** Aprovado
 **Data:** 21 de setembro de 2026
 
 ## Visão da arquitetura

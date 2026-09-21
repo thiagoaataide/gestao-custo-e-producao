@@ -311,7 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Design — F-00 technical design draft awaiting confirmation
+- **Phase / Task**: Tasks — F-00 atomic task decomposition draft awaiting
+  confirmation
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -319,11 +320,12 @@
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
   without Teams in V0, ADR-022 for startup migration execution, the PRD
   synchronization for the resolved user-to-tenant provisioning decision, and
-  `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, and
-  the approved transaction-local tenant context approach
-- **In-progress**: F-00 technical design draft
-- **Next step**: Confirm or adjust the F-00 design, then decompose it into
-  atomic implementation tasks
+  `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, the
+  approved F-00 technical design, and the approved transaction-local tenant
+  context approach, and the draft F-00 task decomposition in
+  `.specs/features/f-00-foundation-access/tasks.md`
+- **In-progress**: F-00 atomic task decomposition awaiting confirmation
+- **Next step**: Confirm the tasks and execution tools, then execute T1
 - **Blockers**: none
 - **Uncommitted files**: none after the current atomic commit
 - **Branch**: `main`
