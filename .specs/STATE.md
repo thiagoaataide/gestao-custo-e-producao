@@ -298,10 +298,12 @@
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
   transaction boundaries, ADR-019 for versioned reversible migrations, and
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
-  without Teams in V0, ADR-022 for startup migration execution, and the PRD
-  synchronization for the resolved user-to-tenant provisioning decision
+  without Teams in V0, ADR-022 for startup migration execution, the PRD
+  synchronization for the resolved user-to-tenant provisioning decision, and
+  `docs/ROADMAP-V0.md`
 - **In-progress**: none
-- **Next step**: Create the V0 roadmap and the first feature specification
+- **Next step**: Create and confirm the specification for F-00 — Technical
+  foundation and secure access
 - **Blockers**: none
 - **Uncommitted files**: none after the current atomic commit
 - **Branch**: `main`
