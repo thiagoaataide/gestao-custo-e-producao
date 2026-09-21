@@ -61,6 +61,8 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
   não altere o banco remoto manualmente no fluxo normal.
 - O Flyway é o único executor e histórico de migrations da aplicação; não
   misture o histórico do Flyway com migrations do Supabase CLI.
+- A V0 usa Flyway Community sem depender do comando `flyway undo` do Teams;
+  reversões devem seguir procedimento explícito, revisado e controlado.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
@@ -202,7 +204,7 @@ atualize esta tabela se houver divergência.
 | Jakarta Persistence | `jakarta.persistence:jakarta.persistence-api` | 3.2.0 | ainda não adicionado |
 | Jakarta Transactions API | `jakarta.transaction:jakarta.transaction-api` | 2.0.1 | ainda não adicionado |
 | PostgreSQL JDBC | `org.postgresql:postgresql` | 42.7.13 | ainda não adicionado |
-| Flyway Core | `org.flywaydb:flyway-core` | 12.4.0 | gerenciado pelo Spring Boot 4.1.1, ainda não adicionado |
+| Flyway Core | `org.flywaydb:flyway-core` | 12.4.0 | Community, gerenciado pelo Spring Boot 4.1.1, ainda não adicionado |
 | Flyway PostgreSQL | `org.flywaydb:flyway-database-postgresql` | 12.4.0 | gerenciado pelo Spring Boot 4.1.1, ainda não adicionado |
 
 ### Componentes planejados sem versão definida
@@ -217,7 +219,7 @@ Spring Boot 4.1.1 e do Java 21.
 | Vaadin | será usado também para aprendizagem | usar matriz e documentação oficiais |
 | Supabase Auth | autenticação gerenciada | registrar versão do cliente/integração escolhido |
 | Supabase Storage | armazenamento de objetos | registrar versão do cliente/SDK escolhido |
-| Flyway | executor único das migrations do schema | usar `spring-boot-starter-flyway` gerenciado pelo Spring Boot 4.1.1 | selecionado, ainda não adicionado |
+| Flyway | executor único das migrations do schema | usar Community com `spring-boot-starter-flyway` gerenciado pelo Spring Boot 4.1.1; não depender do Teams `undo` | selecionado, ainda não adicionado |
 | Spring Cloud | não é necessário no esqueleto atual | só adicionar se uma necessidade da V0 exigir |
 | Implementação JTA | não definida para a V0 | não adicionar sem requisito de transação distribuída |
 | Plataforma de hospedagem | custo zero, pausas e cold starts aceitos | registrar versão/imagem/runtime do provedor |

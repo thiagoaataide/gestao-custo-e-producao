@@ -262,6 +262,20 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-021
+- **Decision**: V0 uses Flyway Community without a Flyway Teams license or
+  dependency. Versioned migrations remain in Git with reviewed reversal
+  scripts, but the `flyway undo` command is not a V0 requirement.
+- **Reason**: Preserve the zero-cost V0 while retaining versioned migrations,
+  transaction rollback for failed executions, and controlled recovery for
+  applied migrations.
+- **Trade-off**: Schema reversions require an explicit operational procedure or
+  a corrective forward migration; they are not an automatic Teams command.
+- **Scope**: Flyway edition, migration execution, rollback, recovery, and V0
+  foundation cost constraints.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries
@@ -270,7 +284,8 @@
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
   transaction boundaries, ADR-019 for versioned reversible migrations, and
-  ADR-020 for Flyway as the migration engine
+  ADR-020 for Flyway as the migration engine, and ADR-021 for Flyway Community
+  without Teams in V0
 - **In-progress**: none
 - **Next step**: Select the next unresolved architecture topic before creating
   the V0 roadmap and feature specifications
