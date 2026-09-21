@@ -155,6 +155,37 @@
 - **Date**: 2026-09-20
 - **Status**: active
 
+### AD-014
+- **Decision**: Supabase Auth owns the user account and authentication; the
+  application domain separately provisions the tenant and the active
+  user-to-tenant association. An authenticated user without an active
+  association is blocked from domain access with a clear not-provisioned
+  message.
+- **Reason**: Keep authentication separate from tenancy, avoid accidental
+  tenant creation, and make the access decision explicit and auditable.
+- **Trade-off**: The initial user and tenant setup requires a controlled
+  provisioning operation before the first successful domain access.
+- **Scope**: Authentication boundary, tenant resolution, authorization, and
+  initial environment bootstrap.
+- **Date**: 2026-09-20
+- **Status**: active
+
+### AD-015
+- **Decision**: The application has two bounded contexts inside the modular
+  monolith: Platform Administration and Tenant Operations. Platform
+  Administration creates tenants, manages invitations and memberships, and
+  accesses only platform metadata; it cannot access operational tenant data.
+- **Reason**: Separate platform governance from customer operation and enforce
+  least privilege for future SaaS and LGPD requirements without introducing a
+  microservice prematurely.
+- **Trade-off**: The monolith must maintain explicit module and authorization
+  boundaries so the platform context cannot depend directly on tenant
+  operational data.
+- **Scope**: Architecture, authentication roles, tenant provisioning,
+  invitations, authorization, and V0 module boundaries.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Project foundation and V0 roadmap
