@@ -2,7 +2,7 @@
 
 **Status:** Confirmada
 **Escopo:** V0
-**Fonte:** `docs/PRD-V0.md`, `docs/ROADMAP-V0.md` e ADR-015 a ADR-022
+**Fonte:** `docs/PRD-V0.md`, `docs/ROADMAP-V0.md` e ADR-015 a ADR-024
 **Data:** 21 de setembro de 2026
 
 ## Problema
@@ -18,17 +18,17 @@ inseguro e depois exigir mudanças incompatíveis no domínio.
 
 ## Objetivos
 
-- [ ] Disponibilizar a aplicação com o baseline tecnológico da V0 e migrations
+- [x] Disponibilizar a aplicação com o baseline tecnológico da V0 e migrations
       versionadas executadas na inicialização.
-- [ ] Autenticar por meio do Supabase Auth e separar a identidade externa da
+- [x] Autenticar por meio do Supabase Auth e separar a identidade externa da
       resolução de tenant no domínio.
-- [ ] Permitir acesso operacional somente a um usuário autenticado com uma
+- [x] Permitir acesso operacional somente a um usuário autenticado com uma
       membership ativa e inequívoca.
-- [ ] Aplicar isolamento em duas camadas: autorização da aplicação e RLS do
+- [x] Aplicar isolamento em duas camadas: autorização da aplicação e RLS do
       PostgreSQL.
-- [ ] Estabelecer transações ACID locais para os casos de uso que alterarem o
+- [x] Estabelecer transações ACID locais para os casos de uso que alterarem o
       domínio.
-- [ ] Exibir um shell mínimo que diferencie acesso provisionado de acesso
+- [x] Exibir um shell mínimo que diferencie acesso provisionado de acesso
       bloqueado, sem implementar funcionalidades operacionais nesta feature.
 
 ## Fora do escopo
@@ -215,37 +215,36 @@ verificar a mensagem e os comandos disponíveis em cada caso.
 
 | ID | Requisito | História | Origem | Status |
 | --- | --- | --- | --- | --- |
-| F00-01 | Executar migrations pendentes antes da operação normal. | Inicializar | FR-001, ADR-022 | Pending |
-| F00-02 | Reprovar startup quando migration ou configuração obrigatória falhar. | Inicializar | ADR-019, ADR-022 | Pending |
-| F00-03 | Não reaplicar migrations já concluídas. | Inicializar | ADR-020 | Pending |
-| F00-04 | Autenticar identidade pelo Supabase Auth. | Acesso | FR-001, ADR-015 | Pending |
-| F00-05 | Resolver exatamente uma membership ativa no backend. | Acesso | FR-002, AD-003, ADR-017 | Pending |
-| F00-06 | Bloquear identidade sem vínculo e não criar tenant automaticamente. | Acesso | FR-002, ADR-015 | Pending |
-| F00-07 | Bloquear vínculo ambíguo sem escolher tenant arbitrariamente. | Acesso | AD-003 | Pending |
-| F00-08 | Negar credencial inválida, expirada ou ausente. | Acesso | FR-001 | Pending |
-| F00-09 | Ignorar `tenant_id` informado pelo cliente. | Isolamento | ADR-017 | Pending |
-| F00-10 | Restringir leituras e alterações ao tenant resolvido. | Isolamento | FR-002, ADR-016 | Pending |
-| F00-11 | Aplicar RLS quando o contexto estiver ausente ou incompatível. | Isolamento | ADR-016, ADR-017 | Pending |
-| F00-12 | Limpar o contexto ao trocar de transação/conexão. | Isolamento | ADR-017 | Pending |
-| F00-13 | Confirmar alterações como uma única transação local. | Atomicidade | ADR-018 | Pending |
-| F00-14 | Reverter alterações parciais quando uma etapa falhar. | Atomicidade | ADR-018 | Pending |
-| F00-15 | Não depender de JTA ou transação distribuída. | Atomicidade | ADR-018 | Pending |
-| F00-16 | Exibir estado provisionado, bloqueado ou não autenticado sem dados protegidos. | Shell | PRD seção 4.2 | Implementado em T10; gate transversal pendente em T11 |
+| F00-01 | Executar migrations pendentes antes da operação normal. | Inicializar | FR-001, ADR-022 | Implementado; verificado em T4/T11 |
+| F00-02 | Reprovar startup quando migration ou configuração obrigatória falhar. | Inicializar | ADR-019, ADR-022 | Implementado; verificado em T4/T11 |
+| F00-03 | Não reaplicar migrations já concluídas. | Inicializar | ADR-020 | Implementado; verificado em T4/T11 |
+| F00-04 | Autenticar identidade pelo Supabase Auth. | Acesso | FR-001, ADR-015 | Implementado; verificado em T5/T11 |
+| F00-05 | Resolver exatamente uma membership ativa no backend. | Acesso | FR-002, AD-003, ADR-017 | Implementado; verificado em T6/T7/T11 |
+| F00-06 | Bloquear identidade sem vínculo e não criar tenant automaticamente. | Acesso | FR-002, ADR-015 | Implementado; verificado em T7/T10/T11 |
+| F00-07 | Bloquear vínculo ambíguo sem escolher tenant arbitrariamente. | Acesso | AD-003 | Implementado; verificado em T7/T10/T11 |
+| F00-08 | Negar credencial inválida, expirada ou ausente. | Acesso | FR-001 | Implementado; verificado em T5/T10/T11 |
+| F00-09 | Ignorar `tenant_id` informado pelo cliente. | Isolamento | ADR-017 | Implementado; verificado em T9/T11 |
+| F00-10 | Restringir leituras e alterações ao tenant resolvido. | Isolamento | FR-002, ADR-016 | Implementado; verificado em T3/T8/T9/T11 |
+| F00-11 | Aplicar RLS quando o contexto estiver ausente ou incompatível. | Isolamento | ADR-016, ADR-017 | Implementado; verificado em T3/T8/T11 |
+| F00-12 | Limpar o contexto ao trocar de transação/conexão. | Isolamento | ADR-017 | Implementado; verificado em T8/T9/T11 |
+| F00-13 | Confirmar alterações como uma única transação local. | Atomicidade | ADR-018 | Implementado; verificado em T9/T11 |
+| F00-14 | Reverter alterações parciais quando uma etapa falhar. | Atomicidade | ADR-018 | Implementado; verificado em T9/T11 |
+| F00-15 | Não depender de JTA ou transação distribuída. | Atomicidade | ADR-018 | Implementado; verificado em T9/T11 |
+| F00-16 | Exibir estado provisionado, bloqueado ou não autenticado sem dados protegidos. | Shell | PRD seção 4.2 | Implementado; verificado em T10/T11 |
 
-**Cobertura:** 16 requisitos identificados, 16 mapeados no rascunho de
-`tasks.md`, com implementação ainda pendente. Os status individuais avançam
-para verificação somente durante o Execute.
+**Cobertura:** 16 requisitos identificados e 16 mapeados em `tasks.md`. Todos
+foram implementados e verificados pelos gates unitário, full e build da F-00.
 
 ## Critérios de sucesso
 
-- [ ] Uma aplicação recém-configurada só é considerada disponível depois de
+- [x] Uma aplicação recém-configurada só é considerada disponível depois de
       concluir as migrations válidas.
-- [ ] Um usuário provisionado acessa exclusivamente o tenant resolvido no
+- [x] Um usuário provisionado acessa exclusivamente o tenant resolvido no
       backend.
-- [ ] Usuários sem vínculo ou com vínculo ambíguo não acessam dados
+- [x] Usuários sem vínculo ou com vínculo ambíguo não acessam dados
       operacionais nem criam tenant automaticamente.
-- [ ] Uma tentativa de atravessar tenant falha na aplicação e permanece
+- [x] Uma tentativa de atravessar tenant falha na aplicação e permanece
       protegida pelo RLS.
-- [ ] Uma falha em operação composta não deixa alterações parciais persistidas.
-- [ ] A especificação de F-00 não antecipa nenhuma regra de insumos, compras,
+- [x] Uma falha em operação composta não deixa alterações parciais persistidas.
+- [x] A especificação de F-00 não antecipa nenhuma regra de insumos, compras,
       estoque, pedidos ou produção.

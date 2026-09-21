@@ -311,8 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T12 concluída; pendente verificação
-  independente da feature
+- **Phase / Task**: Execute — F-00 / T12 concluída; verificação independente
+  aprovada
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -341,7 +341,8 @@
   end-to-end PostgreSQL integration suite with isolated empty-database
   migration/idempotency, tenant-parameter isolation, denied identities, RLS,
   connection reuse and rollback evidence
-- **In-progress**: T11 is complete. The application requires the database URL,
+- **In-progress**: F-00 is complete after independent verification. The
+  application requires the database URL,
   runtime credential, separate migration credential and Supabase JWT settings
   from the environment; Flyway runs on startup with `classpath:db/migration`.
   The Resource Server validates issuer, ES256 signature, expiration and
@@ -367,11 +368,11 @@
   failures, errors or skips, and the Vaadin frontend/Jar build completes. T12
   adds the multi-stage Temurin 21 runtime image, excludes source/cache/secrets
   from the final image, documents the environment contract, and confirms that
-  missing `DB_URL` fails startup explicitly.
-- **Next step**: Run the independent verification of F-00 against the complete
-  task/spec/design checklist and record the result.
-- **Blockers**: none for T12. No DDL was applied directly to the Supabase
+  missing `DB_URL` fails startup explicitly. The final verification records 48
+  passing tests, a successful multi-stage Docker build, non-root runtime
+  execution and a clean documentation/build gate.
+- **Next step**: Select the next V0 feature from `docs/ROADMAP-V0.md`.
+- **Blockers**: none. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T12 Docker/runtime files and state/task updates
-  pending the atomic T12 commit
+- **Uncommitted files**: none after the verification commit
 - **Branch**: `main`

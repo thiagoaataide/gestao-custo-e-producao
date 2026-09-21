@@ -8,8 +8,7 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 a T11 concluídas; próxima tarefa
-operacional: T12
+**Status:** T1 a T12 concluídas; verificação independente aprovada
 
 ## Test Coverage Matrix
 
@@ -661,18 +660,7 @@ esta fundação.
 | T11 | Cross-boundary integration suite | integration | integration | ✅ OK |
 | T12 | Container/configuration | none | none | ✅ OK |
 
-## Antes do Execute
-
-Antes de executar T1, confirme as ferramentas de cada tarefa. A proposta atual
-é usar somente o filesystem/terminal do projeto, documentação web oficial e as
-skills explicitadas em cada tarefa; não há MCP externo selecionado para esta
-feature.
-
-Pergunta obrigatória do processo: **para cada tarefa, quais ferramentas devo
-usar?**
-
 ## Próximo passo
 
-Após a aprovação deste `tasks.md` e da lista de ferramentas, executar T11. Cada
-tarefa deverá terminar com seu gate, inspeção de diff, um commit atômico e
-atualização do estado antes da próxima tarefa.
+F-00 está concluída após T1–T12 e verificação independente registrada em
+`validation.md`. A próxima ação é selecionar a próxima feature V0 do roadmap.
