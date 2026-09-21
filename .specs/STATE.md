@@ -217,6 +217,21 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-018
+- **Decision**: Each state-changing use case runs in one local ACID PostgreSQL
+  transaction. If any step fails, the whole transaction is rolled back and no
+  partial domain state is persisted. JTA and distributed transactions are not
+  used in V0.
+- **Reason**: Keep purchases, stock, production, consumption, destinations,
+  and realized costs consistent within each operation.
+- **Trade-off**: External effects outside PostgreSQL are not atomically
+  included and require explicit treatment; use cases must keep a clear
+  transaction boundary.
+- **Scope**: Transaction boundaries, PostgreSQL persistence, tenant-scoped
+  operations, stock, production, purchases, consumption, and cost records.
+- **Date**: 2026-09-21
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Architecture baseline and V0 boundaries

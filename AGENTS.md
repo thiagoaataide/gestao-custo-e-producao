@@ -54,6 +54,8 @@ Trabalhe exclusivamente no escopo da V0 descrito em `docs/PRD-V0.md`.
   tenants.
 - O backend deve estabelecer o contexto de tenant resolvido em cada transação
   operacional; nunca confie no `tenant_id` enviado pelo cliente.
+- Cada caso de uso que altera o domínio deve ser uma transação ACID local: se
+  uma etapa falhar, nenhuma alteração parcial pode permanecer persistida.
 - Não remova rastreabilidade de compras, lotes, produção, consumo, perdas,
   cancelamentos ou destinações.
 
