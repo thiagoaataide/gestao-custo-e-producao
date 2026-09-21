@@ -8,7 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução iniciada — T1 bloqueada por pré-requisito ambiental
+**Status:** Execução em andamento — T1 concluída; T2 concluída com o build
+aprovado e o teste de contexto dependente da configuração prevista na T4
 
 ## Test Coverage Matrix
 
@@ -26,10 +27,9 @@ tests, commits, independent verification, and the discrimination sensor.
 | Vaadin access shell | integration/smoke | Estados não autenticado, provisionado, não provisionado e membership ambígua sem conteúdo protegido | `src/test/java/**/ui/access/**` | `./mvnw.cmd verify` |
 | Application configuration and container | none | Gate de build e empacotamento; não substituir os testes de segurança | `src/main/resources/**`, `Dockerfile` | `./mvnw.cmd clean verify` |
 
-O wrapper Maven está versionado, mas `AGENTS.md` registra que sua execução foi
-previamente bloqueada por uma falha do script PowerShell antes de iniciar o
-Maven. A primeira tarefa deve revalidar essa condição; nenhum resultado de
-teste será considerado aceito enquanto o runner não executar de fato.
+O Maven Wrapper foi executado de fato com o JDK 21. A validação de testes deve
+continuar separada do gate de build: o teste de contexto atual requer datasource
+e Flyway configurados, o que pertence à T4.
 
 ## Parallelism Assessment
 
@@ -123,6 +123,13 @@ credencial de runtime PostgreSQL e capacidade de manter essa credencial sem
 
 ### T2: Adicionar o baseline de dependências da fundação
 
+**Status:** Concluída em 21 de setembro de 2026. O baseline foi adicionado ao
+`pom.xml`, as versões foram registradas no `AGENTS.md`, a árvore e o effective
+POM foram inspecionados e o empacotamento com testes ignorados passou. O teste de
+contexto do esqueleto ainda falha por ausência da configuração de datasource,
+uma condição esperada até a T4; essa falha não foi mascarada por exclusões de
+auto-configuração.
+
 **What:** Atualizar o `pom.xml` com os starters e drivers necessários para
 Spring Security Resource Server, JPA, Flyway/PostgreSQL, PostgreSQL JDBC e
 Vaadin, sem fixar versões já gerenciadas pelo Spring Boot.
@@ -140,15 +147,19 @@ Vaadin, sem fixar versões já gerenciadas pelo Spring Boot.
 
 **Done when:**
 
-- [ ] As dependências necessárias estão no `pom.xml` com coordenadas oficiais.
-- [ ] Versões declaradas ou gerenciadas estão registradas no inventário de
+- [x] As dependências necessárias estão no `pom.xml` com coordenadas oficiais.
+- [x] Versões declaradas ou gerenciadas estão registradas no inventário de
       `AGENTS.md`.
-- [ ] Não foram adicionados JTA, Spring Cloud ou outra infraestrutura fora da
+- [x] Não foram adicionados JTA, Spring Cloud ou outra infraestrutura fora da
       V0.
-- [ ] A árvore de dependências e o effective POM foram inspecionados quando o
+- [x] A árvore de dependências e o effective POM foram inspecionados quando o
       Maven estiver executável.
-- [ ] O gate de build passa; se o wrapper continuar bloqueado, a validação é
-      registrada como bloqueada.
+- [x] O gate de build passa com `mvnw.cmd -DskipTests package` usando Java 21.
+
+**Validação separada:** `mvnw.cmd test` foi executado com Java 21, mas o teste
+de contexto falhou porque JPA/Flyway passaram a exigir datasource configurado.
+O reparo pertence à T4; não foi introduzida uma exclusão de auto-configuração
+apenas para fazer o teste passar.
 
 **Tests:** none — configuração/build
 **Gate:** build

@@ -176,8 +176,16 @@ para o estado atual do projeto. A data de referência é 20 de setembro de 2026.
 | Apache Maven distribution | `.mvn/wrapper/maven-wrapper.properties` | 3.9.16 | fixado pelo wrapper |
 | Spring Boot parent | `org.springframework.boot:spring-boot-starter-parent` | 4.1.1 | parent do projeto |
 | Spring Boot starter | `org.springframework.boot:spring-boot-starter` | 4.1.1 | dependência direta, versão gerenciada |
+| Spring Security starter | `org.springframework.boot:spring-boot-starter-security` | 4.1.1 | dependência direta, versão gerenciada |
+| OAuth2 Resource Server starter | `org.springframework.boot:spring-boot-starter-oauth2-resource-server` | 4.1.1 | dependência direta, versão gerenciada |
+| Spring Data JPA starter | `org.springframework.boot:spring-boot-starter-data-jpa` | 4.1.1 | dependência direta, versão gerenciada |
+| Flyway starter | `org.springframework.boot:spring-boot-starter-flyway` | 4.1.1 | dependência direta, versão gerenciada |
 | Spring Boot test starter | `org.springframework.boot:spring-boot-starter-test` | 4.1.1 | dependência direta de teste, versão gerenciada |
 | Spring Boot Maven plugin | `org.springframework.boot:spring-boot-maven-plugin` | 4.1.1 | plugin, versão gerenciada |
+| Vaadin BOM | `com.vaadin:vaadin-bom` | 25.2.8 | BOM importado pelo projeto |
+| Vaadin Spring Boot starter | `com.vaadin:vaadin-spring-boot-starter` | 25.2.8 | dependência direta, versão gerenciada pelo BOM |
+| Vaadin development tools | `com.vaadin:vaadin-dev` | 25.2.8 | dependência direta opcional |
+| Vaadin Maven plugin | `com.vaadin:vaadin-maven-plugin` | 25.2.8 | plugin direto do projeto |
 
 As versões das dependências sem `<version>` devem continuar sendo gerenciadas
 pelo parent/BOM do Spring Boot. Não fixe versões individuais sem justificativa
@@ -199,29 +207,27 @@ atualize esta tabela se houver divergência.
 | Mockito | `org.mockito:mockito-*` | 5.23.0 | transitivo do starter de teste |
 | AssertJ | `org.assertj:assertj-core` | 3.27.7 | transitivo do starter de teste |
 | Hamcrest | `org.hamcrest:hamcrest-*` | 3.0 | transitivo do starter de teste |
-| Spring Security | `org.springframework.security:spring-security-*` | 7.1.1 | ainda não adicionado |
-| Spring Data JPA | `org.springframework.data:spring-data-jpa` | 4.1.1 | ainda não adicionado |
-| Hibernate ORM | `org.hibernate.orm:hibernate-core` | 7.4.5.Final | ainda não adicionado |
-| Hibernate Validator | `org.hibernate.validator:hibernate-validator` | 9.1.3.Final | ainda não adicionado |
-| Jakarta Persistence | `jakarta.persistence:jakarta.persistence-api` | 3.2.0 | ainda não adicionado |
-| Jakarta Transactions API | `jakarta.transaction:jakarta.transaction-api` | 2.0.1 | ainda não adicionado |
-| PostgreSQL JDBC | `org.postgresql:postgresql` | 42.7.13 | ainda não adicionado |
-| Flyway Core | `org.flywaydb:flyway-core` | 12.4.0 | Community, gerenciado pelo Spring Boot 4.1.1, ainda não adicionado |
-| Flyway PostgreSQL | `org.flywaydb:flyway-database-postgresql` | 12.4.0 | gerenciado pelo Spring Boot 4.1.1, ainda não adicionado |
+| Spring Security | `org.springframework.security:spring-security-*` | 7.1.1 | transitivo dos starters de Security |
+| Spring Data JPA | `org.springframework.data:spring-data-jpa` | 4.1.1 | transitivo do starter de JPA |
+| Hibernate ORM | `org.hibernate.orm:hibernate-core` | 7.4.5.Final | transitivo do starter de JPA |
+| Hibernate Validator | `org.hibernate.validator:hibernate-validator` | 9.1.3.Final | transitivo do baseline de validação |
+| Jakarta Persistence | `jakarta.persistence:jakarta.persistence-api` | 3.2.0 | transitivo do starter de JPA |
+| Jakarta Transactions API | `jakarta.transaction:jakarta.transaction-api` | 2.0.1 | transitivo do starter de JPA; não implica JTA |
+| PostgreSQL JDBC | `org.postgresql:postgresql` | 42.7.13 | dependência direta de runtime |
+| Flyway Core | `org.flywaydb:flyway-core` | 12.4.0 | transitivo do starter Flyway, Community |
+| Flyway PostgreSQL | `org.flywaydb:flyway-database-postgresql` | 12.4.0 | dependência direta do banco PostgreSQL |
 
-### Componentes planejados sem versão definida
+### Componentes planejados ou condicionais
 
-Os itens abaixo fazem parte do baseline tecnológico da V0, mas ainda não
-possuem dependência declarada no `pom.xml`. A versão deve ser escolhida e
-registrada durante a fundação, a partir da matriz de compatibilidade oficial do
-Spring Boot 4.1.1 e do Java 21.
+Os itens abaixo permanecem planejados ou condicionais para a V0, mas não fazem
+parte da baseline de dependências adicionada na T2. Integrações gerenciadas por
+serviço devem registrar a versão do cliente ou protocolo efetivamente escolhido
+quando forem implementadas.
 
 | Componente | Decisão atual | Regra para definir a versão |
 | --- | --- | --- |
-| Vaadin | será usado também para aprendizagem | usar matriz e documentação oficiais |
 | Supabase Auth | autenticação gerenciada | registrar versão do cliente/integração escolhido |
 | Supabase Storage | armazenamento de objetos | registrar versão do cliente/SDK escolhido |
-| Flyway | executor único das migrations do schema | usar Community com `spring-boot-starter-flyway` gerenciado pelo Spring Boot 4.1.1; não depender do Teams `undo` | selecionado, ainda não adicionado |
 | Spring Cloud | não é necessário no esqueleto atual | só adicionar se uma necessidade da V0 exigir |
 | Implementação JTA | não definida para a V0 | não adicionar sem requisito de transação distribuída |
 | Plataforma de hospedagem | custo zero, pausas e cold starts aceitos | registrar versão/imagem/runtime do provedor |
@@ -273,10 +279,12 @@ Antes de concluir uma mudança relevante:
 - registre se a validação foi concluída, parcial ou bloqueada;
 - não declare aceitação com base somente em inspeção estática.
 
-No estado inicial deste projeto, a execução de `mvnw.cmd` foi bloqueada no
-ambiente local antes de iniciar o Maven por uma falha do script PowerShell do
-wrapper. O wrapper continua declarando Maven 3.9.16, mas a árvore efetiva de
-dependências deve ser confirmada assim que o wrapper estiver executável.
+O Maven Wrapper foi revalidado no ambiente local com Java 21. A árvore de
+dependências e o effective POM foram gerados durante a T2. O empacotamento com
+`mvnw.cmd -DskipTests package` passou; o teste de contexto ainda exige a
+configuração de datasource/Flyway prevista para a T4 e essa dependência de
+validação deve permanecer explícita, sem excluir auto-configurações para
+mascarar a ausência da configuração.
 
 ## Atualização obrigatória deste arquivo
 

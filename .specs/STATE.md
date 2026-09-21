@@ -311,8 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T1 completed; ready for T2 dependency
-  baseline
+- **Phase / Task**: Execute — F-00 / T2 completed; ready for T3 schema and RLS
+  migration
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -322,14 +322,19 @@
   synchronization for the resolved user-to-tenant provisioning decision, and
   `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, the
   approved F-00 technical design, and the approved transaction-local tenant
-  context approach, and the draft F-00 task decomposition in
-  `.specs/features/f-00-foundation-access/tasks.md`, and the T1 environmental
-  validation evidence for Supabase project `clcgyhsjbenywugcagjo`
-- **In-progress**: T1 completed; `app_runtime` is subject to RLS and Supabase
-  JWT validation is defined as ES256/JWKS with the required `apikey` header
-- **Next step**: Execute T2 and add the foundation dependency baseline
-- **Blockers**: none; `postgres` remains restricted to administration and
-  migrations
-- **Uncommitted files**: T1 evidence updates in `context.md`, `tasks.md`, and
-  `STATE.md`, pending atomic commit
+  context approach, and the F-00 task decomposition in
+  `.specs/features/f-00-foundation-access/tasks.md`, the T1 environmental
+  validation evidence for Supabase project `clcgyhsjbenywugcagjo`, and the T2
+  dependency baseline with its Maven validation evidence
+- **In-progress**: T2 completed; Spring Security Resource Server, Spring Data
+  JPA, Flyway/PostgreSQL, PostgreSQL JDBC, Vaadin and their recorded versions
+  are in the project baseline. The context test is intentionally pending the
+  datasource/Flyway configuration from T4.
+- **Next step**: Execute T3 and create the platform/operations schema, grants
+  and RLS migration
+- **Blockers**: none for the task sequence; the context-test failure is a known
+  validation dependency on T4, and `postgres` remains restricted to
+  administration and migrations
+- **Uncommitted files**: T2 changes in `pom.xml`, `AGENTS.md`, `.gitignore`,
+  `tasks.md`, and `STATE.md`, pending atomic commit
 - **Branch**: `main`
