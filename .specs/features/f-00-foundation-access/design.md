@@ -142,6 +142,21 @@ Os pacotes `platform` não importam entidades ou casos de uso de `operations`.
 As features seguintes adicionarão seus próprios pacotes operacionais sem mover
 a resolução de tenant para dentro das telas.
 
+### Direção de dependências e CQRS lógico
+
+Casos de uso e políticas de domínio dependem de portas que representam suas
+necessidades. Adapters de autenticação, persistência, JDBC e RLS implementam
+essas portas; a configuração Spring faz a composição no limite da aplicação.
+Não haverá dependência direta de JPA, JDBC ou detalhes do Supabase dentro dos
+casos de uso.
+
+A camada de aplicação separará commands e queries por intenção. Commands
+alteram o domínio dentro da fronteira ACID do caso de uso. Queries consultam
+modelos ou projeções de leitura sem mutação. A separação é lógica e síncrona,
+no mesmo monólito e PostgreSQL, sem mensageria, event sourcing ou banco de
+leitura separado na V0. As duas categorias continuam sujeitas à resolução de
+tenant e ao RLS.
+
 ## Componentes e interfaces
 
 ### Resource Server e conversor de identidade
@@ -150,7 +165,7 @@ a resolução de tenant para dentro das telas.
   mínima para a aplicação.
 - **Localização:** `platform/access/security`.
 - **Interface principal:**
-  `ExternalIdentity authenticate(Jwt token)`.
+  converter de `Jwt` para token autenticado cujo principal é `ExternalSubject`.
 - **Dependências:** Spring Security Resource Server, issuer/JWKS do Supabase e
   configurações externas.
 - **Projeto V0:** o Supabase usa ECC P-256 (`ES256`). O issuer é
@@ -348,7 +363,7 @@ aplicação fora do Flyway.
 
 ### Unitários
 
-- conversão de `sub` em `ExternalIdentity`;
+- conversão de `sub` em `ExternalSubject`;
 - decisão para zero, uma e múltiplas memberships ativas;
 - bloqueio de status revogado/inativo;
 - rejeição de contexto construído a partir de tenant fornecido pelo cliente;
@@ -436,10 +451,13 @@ reutilizar no estado atual.
 | Migration | Flyway no startup | É o executor único definido nos ADRs. |
 | Transação | Spring local + PostgreSQL ACID | Não há JTA ou serviço externo transacional na V0. |
 | Teste de banco | PostgreSQL real | H2 não representa RLS, grants, roles ou GUCs. |
+| Dependência | Portas internas e adapters de infraestrutura | Mantém domínio e aplicação independentes de JPA, JDBC e provedores. |
+| Organização de casos de uso | CQRS lógico e síncrono | Separa mutações e leituras sem introduzir infraestrutura distribuída. |
 
 ## Referências oficiais consultadas
 
 - [Spring Security — Resource Server JWT](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html)
+- [Spring Framework — Dependency Injection](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html)
 - [Spring Framework — Transaction Management](https://docs.spring.io/spring-framework/reference/data-access/transaction.html)
 - [Spring Boot — Database Initialization e Flyway](https://docs.spring.io/spring-boot/how-to/data-initialization.html)
 - [Supabase — Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)

@@ -317,7 +317,9 @@
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
   transaction boundaries, ADR-019 for versioned reversible migrations, and
   ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
-  without Teams in V0, ADR-022 for startup migration execution, the PRD
+  without Teams in V0, ADR-022 for startup migration execution, ADR-023 for
+  dependency inversion and ports, ADR-024 for logical CQRS in the modular
+  monolith, the PRD
   synchronization for the resolved user-to-tenant provisioning decision, and
   `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, the
   approved F-00 technical design, and the approved transaction-local tenant
@@ -340,5 +342,5 @@
   boundary.
 - **Blockers**: none for T6. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after commit `09919f6`
+- **Uncommitted files**: none after commit `692a2c0`
 - **Branch**: `main`

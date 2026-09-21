@@ -263,6 +263,14 @@ ou outro componente transversal sem uma necessidade explícita da V0.
 
 - Modele regras de negócio no domínio, evitando lógica essencial somente em
   telas ou controladores.
+- Mantenha a inversão de dependência: domínio e aplicação dependem de portas,
+  enquanto adapters de infraestrutura implementam essas portas. Não injete
+  JPA, JDBC ou detalhes de provedores diretamente nos casos de uso.
+- Use interfaces somente em fronteiras reais de integração, substituição ou
+  teste. Não crie uma abstração para cada classe sem necessidade arquitetural.
+- Separe commands e queries na camada de aplicação conforme o ADR-024. A V0
+  usa CQRS lógico, síncrono e dentro do monólito; não introduza mensageria,
+  bancos de leitura separados ou event sourcing sem novo ADR.
 - Mantenha cálculos projetados separados dos realizados.
 - Preserve unidades, conversões, rendimentos, lotes, arredondamentos de compra,
   margem de segurança, consumo real, perdas e destinações.
