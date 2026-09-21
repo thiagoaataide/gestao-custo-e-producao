@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1, T2, T3, T4, T5, T6 e T7 concluídas;
-próxima tarefa operacional: T8
+**Status:** Execução em andamento — T1 a T8 concluídas; próxima tarefa
+operacional: T9
 
 ## Test Coverage Matrix
 
@@ -390,6 +390,10 @@ somente para tenant ativo.
 
 ### T8: Implementar o escritor de contexto RLS transacional
 
+**Status:** Concluída em 21 de setembro de 2026. O port de saída e o adapter
+PostgreSQL gravam o tenant resolvido com escopo local na conexão vinculada à
+transação, sem aceitar entrada de tenant do cliente.
+
 **What:** Implementar o adapter que grava `app.tenant_id` com escopo local na
 conexão JDBC vinculada à transação atual.
 **Where:** `src/main/java/br/com/taas/saas/gestaoproducao/persistence/rls/`
@@ -406,15 +410,18 @@ conexão JDBC vinculada à transação atual.
 
 **Done when:**
 
-- [ ] O valor é gravado com escopo local à transação.
-- [ ] O comando usa a mesma conexão que executará a operação tenant-scoped.
-- [ ] Ausência de transação/conexão vinculada falha de forma segura.
-- [ ] Nenhum valor vindo diretamente do cliente chega ao escritor.
-- [ ] Testes comprovam ausência de contexto, tenant correto, tenant diferente e
+- [x] O valor é gravado com escopo local à transação.
+- [x] O comando usa a mesma conexão que executará a operação tenant-scoped.
+- [x] Ausência de transação/conexão vinculada falha de forma segura.
+- [x] Nenhum valor vindo diretamente do cliente chega ao escritor.
+- [x] Testes comprovam ausência de contexto, tenant correto, tenant diferente e
       reuso de conexão sem vazamento.
 
-**Tests:** integration
+**Tests:** integration — `RlsTenantContextIntegrationTests` (4 testes; PostgreSQL
+real; o teste de reuso valida o mesmo `pg_backend_pid()` com pool unitário).
 **Gate:** full
+**Validação:** `mvnw.cmd verify` passou com Java 21 contra PostgreSQL 17.11
+local; 36 testes, 0 falhas, 0 erros e 0 skips.
 **Commit:** `feat(f00): propagate tenant context to rls`
 
 ---
