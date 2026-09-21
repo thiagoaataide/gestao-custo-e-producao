@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T6 concluída; próxima tarefa T7
+- **Phase / Task**: Execute — F-00 / T7 concluída; próxima tarefa T8
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -332,18 +332,21 @@
   datasource/Flyway configuration and its failure/restart integration tests,
   and the T5 Supabase JWT Resource Server adapter with its unit-test evidence,
   and the T6 domain identity, tenant and membership model, ports, JPA adapters,
-  external-subject relocation, PostgreSQL fixture and integration-test evidence
-- **In-progress**: T6 is complete. The application requires the database URL,
+  external-subject relocation, PostgreSQL fixture and integration-test evidence,
+  and the T7 access decision resolver with unit-test evidence
+- **In-progress**: T7 is complete. The application requires the database URL,
   runtime credential, separate migration credential and Supabase JWT settings
   from the environment; Flyway runs on startup with `classpath:db/migration`.
   The Resource Server validates issuer, ES256 signature, expiration and
   configured audience, and maps only `sub` to the domain `ExternalSubject`.
   The identity model keeps external and internal identifiers separate; JPA
-  adapters expose active-membership queries by internal identity only, and
+  adapters expose active-membership queries by internal identity only. The T7
+  resolver maps the authenticated subject to tenant, platform, not-provisioned
+  or ambiguous decisions and creates a tenant context only for an active tenant;
   the runtime continues to use `app_runtime` without `BYPASSRLS`.
-- **Next step**: Execute T7 to implement the access decision and tenant
-  resolution while preserving the domain-owned tenant resolution boundary.
-- **Blockers**: none for T7. No DDL was applied directly to the Supabase
+- **Next step**: Execute T8 to implement transaction-local RLS context
+  propagation while preserving the domain-owned tenant resolution boundary.
+- **Blockers**: none for T8. No DDL was applied directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after commit `2e73012`
+- **Uncommitted files**: none after commit `2937d9a`
 - **Branch**: `main`

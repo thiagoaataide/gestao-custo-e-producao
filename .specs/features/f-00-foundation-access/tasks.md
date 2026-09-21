@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1, T2, T3, T4, T5 e T6 concluídas;
-próxima tarefa operacional: T7
+**Status:** Execução em andamento — T1, T2, T3, T4, T5, T6 e T7 concluídas;
+próxima tarefa operacional: T8
 
 ## Test Coverage Matrix
 
@@ -356,6 +356,11 @@ ativas.
 
 ### T7: Implementar a decisão de acesso e resolução do tenant
 
+**Status:** Concluída em 21 de setembro de 2026. O resolver produz decisões
+determinísticas a partir do `ExternalSubject`, bloqueia identidades e vínculos
+inativos ou ambíguos, não aceita tenant do cliente e cria contexto operacional
+somente para tenant ativo.
+
 **What:** Implementar o serviço que produz `TENANT_ACCESS`, `PLATFORM_ACCESS`,
 `NOT_PROVISIONED` ou `AMBIGUOUS_MEMBERSHIP` a partir da identidade autenticada.
 **Where:** `src/main/java/br/com/taas/saas/gestaoproducao/platform/access/application/`
@@ -370,14 +375,14 @@ ativas.
 
 **Done when:**
 
-- [ ] Exatamente uma membership ativa produz contexto de tenant determinístico.
-- [ ] Zero memberships produz decisão não provisionada sem criação automática.
-- [ ] Mais de uma membership ativa produz bloqueio por ambiguidade.
-- [ ] Membership revogada ou tenant indisponível produz bloqueio.
-- [ ] O serviço não recebe nem confia em `tenant_id` do cliente.
-- [ ] Testes unitários cobrem todos os branches e casos de borda da spec.
+- [x] Exatamente uma membership ativa produz contexto de tenant determinístico.
+- [x] Zero memberships produz decisão não provisionada sem criação automática.
+- [x] Mais de uma membership ativa produz bloqueio por ambiguidade.
+- [x] Membership revogada ou tenant indisponível produz bloqueio.
+- [x] O serviço não recebe nem confia em `tenant_id` do cliente.
+- [x] Testes unitários cobrem todos os branches e casos de borda da spec.
 
-**Tests:** unit
+**Tests:** unit — `AccessDecisionResolverTests` (9 testes)
 **Gate:** quick
 **Commit:** `feat(f00): resolve provisioned tenant access`
 
