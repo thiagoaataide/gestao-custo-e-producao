@@ -311,8 +311,8 @@
 ## Handoff
 
 - **Feature**: F-00 — Technical foundation and secure access
-- **Phase / Task**: Execute — F-00 / T2 completed; ready for T3 schema and RLS
-  migration
+- **Phase / Task**: Execute — F-00 / T3 implemented; PostgreSQL gate blocked
+  before T4
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -325,16 +325,18 @@
   context approach, and the F-00 task decomposition in
   `.specs/features/f-00-foundation-access/tasks.md`, the T1 environmental
   validation evidence for Supabase project `clcgyhsjbenywugcagjo`, and the T2
-  dependency baseline with its Maven validation evidence
-- **In-progress**: T2 completed; Spring Security Resource Server, Spring Data
-  JPA, Flyway/PostgreSQL, PostgreSQL JDBC, Vaadin and their recorded versions
-  are in the project baseline. The context test is intentionally pending the
-  datasource/Flyway configuration from T4.
-- **Next step**: Execute T3 and create the platform/operations schema, grants
-  and RLS migration
-- **Blockers**: none for the task sequence; the context-test failure is a known
-  validation dependency on T4, and `postgres` remains restricted to
-  administration and migrations
-- **Uncommitted files**: T2 changes in `pom.xml`, `AGENTS.md`, `.gitignore`,
-  `tasks.md`, and `STATE.md`, pending atomic commit
+  dependency baseline with its Maven validation evidence, and the T3 migration
+  and reviewed reversal procedure
+- **In-progress**: T3 implementation is complete. `platform` and `operations`
+  objects, membership uniqueness, minimum runtime grants, transaction-local
+  RLS policies and the non-destructive reversal procedure are versioned. The
+  full PostgreSQL gate has not run.
+- **Next step**: Run the T3 migration/RLS gate on PostgreSQL real; then execute
+  T4 to configure datasource and Flyway startup
+- **Blockers**: local validation is blocked because `psql`/`pg_ctl` are absent
+  and the Docker daemon is unavailable. No DDL was applied directly to the
+  Supabase project; `postgres` remains restricted to administration and
+  migrations.
+- **Uncommitted files**: T3 migration/revert scripts and updates to `tasks.md`
+  and `STATE.md`, pending atomic commit
 - **Branch**: `main`

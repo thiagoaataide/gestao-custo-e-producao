@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1 concluída; T2 concluída com o build
-aprovado e o teste de contexto dependente da configuração prevista na T4
+**Status:** Execução em andamento — T1 e T2 concluídas; T3 implementada com
+gate PostgreSQL bloqueado pela indisponibilidade de runtime local
 
 ## Test Coverage Matrix
 
@@ -169,6 +169,13 @@ apenas para fazer o teste passar.
 
 ### T3: Criar o schema de identidade, membership e RLS
 
+**Status:** Implementada em 21 de setembro de 2026. A migration cria os
+schemas `platform` e `operations`, identidade externa, tenant, membership,
+`operations.tenant_settings`, grants mínimos, role de runtime sem bypass e
+policies explícitas de RLS. A reversão é separada e não remove a role de
+ambiente. O gate full ainda está bloqueado porque o ambiente não possui
+`psql`/`pg_ctl` e o daemon Docker não está disponível.
+
 **What:** Criar a migration inicial com schemas `platform` e `operations`,
 identidade externa, tenant, membership, a tabela real `operations.tenant_settings`,
 constraints, índices, grants, roles necessários e policies RLS por operação.
@@ -189,15 +196,22 @@ constraints, índices, grants, roles necessários e policies RLS por operação.
 
 - [ ] A migration é executável em PostgreSQL vazio e cria os objetos na ordem
       correta.
-- [ ] A unicidade normal de uma membership ativa por identidade está protegida
+- [x] A unicidade normal de uma membership ativa por identidade está protegida
       por constraint/índice apropriado.
-- [ ] Tabelas tenant-scoped habilitam RLS e têm policies explícitas de
+- [x] Tabelas tenant-scoped habilitam RLS e têm policies explícitas de
       `SELECT`, `INSERT`, `UPDATE` e `DELETE`, usando `USING` e `WITH CHECK`.
-- [ ] Ausência de `app.tenant_id` nega acesso à tabela tenant-scoped.
-- [ ] O runtime não recebe privilégios de bypass; grants são mínimos.
-- [ ] O script de reversão é revisado e não é tratado como `flyway undo`.
+- [x] Ausência de `app.tenant_id` nega acesso à tabela tenant-scoped por
+      comparação nula na policy.
+- [x] O runtime não recebe privilégios de bypass; grants são mínimos.
+- [x] O script de reversão é revisado e não é tratado como `flyway undo`.
 - [ ] Testes de migration e RLS incluídos nesta tarefa passam em PostgreSQL
       real.
+
+**Validação da implementação:** `mvnw.cmd -DskipTests package` passou com
+Java 21 e os dois scripts foram confirmados dentro do Jar. A validação em
+PostgreSQL real não foi executada: `psql`/`pg_ctl` não estão instalados e o
+daemon Docker não está ativo. Não foi aplicado DDL diretamente no Supabase;
+isso permanece responsabilidade do Flyway na T4.
 
 **Tests:** integration
 **Gate:** full
