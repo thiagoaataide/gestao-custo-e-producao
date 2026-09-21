@@ -105,6 +105,7 @@ Estes são os context paths oficiais que devem ser usados como ponto de partida:
 | Spring Boot | https://docs.spring.io/spring-boot/ |
 | Spring Framework | https://docs.spring.io/spring-framework/reference/ |
 | Spring Security | https://docs.spring.io/spring-security/reference/ |
+| Nimbus JOSE + JWT | https://connect2id.com/products/nimbus-jose-jwt |
 | Spring Data JPA | https://docs.spring.io/spring-data/jpa/reference/ |
 | Spring Cloud | https://spring.io/projects/spring-cloud |
 | Hibernate ORM | https://docs.hibernate.org/orm/ |
@@ -211,6 +212,7 @@ atualize esta tabela se houver divergência.
 | AssertJ | `org.assertj:assertj-core` | 3.27.7 | transitivo do starter de teste |
 | Hamcrest | `org.hamcrest:hamcrest-*` | 3.0 | transitivo do starter de teste |
 | Spring Security | `org.springframework.security:spring-security-*` | 7.1.1 | transitivo dos starters de Security |
+| Nimbus JOSE + JWT | `com.nimbusds:nimbus-jose-jwt` | 10.9.1 | transitivo do Resource Server; assinatura ES256/JWKS |
 | Spring Data JPA | `org.springframework.data:spring-data-jpa` | 4.1.1 | transitivo do starter de JPA |
 | Hibernate ORM | `org.hibernate.orm:hibernate-core` | 7.4.5.Final | transitivo do starter de JPA |
 | Hibernate Validator | `org.hibernate.validator:hibernate-validator` | 9.1.3.Final | transitivo do baseline de validação |
@@ -229,7 +231,7 @@ quando forem implementadas.
 
 | Componente | Decisão atual | Regra para definir a versão |
 | --- | --- | --- |
-| Supabase Auth | autenticação gerenciada | registrar versão do cliente/integração escolhido |
+| Supabase Auth | Resource Server JWT no Spring Security; sem SDK de cliente no backend | T5; integração baseada no protocolo JWT/JWKS do projeto |
 | Supabase Storage | armazenamento de objetos | registrar versão do cliente/SDK escolhido |
 | Spring Cloud | não é necessário no esqueleto atual | só adicionar se uma necessidade da V0 exigir |
 | Implementação JTA | não definida para a V0 | não adicionar sem requisito de transação distribuída |
@@ -302,6 +304,12 @@ de produção no `application.yaml`:
   o datasource da aplicação;
 - `MIGRATION_DB_USER` e `MIGRATION_DB_PASSWORD`: credencial separada usada pelo
   Flyway no startup.
+- `SUPABASE_JWT_ISSUER` e `SUPABASE_JWT_JWK_SET_URI`: issuer e endpoint JWKS
+  do projeto Supabase configurados para o Resource Server;
+- `SUPABASE_PUBLISHABLE_KEY`: chave publicável enviada somente no header
+  `apikey` da leitura do JWKS protegido;
+- `SUPABASE_JWT_AUDIENCE`: audience esperada dos access tokens, normalmente
+  `authenticated`.
 
 O `spring.flyway.url` usa o mesmo `DB_URL`, mas mantém usuário e senha
 separados. O perfil `test` possui defaults locais controlados para executar o

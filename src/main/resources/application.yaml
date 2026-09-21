@@ -21,3 +21,9 @@ spring:
   sql:
     init:
       mode: never
+supabase:
+  jwt:
+    issuer: ${SUPABASE_JWT_ISSUER}
+    jwk-set-uri: ${SUPABASE_JWT_JWK_SET_URI}
+    publishable-key: ${SUPABASE_PUBLISHABLE_KEY}
+    audience: ${SUPABASE_JWT_AUDIENCE:authenticated}

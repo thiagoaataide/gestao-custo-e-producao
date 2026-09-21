@@ -17,3 +17,9 @@ spring:
   sql:
     init:
       mode: never
+supabase:
+  jwt:
+    issuer: https://test.supabase.local/auth/v1
+    jwk-set-uri: https://test.supabase.local/auth/v1/.well-known/jwks.json
+    publishable-key: test-publishable-key
+    audience: authenticated

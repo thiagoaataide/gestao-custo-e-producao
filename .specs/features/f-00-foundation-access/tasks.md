@@ -8,8 +8,8 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** Execução em andamento — T1, T2, T3 e T4 concluídas; próxima
-tarefa operacional: T5
+**Status:** Execução em andamento — T1, T2, T3, T4 e T5 concluídas; próxima
+tarefa operacional: T6
 
 ## Test Coverage Matrix
 
@@ -281,6 +281,14 @@ há segredo de implantação versionado.
 
 ### T5: Integrar o Resource Server JWT do Supabase
 
+**Status:** Concluída em 21 de setembro de 2026. O Resource Server valida
+issuer, assinatura ES256 via JWKS do Supabase, expiração e audience configurável;
+o cliente JWKS envia a chave publicável somente no header `apikey`. O conversor
+produz um `ExternalSubject` com `provider=SUPABASE` e `sub`, sem converter
+claims editáveis em tenant ou autoridade. Os testes unitários cobrem identidade
+válida, `sub` ausente ou em branco, issuer incorreto, expiração, audience
+incorreta, assinatura inválida e header do JWKS.
+
 **What:** Configurar o Spring Security Resource Server e o conversor que
 transforma o JWT validado em uma identidade externa mínima, sem usar claims de
 tenant ou `user_metadata` para autorização.
@@ -297,12 +305,12 @@ tenant ou `user_metadata` para autorização.
 
 **Done when:**
 
-- [ ] Issuer, assinatura, expiração e audience quando aplicável são validados.
-- [ ] O claim `sub` é convertido para `ExternalSubject`.
-- [ ] Token inválido, expirado, sem `sub` utilizável ou com issuer incorreto é
+- [x] Issuer, assinatura, expiração e audience quando aplicável são validados.
+- [x] O claim `sub` é convertido para `ExternalSubject`.
+- [x] Token inválido, expirado, sem `sub` utilizável ou com issuer incorreto é
       rejeitado antes do domínio.
-- [ ] Claims editáveis pelo usuário não definem tenant ou permissão.
-- [ ] Testes unitários cobrem todos os cenários de token definidos na spec.
+- [x] Claims editáveis pelo usuário não definem tenant ou permissão.
+- [x] Testes unitários cobrem todos os cenários de token definidos na spec.
 
 **Tests:** unit
 **Gate:** quick
