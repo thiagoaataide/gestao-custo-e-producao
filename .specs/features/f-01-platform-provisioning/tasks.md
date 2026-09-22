@@ -190,10 +190,10 @@ auditoria de plataforma.
 
 **Done when:**
 
-- [ ] O evento registra ator, ação, alvo, resultado e timestamp.
-- [ ] Token, segredo e dados operacionais não entram no evento.
-- [ ] Query paginada filtra apenas metadados administrativos.
-- [ ] Testes de persistência cobrem sucesso, negação e consulta.
+- [x] O evento registra ator, ação, alvo, resultado e timestamp.
+- [x] Token, segredo e dados operacionais não entram no evento.
+- [x] Query paginada filtra apenas metadados administrativos.
+- [x] Testes de persistência cobrem sucesso, negação e consulta.
 
 **Tests:** integration — `AdministrativeAuditPersistenceIntegrationTests`.
 **Gate:** full.

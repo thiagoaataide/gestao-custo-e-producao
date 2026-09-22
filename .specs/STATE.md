@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T4 concluída; T5 pronta para execução
+- **Phase / Task**: Fase 1 — T5 concluída; T6 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -387,14 +387,20 @@
   isolated full gate passes with 62 tests, no failures, errors or skips, and
   the JAR/frontend build completes. T4 adds the invitation domain state,
   normalized e-mail and token-digest value objects, JPA persistence and the
-  pending-invitation queries; the isolated full gate passes with 67 tests, no
-  failures, errors or skips, and the JAR/frontend build completes.
-- **Next step**: Execute T5 atomically: persist administrative audit events.
+ pending-invitation queries; the isolated full gate passes with 67 tests, no
+ failures, errors or skips, and the JAR/frontend build completes.
+ T5 adds the administrative audit domain vocabulary, controlled metadata
+ boundary, JPA JSONB persistence, dynamic filtered pagination, and
+ integration evidence for successful, denied and administrative-only
+ queries; the isolated full gate passes with 70 tests, no failures, errors or
+ skips, and the JAR/frontend build completes.
+- **Next step**: Execute T6 atomically: evolve tenant and membership
+  persistence.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T4 invitation persistence, tests, task status and this
-  handoff update
+- **Uncommitted files**: T5 administrative audit persistence, tests, task status
+  and this handoff update
 - **Branch**: `main`
