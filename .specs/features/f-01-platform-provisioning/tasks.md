@@ -120,11 +120,11 @@ auditoria, nome/metadados de tenant e constraints dos estados da F-01.
 
 **Done when:**
 
-- [ ] A migration parte do schema V1 e cria as tabelas/constraints necessárias.
-- [ ] Há constraint para um owner ativo e um convite pendente por tenant/e-mail.
-- [ ] Estados, timestamps, foreign keys e índices refletem o spec.
-- [ ] A migration é transacional quando suportado e a reversão é revisada.
-- [ ] Testes contra PostgreSQL real cobrem banco vazio, estados, constraints e
+- [x] A migration parte do schema V1 e cria as tabelas/constraints necessárias.
+- [x] Há constraint para um owner ativo e um convite pendente por tenant/e-mail.
+- [x] Estados, timestamps, foreign keys e índices refletem o spec.
+- [x] A migration é transacional quando suportado e a reversão é revisada.
+- [x] Testes contra PostgreSQL real cobrem banco vazio, estados, constraints e
       grants sem conceder RLS bypass ao runtime.
 
 **Tests:** integration — migration e constraints no PostgreSQL real.

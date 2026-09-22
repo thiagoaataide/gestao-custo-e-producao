@@ -81,6 +81,7 @@ class FoundationEndToEndIntegrationTests {
             flyway.migrate();
             assertThat(appliedMigrationCount(databaseUrl)).isEqualTo(expectedMigrationCount);
             assertThat(hasRelation(databaseUrl, "platform.tenant")).isTrue();
+            assertThat(hasRelation(databaseUrl, "platform.platform_role_assignment")).isTrue();
         } finally {
             dropDatabase(databaseName);
         }

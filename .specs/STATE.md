@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T1 concluída; T2 pronta para execução
+- **Phase / Task**: Fase 1 — T2 concluída; T3 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -376,13 +376,18 @@
   approach for F-01. T1 adds the separate platform-role domain model,
   owner/admin hierarchy policy, repository port without a tenant parameter, and
   four unit tests; the quick gate passes with 52 tests, no failures, errors or
-  skips.
-- **Next step**: Execute T2 atomically: create and review the platform
-  provisioning migration and its reversal script.
-- **Blockers**: none. T1 is implemented and committed; no F-01 DDL has been
-  added. No DDL was applied
+  skips. T2 adds the platform provisioning migration and reviewed reversal
+  script for tenant metadata, platform roles, invitations, audit events,
+  constraints, indexes and least-privilege grants; the isolated full gate
+  passes with 58 tests, no failures, errors or skips, and the JAR/frontend
+  build completes.
+- **Next step**: Execute T3 atomically: persist platform role assignments
+  through JPA and the platform-role repository adapter.
+- **Blockers**: none. T1 and T2 are implemented and committed. The shared
+  local test database predates V2 and remains untouched; future full gates
+  should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T1 implementation, tests, task status and this handoff
-  update
+- **Uncommitted files**: T2 migration, reversal, tests, task status and this
+  handoff update
 - **Branch**: `main`
