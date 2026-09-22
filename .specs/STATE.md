@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T6 concluída; T7 pronta para execução
+- **Phase / Task**: Fase 1 — T7 concluída; T8 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -399,13 +399,21 @@
   queries, and enforcement of the one-active-membership constraint; the
   isolated full gate passes with 74 tests, no failures, errors or skips, and
   the JAR/frontend build completes.
-- **Next step**: Execute T7 atomically: create the authenticated Supabase
-  profile port and adapter.
+  T7 adds the provider-neutral authenticated identity port, validated-token
+  context and Supabase Auth `/user` adapter. The adapter sends the publishable
+  `apikey` and validated bearer token, accepts only a matching subject with a
+  non-blank `email_confirmed_at`, ignores `user_metadata`, applies two-second
+  HTTP timeouts to the shared Supabase client and fails closed for HTTP errors,
+  malformed profiles and timeouts. Its seven contract/unit tests and the full
+  gate pass with 81 tests, zero failures/errors/skips, against isolated
+  PostgreSQL 17.11; the production constructor is explicitly selected for
+  Spring injection while the test-only constructor remains package-private.
+- **Next step**: Execute T8 atomically: implement platform bootstrap and
+  platform authorization using the T7 authenticated identity boundary.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T6 tenant/membership persistence, tests, task status
-  and this handoff update
+- **Uncommitted files**: none
 - **Branch**: `main`

@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** Rascunho — aguardando aprovação do design e das tasks
+**Status:** Em execução — tarefas aprovadas e implementadas sequencialmente
 
 ## Test Coverage Matrix
 
@@ -225,6 +225,11 @@ membership cases no PostgreSQL real.
 
 ### T7: Criar porta e adapter de perfil autenticado Supabase
 
+**Status:** Concluída em 22 de setembro de 2026. A porta provider-neutral,
+o contexto de token validado e o adapter HTTP do Supabase foram implementados
+com teste contract/unit; o contexto Spring e o gate completo foram validados
+contra PostgreSQL isolado, com commit atômico.
+
 **What:** Criar a fronteira que obtém subject, e-mail e confirmação do usuário
 autenticado para aceitação segura, sem usar `user_metadata`.
 
@@ -237,13 +242,13 @@ autenticado para aceitação segura, sem usar `user_metadata`.
 
 **Done when:**
 
-- [ ] O caso de uso recebe somente identidade autenticada já validada.
-- [ ] O adapter consulta a fonte oficial de perfil por HTTPS e usa apenas
+- [x] O caso de uso recebe somente identidade autenticada já validada.
+- [x] O adapter consulta a fonte oficial de perfil por HTTPS e usa apenas
       campos confiáveis para e-mail/verificação.
-- [ ] Chaves administrativas, se necessárias, ficam somente no backend e no
+- [x] Chaves administrativas, se necessárias, ficam somente no backend e no
       ambiente; nenhuma vai para a UI.
-- [ ] Falhas, timeout, e-mail ausente e e-mail não confirmado falham fechado.
-- [ ] Testes unitários/contract cobrem headers, resposta válida e falhas HTTP.
+- [x] Falhas, timeout, e-mail ausente e e-mail não confirmado falham fechado.
+- [x] Testes unitários/contract cobrem headers, resposta válida e falhas HTTP.
 
 **Tests:** unit/contract — `SupabaseAuthenticatedIdentityAdapterTests`.
 **Gate:** quick; full se houver contexto Spring.

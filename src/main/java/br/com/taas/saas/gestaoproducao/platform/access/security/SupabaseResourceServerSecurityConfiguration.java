@@ -1,5 +1,7 @@
 package br.com.taas.saas.gestaoproducao.platform.access.security;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +23,10 @@ public class SupabaseResourceServerSecurityConfiguration {
 
     @Bean
     RestOperations supabaseJwkSetRestOperations(SupabaseJwtProperties properties) {
-        RestTemplate restTemplate = new RestTemplate(new SimpleClientHttpRequestFactory());
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(2));
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
         ClientHttpRequestInterceptor apiKeyInterceptor =
                 new SupabaseJwkSetApiKeyInterceptor(properties.publishableKey());
         restTemplate.getInterceptors().add(apiKeyInterceptor);
