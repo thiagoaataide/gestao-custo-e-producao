@@ -12,5 +12,13 @@ public interface PlatformRoleRepository {
 
     Optional<PlatformRoleAssignment> findActiveOwner();
 
+    default Optional<PlatformRoleAssignment> findById(UUID assignmentId) {
+        throw new UnsupportedOperationException("platform role persistence is not available");
+    }
+
+    default List<PlatformRoleAssignment> findAll() {
+        throw new UnsupportedOperationException("platform role persistence is not available");
+    }
+
     PlatformRoleAssignment save(PlatformRoleAssignment assignment);
 }

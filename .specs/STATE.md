@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T11 concluída; T12 pronta para execução
+- **Phase / Task**: Fase 1 — T12 concluída; T13 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -437,13 +437,17 @@
      and local rollback across identity, membership, invitation and audit.
      Unit and PostgreSQL integration tests pass with 10 T11-specific tests,
      including concurrent deduplication and audit-failure rollback.
- - **Next step**: Execute T12 atomically: implement administration of
-   memberships and platform administrators.
+     T12 adds owner-only platform-admin grant/revocation, platform-access
+     membership revocation, administrative metadata queries, and transaction-
+     bound audit rollback for role and membership mutations. Unit tests pass
+     with 5 tests and the PostgreSQL integration suite passes with 6 tests.
+ - **Next step**: Execute T13 atomically: integrate optional invitation
+   delivery after commit.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
- - **Uncommitted files**: T11 implementation and documentation changes pending
-   the atomic commit
+- **Working tree**: T12 implementation and documentation are included in the
+  current atomic commit.
 - **Branch**: `main`

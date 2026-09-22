@@ -357,6 +357,10 @@ e `src/main/java/**/platform/identity/application/`.
 
 ### T12: Implementar administração de memberships e administradores
 
+**Status:** Concluída em 22 de setembro de 2026. O serviço administrativo,
+as consultas de metadados e os testes unitários/PostgreSQL foram implementados
+e validados no gate completo.
+
 **What:** Implementar concessão/revogação de `PLATFORM_ADMIN`, revogação de
 membership `TENANT_USER` e consultas administrativas sem dados operacionais.
 
@@ -369,13 +373,13 @@ e `src/main/java/**/platform/administration/application/role/`.
 
 **Done when:**
 
-- [ ] Somente owner concede ou revoga `PLATFORM_ADMIN`.
-- [ ] Owner não pode criar segundo owner nem revogar a própria condição de
-      owner na UI.
-- [ ] Plataforma pode revogar membership sem apagar histórico.
-- [ ] Consultas retornam status, papel e metadados mínimos, sem operations.
-- [ ] Cada mutação gera auditoria e é transacional.
-- [ ] Testes cobrem hierarquia, auto-revogação, membership e consultas.
+- [x] Somente owner concede ou revoga `PLATFORM_ADMIN`.
+- [x] Owner não pode criar segundo owner nem revogar a própria condição de
+       owner na UI.
+- [x] Plataforma pode revogar membership sem apagar histórico.
+- [x] Consultas retornam status, papel e metadados mínimos, sem operations.
+- [x] Cada mutação gera auditoria e é transacional.
+- [x] Testes cobrem hierarquia, auto-revogação, membership e consultas.
 
 **Tests:** unit + integration — `PlatformMembershipAdminServiceTests` e
 `PlatformMembershipAdminIntegrationTests`.

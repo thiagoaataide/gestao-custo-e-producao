@@ -46,6 +46,18 @@ public class JpaPlatformRoleRepository implements PlatformRoleRepository {
     }
 
     @Override
+    public Optional<PlatformRoleAssignment> findById(UUID assignmentId) {
+        return repository.findById(assignmentId).map(entity -> entity.toDomain());
+    }
+
+    @Override
+    public List<PlatformRoleAssignment> findAll() {
+        return repository.findAll().stream()
+                .map(entity -> entity.toDomain())
+                .toList();
+    }
+
+    @Override
     public PlatformRoleAssignment save(PlatformRoleAssignment assignment) {
         try {
             return repository

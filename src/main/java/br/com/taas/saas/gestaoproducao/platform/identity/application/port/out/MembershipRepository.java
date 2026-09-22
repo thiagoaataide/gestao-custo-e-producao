@@ -16,6 +16,10 @@ public interface MembershipRepository {
         throw new UnsupportedOperationException("membership persistence is not available");
     }
 
+    default List<Membership> findAll() {
+        throw new UnsupportedOperationException("membership persistence is not available");
+    }
+
     List<Membership> findActiveByIdentityId(UUID identityId);
 
     default Membership save(Membership membership) {

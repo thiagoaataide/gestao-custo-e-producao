@@ -43,6 +43,13 @@ public class JpaMembershipRepository implements MembershipRepository {
     }
 
     @Override
+    public List<Membership> findAll() {
+        return repository.findAll().stream()
+                .map(entity -> entity.toDomain())
+                .toList();
+    }
+
+    @Override
     public Membership save(Membership membership) {
         return repository
                 .saveAndFlush(MembershipJpaEntity.fromDomain(membership))
