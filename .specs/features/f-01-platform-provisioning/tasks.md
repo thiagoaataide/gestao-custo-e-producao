@@ -460,11 +460,11 @@ filtrando por ação, alvo, ator, resultado e período quando aplicável.
 
 **Done when:**
 
-- [ ] Owner/admin consultam eventos sem acessar operations.
-- [ ] Tenant user e usuário não provisionado não acessam a auditoria.
-- [ ] A UI não mostra token, segredo ou conteúdo operacional.
-- [ ] Consulta vazia, filtro inválido e falha de banco são tratados.
-- [ ] Testes de integração cobrem autorização, filtro e conteúdo seguro.
+- [x] Owner/admin consultam eventos sem acessar operations.
+- [x] Tenant user e usuário não provisionado não acessam a auditoria.
+- [x] A UI não mostra token, segredo ou conteúdo operacional.
+- [x] Consulta vazia, filtro inválido e falha de banco são tratados.
+- [x] Testes de integração cobrem autorização, filtro e conteúdo seguro.
 
 **Tests:** integration/smoke — `AdministrativeAuditViewIntegrationTests`.
 **Gate:** full.
