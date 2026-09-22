@@ -311,8 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Design/Tasks — desenho e decomposição da F-01 aguardando
-  aprovação
+- **Phase / Task**: Fase 1 — T1 concluída; T2 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -374,11 +373,16 @@
   cover bootstrap, separate platform identities, owner/admin roles, tenant
   lifecycle, invitation channels and expiry, one active membership per user,
   and administrative audit. The user confirmed the domain-first architecture
-  approach for F-01.
-- **Next step**: Approve `.specs/features/f-01-platform-provisioning/design.md`
-  and `tasks.md`; then execute T1 atomically.
-- **Blockers**: none. No F-01 code or DDL has been added. No DDL was applied
+  approach for F-01. T1 adds the separate platform-role domain model,
+  owner/admin hierarchy policy, repository port without a tenant parameter, and
+  four unit tests; the quick gate passes with 52 tests, no failures, errors or
+  skips.
+- **Next step**: Execute T2 atomically: create and review the platform
+  provisioning migration and its reversal script.
+- **Blockers**: none. T1 is implemented and committed; no F-01 DDL has been
+  added. No DDL was applied
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: F-01 design, tasks and this handoff update
+- **Uncommitted files**: T1 implementation, tests, task status and this handoff
+  update
 - **Branch**: `main`

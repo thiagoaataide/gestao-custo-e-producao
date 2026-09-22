@@ -97,10 +97,10 @@ porta de saída que representa autorização de plataforma sem `tenant_id`.
 
 **Done when:**
 
-- [ ] `PLATFORM_OWNER` e `PLATFORM_ADMIN` são papéis distintos de membership.
-- [ ] O modelo impede papel vazio/desconhecido e expõe as regras de owner.
-- [ ] A porta consulta owner/admin por identidade sem aceitar tenant do cliente.
-- [ ] O teste unitário cobre owner único, papel válido e revogação.
+- [x] `PLATFORM_OWNER` e `PLATFORM_ADMIN` são papéis distintos de membership.
+- [x] O modelo impede papel vazio/desconhecido e expõe as regras de owner.
+- [x] A porta consulta owner/admin por identidade sem aceitar tenant do cliente.
+- [x] O teste unitário cobre owner único, papel válido e revogação.
 
 **Tests:** unit — regras de papel, unicidade sem persistência e decisão de
 hierarquia.
