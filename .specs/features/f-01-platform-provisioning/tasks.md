@@ -342,13 +342,13 @@ e `src/main/java/**/platform/identity/application/`.
 
 **Done when:**
 
-- [ ] Aceitação exige token válido, identidade autenticada e e-mail verificado
+- [x] Aceitação exige token válido, identidade autenticada e e-mail verificado
       correspondente.
-- [ ] Convite aceito torna-se inutilizável e ativa `TENANT_USER`.
-- [ ] Segundo tenant é bloqueado sem alterar a membership atual.
-- [ ] Associação manual não ativa sem confirmação do usuário.
-- [ ] Falha em qualquer etapa reverte membership, convite e auditoria.
-- [ ] Testes cobrem sucesso, divergência, expiração, tenant fechado, segundo
+- [x] Convite aceito torna-se inutilizável e ativa `TENANT_USER`.
+- [x] Segundo tenant é bloqueado sem alterar a membership atual.
+- [x] Associação manual não ativa sem confirmação do usuário.
+- [x] Falha em qualquer etapa reverte membership, convite e auditoria.
+- [x] Testes cobrem sucesso, divergência, expiração, tenant fechado, segundo
       tenant e concorrência/deduplicação.
 
 **Tests:** unit + integration — `InvitationAcceptanceServiceTests` e

@@ -44,6 +44,14 @@ public class JpaInvitationRepository implements InvitationRepository {
     }
 
     @Override
+    public Optional<Invitation> findPendingByTokenForUpdate(String token, Instant now) {
+        String tokenDigest = InvitationTokenDigest.fromToken(token).value();
+        return repository
+                .findPendingByTokenForUpdate(tokenDigest, InvitationStatus.PENDING, now)
+                .map(entity -> entity.toDomain());
+    }
+
+    @Override
     public Optional<Invitation> findPendingByTenantAndEmail(
             UUID tenantId,
             String email,

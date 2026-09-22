@@ -308,6 +308,10 @@ Constraint de negócio: um convite `PENDING` por `(tenant_id, email_normalized)`
   fica dentro da transação que grava o estado principal.
 - A aceitação do convite valida expiração, tenant, e-mail verificado,
   membership atual e estado do tenant antes de alterar o vínculo.
+- A aceitação serializa concorrentes pelo convite pendente e mantém a
+  constraint de uma membership ativa por identidade como barreira final. A
+  alteração de identidade, membership, convite e auditoria ocorre na mesma
+  transação local.
 - O desenho não adiciona JTA, mensageria, outbox, banco de leitura ou
   microserviço.
 

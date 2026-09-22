@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T7 concluída; T8 pronta para execução
+- **Phase / Task**: Fase 1 — T11 concluída; T12 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -427,16 +427,23 @@
     invitation command service for creation, explicit resend, revocation and
     expiry; it normalizes e-mail, issues 24-hour opaque links with only a
     SHA-256 digest persisted, rejects unavailable tenants and duplicates,
-    records administrative audit in the local transaction, and preserves
-    platform authorization. The isolated full gate passes with 114 tests,
-    zero failures/errors/skips, against PostgreSQL 17.11; the JAR/frontend
-    build completes.
- - **Next step**: Execute T11 atomically: implement authenticated invitation
-   acceptance and membership activation.
+     records administrative audit in the local transaction, and preserves
+     platform authorization. The isolated full gate passes with 114 tests,
+     zero failures/errors/skips, against PostgreSQL 17.11; the JAR/frontend
+     build completes. T11 adds authenticated invitation acceptance with a
+     provider-neutral verified profile, one-time token consumption, active
+     `TENANT_USER` membership creation, tenant availability and one-tenant
+     enforcement, manual-association confirmation, invitation row locking,
+     and local rollback across identity, membership, invitation and audit.
+     Unit and PostgreSQL integration tests pass with 10 T11-specific tests,
+     including concurrent deduplication and audit-failure rollback.
+ - **Next step**: Execute T12 atomically: implement administration of
+   memberships and platform administrators.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none after the T10 atomic commit
+ - **Uncommitted files**: T11 implementation and documentation changes pending
+   the atomic commit
 - **Branch**: `main`
