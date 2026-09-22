@@ -144,11 +144,11 @@ de `PlatformRoleRepository`.
 
 **Done when:**
 
-- [ ] O adapter persiste e consulta owner/admin por identidade interna.
-- [ ] A constraint de owner único é respeitada e traduzida para erro de
+- [x] O adapter persiste e consulta owner/admin por identidade interna.
+- [x] A constraint de owner único é respeitada e traduzida para erro de
       domínio previsível.
-- [ ] Revogação preserva o histórico e não altera membership de tenant.
-- [ ] Testes de integração cobrem sucesso, duplicidade e revogação.
+- [x] Revogação preserva o histórico e não altera membership de tenant.
+- [x] Testes de integração cobrem sucesso, duplicidade e revogação.
 
 **Tests:** integration — `PlatformRolePersistenceIntegrationTests`.
 **Gate:** full.

@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T2 concluída; T3 pronta para execução
+- **Phase / Task**: Fase 1 — T3 concluída; T4 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -380,14 +380,19 @@
   script for tenant metadata, platform roles, invitations, audit events,
   constraints, indexes and least-privilege grants; the isolated full gate
   passes with 58 tests, no failures, errors or skips, and the JAR/frontend
-  build completes.
-- **Next step**: Execute T3 atomically: persist platform role assignments
-  through JPA and the platform-role repository adapter.
+  build completes. T3 adds the JPA entity, Spring Data repository and platform-
+  role adapter for active owner/admin assignments, translates the database
+  uniqueness constraints into a predictable application conflict, and proves
+  revocation/history preservation without changing tenant membership; the
+  isolated full gate passes with 62 tests, no failures, errors or skips, and
+  the JAR/frontend build completes.
+- **Next step**: Execute T4 atomically: persist invitations and their lifecycle
+  states.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T2 migration, reversal, tests, task status and this
+- **Uncommitted files**: T3 persistence adapter, tests, task status and this
   handoff update
 - **Branch**: `main`
