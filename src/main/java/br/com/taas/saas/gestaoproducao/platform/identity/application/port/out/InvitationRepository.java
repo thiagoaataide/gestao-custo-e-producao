@@ -1,12 +1,17 @@
 package br.com.taas.saas.gestaoproducao.platform.identity.application.port.out;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import br.com.taas.saas.gestaoproducao.platform.identity.model.Invitation;
 
 public interface InvitationRepository {
+
+    default List<Invitation> findAll() {
+        return List.of();
+    }
 
     Optional<Invitation> findById(UUID invitationId);
 

@@ -85,6 +85,16 @@ class AccessShellViewIntegrationTests {
         assertThat(textOf(view)).doesNotContain("TENANT_A", "tenant_id");
     }
 
+    @Test
+    void exposesPlatformAdministrationOnlyForPlatformAccess() {
+        AccessShellView view = new AccessShellView(AccessShellState.PLATFORM_ACCESS);
+
+        assertThat(view.getChildren().filter(Anchor.class::isInstance))
+                .extracting(component -> ((Anchor) component).getHref())
+                .containsExactly("platform");
+        assertThat(textOf(view)).contains("Abrir administração da plataforma");
+    }
+
     private static SupabaseAuthenticationToken authenticationFor(ExternalSubject subject) {
         Jwt jwt = Jwt.withTokenValue("test-token")
                 .header("alg", "ES256")

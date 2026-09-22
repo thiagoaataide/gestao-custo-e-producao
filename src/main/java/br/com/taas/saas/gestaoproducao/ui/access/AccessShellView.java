@@ -73,7 +73,8 @@ public final class AccessShellView extends VerticalLayout {
                 entry.setTooltipText("A área operacional será disponibilizada pelas próximas features.");
                 yield entry;
             }
-            case NOT_PROVISIONED, AMBIGUOUS_MEMBERSHIP, PLATFORM_ACCESS -> new Paragraph("");
+            case NOT_PROVISIONED, AMBIGUOUS_MEMBERSHIP -> new Paragraph("");
+            case PLATFORM_ACCESS -> new Anchor("platform", "Abrir administração da plataforma");
         };
     }
 }

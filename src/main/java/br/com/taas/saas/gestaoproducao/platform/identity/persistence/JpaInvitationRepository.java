@@ -1,6 +1,7 @@
 package br.com.taas.saas.gestaoproducao.platform.identity.persistence;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +31,13 @@ public class JpaInvitationRepository implements InvitationRepository {
     @Override
     public Optional<Invitation> findById(UUID invitationId) {
         return repository.findById(invitationId).map(entity -> entity.toDomain());
+    }
+
+    @Override
+    public List<Invitation> findAll() {
+        return repository.findAll().stream()
+                .map(entity -> entity.toDomain())
+                .toList();
     }
 
     @Override

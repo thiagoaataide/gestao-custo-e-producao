@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T12 concluída; T13 pronta para execução
+- **Phase / Task**: Fase 3 — T14 concluída; T15 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -445,12 +445,19 @@
      event listener, disabled-by-default configuration, safe delivery-failure
      audit, and tests proving that delivery never runs before commit. The full
      gate passes with 141 tests, including Vaadin build and JAR packaging.
-- **Next step**: Execute T14 atomically: create the Vaadin UI for tenants,
-  invitations, and memberships.
+-     T14 adds the Vaadin platform administration route, safe administrative
+     queries, tenant lifecycle controls, invitation create/resend/revoke with
+     copyable links, membership and platform-role views/actions, and role-aware
+     blocking for tenant users. The clean isolated full gate passes with 145
+     tests, zero failures/errors/skips, including frontend build and JAR
+     packaging.
+- **Next step**: Execute T15 atomically: create the Vaadin administrative
+  audit UI.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Working tree**: clean after the latest atomic task commit.
+- **Working tree**: changes for T14 are ready for the atomic commit after the
+  full gate; no unrelated changes were detected.
 - **Branch**: `main`

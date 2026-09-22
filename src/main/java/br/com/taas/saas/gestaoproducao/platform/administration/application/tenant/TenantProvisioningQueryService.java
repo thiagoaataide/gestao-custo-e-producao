@@ -1,5 +1,7 @@
 package br.com.taas.saas.gestaoproducao.platform.administration.application.tenant;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -35,5 +37,15 @@ public class TenantProvisioningQueryService {
 
         return tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new TenantNotFoundException(tenantId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Tenant> listTenants(UUID actorIdentityId) {
+        Objects.requireNonNull(actorIdentityId, "actorIdentityId must not be null");
+        platformAuthorizationService.requirePlatformAccess(actorIdentityId);
+
+        return tenantRepository.findAll().stream()
+                .sorted(Comparator.comparing(Tenant::createdAt).thenComparing(Tenant::id))
+                .toList();
     }
 }

@@ -1,5 +1,6 @@
 package br.com.taas.saas.gestaoproducao.platform.identity.persistence;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +23,13 @@ public class JpaTenantRepository implements TenantRepository {
     @Override
     public Optional<Tenant> findById(UUID tenantId) {
         return repository.findById(tenantId).map(entity -> entity.toDomain());
+    }
+
+    @Override
+    public List<Tenant> findAll() {
+        return repository.findAll().stream()
+                .map(entity -> entity.toDomain())
+                .toList();
     }
 
     @Override

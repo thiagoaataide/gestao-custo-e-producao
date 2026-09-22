@@ -417,6 +417,12 @@ e-mail ao evento pós-commit, mantendo o link manual como caminho garantido.
 
 ### T14: Criar UI de tenants, convites e memberships
 
+**Status:** Concluída em 22 de setembro de 2026. A rota Vaadin de administração
+da plataforma, as consultas administrativas, os comandos de tenants, convites,
+memberships e papéis, o bloqueio por identidade/papel e os testes de smoke foram
+implementados. O gate completo passou com 145 testes, sem falhas, erros ou skips,
+incluindo build frontend e empacotamento do JAR.
+
 **What:** Criar as telas Vaadin do contexto Platform Administration para listar
 e criar tenants, executar ciclo de vida, criar/reenviar/revogar convites e
 consultar memberships.
@@ -429,14 +435,14 @@ consultar memberships.
 
 **Done when:**
 
-- [ ] Apenas owner/admin acessa as telas de plataforma.
-- [ ] A UI mostra tenant sem user, estados e ações permitidas por papel.
-- [ ] Link de convite pode ser copiado; falha de e-mail é comunicada sem
+- [x] Apenas owner/admin acessa as telas de plataforma.
+- [x] A UI mostra tenant sem user, estados e ações permitidas por papel.
+- [x] Link de convite pode ser copiado; falha de e-mail é comunicada sem
       perder o convite.
-- [ ] Estados expirado, revogado, segundo tenant e tenant fechado mostram
+- [x] Estados expirado, revogado, segundo tenant e tenant fechado mostram
       mensagens seguras.
-- [ ] Tenant user não vê menu nem comandos de plataforma.
-- [ ] Testes de integração cobrem owner/admin, bloqueios e fluxos principais.
+- [x] Tenant user não vê menu nem comandos de plataforma.
+- [x] Testes de integração cobrem owner/admin, bloqueios e fluxos principais.
 
 **Tests:** integration/smoke — `PlatformAdministrationViewIntegrationTests`.
 **Gate:** full.
