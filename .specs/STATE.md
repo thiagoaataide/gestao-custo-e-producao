@@ -407,8 +407,8 @@
   malformed profiles and timeouts. Its seven contract/unit tests and the full
   gate pass with 81 tests, zero failures/errors/skips, against isolated
   PostgreSQL 17.11; the production constructor is explicitly selected for
-   Spring injection while the test-only constructor remains package-private.
-   T8 adds the controlled, idempotent first-owner bootstrap, persists the
+    Spring injection while the test-only constructor remains package-private.
+    T8 adds the controlled, idempotent first-owner bootstrap, persists the
    external identity when necessary, records the successful bootstrap audit,
    resolves `PLATFORM_OWNER`/`PLATFORM_ADMIN` from the separate platform-role
    assignments, and removes the legacy membership-role shortcut from access
@@ -416,13 +416,20 @@
    revoked/missing roles, unauthorized bootstrap, blocked identity, existing
    owner and repeated bootstrap. The full isolated gate passes with 89 tests,
    zero failures/errors/skips, against PostgreSQL 17.11; migrations and the
-   Spring context load successfully.
-- **Next step**: Execute T9 atomically: implement tenant commands and tenant
-   lifecycle using the T8 platform authorization service.
+    Spring context load successfully. T9 adds command/query services for tenant
+    administration, lets owner/admin create an active tenant without a
+    membership, restricts lifecycle transitions to the owner, preserves
+    memberships and data on suspension/closure, and records SUCCESS, DENIED or
+    FAILED administrative audit events. Successful mutations and audit writes
+    share the local transaction; the integration test proves audit failure
+    rolls back tenant creation. The clean isolated full gate passes with 100
+    tests, zero failures/errors/skips, against PostgreSQL 17.11.
+ - **Next step**: Execute T10 atomically: implement invitation commands using
+   the T8 platform authorization service and the T9 tenant lifecycle.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T8 changes pending atomic commit
+ - **Uncommitted files**: T9 changes pending atomic commit
 - **Branch**: `main`

@@ -293,12 +293,12 @@ fechamento terminal de tenant em uma transação local com auditoria.
 
 **Done when:**
 
-- [ ] Owner/admin cria tenant ativo sem user obrigatório.
-- [ ] Somente owner executa suspensão, reativação e fechamento.
-- [ ] Fechamento é terminal e não apaga dados.
-- [ ] Cada mutação grava auditoria na mesma transação.
-- [ ] Falha em auditoria ou persistência faz rollback completo.
-- [ ] Testes unitários e de integração cobrem sucesso, negação e rollback.
+- [x] Owner/admin cria tenant ativo sem user obrigatório.
+- [x] Somente owner executa suspensão, reativação e fechamento.
+- [x] Fechamento é terminal e não apaga dados.
+- [x] Cada mutação grava auditoria na mesma transação.
+- [x] Falha em auditoria ou persistência faz rollback completo.
+- [x] Testes unitários e de integração cobrem sucesso, negação e rollback.
 
 **Tests:** unit + integration — `TenantProvisioningServiceTests` e
 `TenantProvisioningIntegrationTests`.
