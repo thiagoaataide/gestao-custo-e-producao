@@ -43,6 +43,28 @@ public class ExternalIdentityJpaEntity {
     protected ExternalIdentityJpaEntity() {
     }
 
+    private ExternalIdentityJpaEntity(
+            UUID id,
+            String provider,
+            String externalSubject,
+            ExternalIdentityStatus status,
+            Instant createdAt) {
+        this.id = id;
+        this.provider = provider;
+        this.externalSubject = externalSubject;
+        this.status = status;
+        this.createdAt = createdAt;
+    }
+
+    public static ExternalIdentityJpaEntity fromDomain(ExternalIdentity identity) {
+        return new ExternalIdentityJpaEntity(
+                identity.id(),
+                identity.subject().provider(),
+                identity.subject().value(),
+                identity.status(),
+                identity.createdAt());
+    }
+
     public ExternalIdentity toDomain() {
         return new ExternalIdentity(
                 id,

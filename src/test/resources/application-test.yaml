@@ -23,3 +23,6 @@ supabase:
     jwk-set-uri: https://test.supabase.local/auth/v1/.well-known/jwks.json
     publishable-key: test-publishable-key
     audience: authenticated
+platform:
+  bootstrap:
+    owner-subject: ${PLATFORM_BOOTSTRAP_OWNER_SUBJECT:test-subject-a}

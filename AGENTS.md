@@ -320,6 +320,9 @@ de produção no `application.yaml`:
   `apikey` da leitura do JWKS protegido;
 - `SUPABASE_JWT_AUDIENCE`: audience esperada dos access tokens, normalmente
   `authenticated`.
+- `PLATFORM_BOOTSTRAP_OWNER_SUBJECT`: subject Supabase autorizado para o
+  bootstrap controlado do primeiro `PLATFORM_OWNER`; sem esse valor o bootstrap
+  permanece bloqueado.
 
 O `spring.flyway.url` usa o mesmo `DB_URL`, mas mantém usuário e senha
 separados. O perfil `test` possui defaults locais controlados para executar o

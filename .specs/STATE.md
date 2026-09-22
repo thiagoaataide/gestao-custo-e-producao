@@ -399,7 +399,7 @@
   queries, and enforcement of the one-active-membership constraint; the
   isolated full gate passes with 74 tests, no failures, errors or skips, and
   the JAR/frontend build completes.
-  T7 adds the provider-neutral authenticated identity port, validated-token
+   T7 adds the provider-neutral authenticated identity port, validated-token
   context and Supabase Auth `/user` adapter. The adapter sends the publishable
   `apikey` and validated bearer token, accepts only a matching subject with a
   non-blank `email_confirmed_at`, ignores `user_metadata`, applies two-second
@@ -407,13 +407,22 @@
   malformed profiles and timeouts. Its seven contract/unit tests and the full
   gate pass with 81 tests, zero failures/errors/skips, against isolated
   PostgreSQL 17.11; the production constructor is explicitly selected for
-  Spring injection while the test-only constructor remains package-private.
-- **Next step**: Execute T8 atomically: implement platform bootstrap and
-  platform authorization using the T7 authenticated identity boundary.
+   Spring injection while the test-only constructor remains package-private.
+   T8 adds the controlled, idempotent first-owner bootstrap, persists the
+   external identity when necessary, records the successful bootstrap audit,
+   resolves `PLATFORM_OWNER`/`PLATFORM_ADMIN` from the separate platform-role
+   assignments, and removes the legacy membership-role shortcut from access
+   resolution. The unit tests cover owner precedence, admin limitations,
+   revoked/missing roles, unauthorized bootstrap, blocked identity, existing
+   owner and repeated bootstrap. The full isolated gate passes with 89 tests,
+   zero failures/errors/skips, against PostgreSQL 17.11; migrations and the
+   Spring context load successfully.
+- **Next step**: Execute T9 atomically: implement tenant commands and tenant
+   lifecycle using the T8 platform authorization service.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: none
+- **Uncommitted files**: T8 changes pending atomic commit
 - **Branch**: `main`

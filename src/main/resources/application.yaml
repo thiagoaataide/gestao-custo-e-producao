@@ -27,3 +27,6 @@ supabase:
     jwk-set-uri: ${SUPABASE_JWT_JWK_SET_URI}
     publishable-key: ${SUPABASE_PUBLISHABLE_KEY}
     audience: ${SUPABASE_JWT_AUDIENCE:authenticated}
+platform:
+  bootstrap:
+    owner-subject: ${PLATFORM_BOOTSTRAP_OWNER_SUBJECT:}

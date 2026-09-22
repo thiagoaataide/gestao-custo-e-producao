@@ -3,6 +3,7 @@ package br.com.taas.saas.gestaoproducao.platform.access.application;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.ExternalIdentityRepository;
@@ -21,11 +22,14 @@ public final class AccessDecisionResolver {
     private final ExternalIdentityRepository externalIdentityRepository;
     private final MembershipRepository membershipRepository;
     private final TenantRepository tenantRepository;
+    private final PlatformAuthorizationService platformAuthorizationService;
 
+    @Autowired
     public AccessDecisionResolver(
             ExternalIdentityRepository externalIdentityRepository,
             MembershipRepository membershipRepository,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            PlatformAuthorizationService platformAuthorizationService) {
         this.externalIdentityRepository = Objects.requireNonNull(
                 externalIdentityRepository,
                 "externalIdentityRepository must not be null");
@@ -35,6 +39,9 @@ public final class AccessDecisionResolver {
         this.tenantRepository = Objects.requireNonNull(
                 tenantRepository,
                 "tenantRepository must not be null");
+        this.platformAuthorizationService = Objects.requireNonNull(
+                platformAuthorizationService,
+                "platformAuthorizationService must not be null");
     }
 
     public AccessDecision resolve(ExternalSubject subject) {
@@ -50,6 +57,10 @@ public final class AccessDecisionResolver {
     private AccessDecision resolveForIdentity(
             ExternalSubject subject,
             ExternalIdentity identity) {
+        if (platformAuthorizationService.hasPlatformAccess(identity.id())) {
+            return AccessDecision.platformAccess(subject);
+        }
+
         List<Membership> activeMemberships = membershipRepository
                 .findActiveByIdentityId(identity.id())
                 .stream()
@@ -64,9 +75,6 @@ public final class AccessDecisionResolver {
         }
 
         Membership membership = activeMemberships.getFirst();
-        if (membership.role().isPlatformAdmin()) {
-            return AccessDecision.platformAccess(subject);
-        }
 
         return tenantRepository
                 .findById(membership.tenantId())

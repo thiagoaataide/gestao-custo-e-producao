@@ -268,13 +268,13 @@ membership no resolver de acesso.
 
 **Done when:**
 
-- [ ] Somente a identidade autorizada pelo bootstrap pode criar o primeiro
+- [x] Somente a identidade autorizada pelo bootstrap pode criar o primeiro
       owner.
-- [ ] Repetição do bootstrap é idempotente e não cria segundo owner.
-- [ ] Owner e admin recebem decisões de plataforma sem tenant context.
-- [ ] Admin comum não cria/remove administrador; owner pode fazê-lo.
-- [ ] Tenant user não recebe acesso de plataforma.
-- [ ] Testes unitários cobrem todos os branches de hierarquia e bootstrap.
+- [x] Repetição do bootstrap é idempotente e não cria segundo owner.
+- [x] Owner e admin recebem decisões de plataforma sem tenant context.
+- [x] Admin comum não cria/remove administrador; owner pode fazê-lo.
+- [x] Tenant user não recebe acesso de plataforma.
+- [x] Testes unitários cobrem todos os branches de hierarquia e bootstrap.
 
 **Tests:** unit — `PlatformAuthorizationServiceTests` e
 `BootstrapOwnerServiceTests`.
