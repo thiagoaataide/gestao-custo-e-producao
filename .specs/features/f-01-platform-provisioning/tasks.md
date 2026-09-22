@@ -167,11 +167,11 @@ normalização de e-mail, digest do token e consulta de convite pendente.
 
 **Done when:**
 
-- [ ] O token em claro nunca é persistido.
-- [ ] O repository encontra somente o convite pendente correto e respeita
+- [x] O token em claro nunca é persistido.
+- [x] O repository encontra somente o convite pendente correto e respeita
       validade/estado.
-- [ ] A constraint de duplicidade por tenant/e-mail é exercitada.
-- [ ] Testes cobrem pendente, aceito, expirado, revogado e reenvio.
+- [x] A constraint de duplicidade por tenant/e-mail é exercitada.
+- [x] Testes cobrem pendente, aceito, expirado, revogado e reenvio.
 
 **Tests:** integration — `InvitationPersistenceIntegrationTests`.
 **Gate:** full.
