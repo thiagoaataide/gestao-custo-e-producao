@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** Em execução — tarefas aprovadas e implementadas sequencialmente
+**Status:** Concluída — tarefas aprovadas, implementadas e verificadas
 
 ## Test Coverage Matrix
 
@@ -484,15 +484,15 @@ incluindo sensor de discriminação.
 
 **Done when:**
 
-- [ ] Banco vazio aplica a migration F-01 e a reinicialização é idempotente.
-- [ ] Bootstrap cria somente o owner autorizado.
-- [ ] Tenant sem user, ciclo de vida, convites, memberships e auditoria são
+- [x] Banco vazio aplica a migration F-01 e a reinicialização é idempotente.
+- [x] Bootstrap cria somente o owner autorizado.
+- [x] Tenant sem user, ciclo de vida, convites, memberships e auditoria são
       demonstrados no fluxo completo.
-- [ ] Link/e-mail opcional/associação manual respeitam confirmação e 24 horas.
-- [ ] Admin não acessa operations e tenant user não acessa plataforma.
-- [ ] Falha transacional não deixa estado parcial.
-- [ ] `mvnw.cmd verify`, build limpo e `git diff --check` passam.
-- [ ] Verificador independente registra PASS/FAIL por requisito e resultado do
+- [x] Link/e-mail opcional/associação manual respeitam confirmação e 24 horas.
+- [x] Admin não acessa operations e tenant user não acessa plataforma.
+- [x] Falha transacional não deixa estado parcial.
+- [x] `mvnw.cmd verify`, build limpo e `git diff --check` passam.
+- [x] Verificador independente registra PASS/FAIL por requisito e resultado do
       sensor; qualquer gap vira task de correção antes do encerramento.
 
 **Tests:** integration — `PlatformProvisioningEndToEndIntegrationTests` mais
@@ -503,22 +503,22 @@ suíte existente.
 
 | Requirement | Tasks | Status |
 | --- | --- | --- |
-| F01-01 | T1, T3, T8, T16 | Mapped |
-| F01-02 | T1, T2, T3, T8, T16 | Mapped |
-| F01-03 | T2, T6, T9, T14, T16 | Mapped |
-| F01-04 | T5, T9, T12, T14, T15, T16 | Mapped |
-| F01-05 | T2, T6, T9, T14, T16 | Mapped |
-| F01-06 | T2, T6, T9, T14, T16 | Mapped |
-| F01-07 | T2, T4, T10, T13, T16 | Mapped |
-| F01-08 | T7, T10, T11, T16 | Mapped |
-| F01-09 | T4, T7, T10, T13, T14, T16 | Mapped |
-| F01-10 | T4, T6, T11, T16 | Mapped |
-| F01-11 | T1, T8, T11, T12, T16 | Mapped |
-| F01-12 | T1, T3, T8, T12, T16 | Mapped |
-| F01-13 | T6, T12, T16 | Mapped |
-| F01-14 | T2, T5, T8, T9, T10, T11, T12, T13, T16 | Mapped |
-| F01-15 | T5, T12, T15, T16 | Mapped |
-| F01-16 | T2, T5, T9, T10, T11, T12, T13, T16 | Mapped |
+| F01-01 | T1, T3, T8, T16 | Verified |
+| F01-02 | T1, T2, T3, T8, T16 | Verified |
+| F01-03 | T2, T6, T9, T14, T16 | Verified |
+| F01-04 | T5, T9, T12, T14, T15, T16 | Verified |
+| F01-05 | T2, T6, T9, T14, T16 | Verified |
+| F01-06 | T2, T6, T9, T14, T16 | Verified |
+| F01-07 | T2, T4, T10, T13, T16 | Verified |
+| F01-08 | T7, T10, T11, T16 | Verified |
+| F01-09 | T4, T7, T10, T13, T14, T16 | Verified |
+| F01-10 | T4, T6, T11, T16 | Verified |
+| F01-11 | T1, T8, T11, T12, T16 | Verified |
+| F01-12 | T1, T3, T8, T12, T16 | Verified |
+| F01-13 | T6, T12, T16 | Verified |
+| F01-14 | T2, T5, T8, T9, T10, T11, T12, T13, T16 | Verified |
+| F01-15 | T5, T12, T15, T16 | Verified |
+| F01-16 | T2, T5, T9, T10, T11, T12, T13, T16 | Verified |
 
 **Coverage:** 16 requisitos definidos, 16 mapeados para tasks, 0 sem cobertura.
 

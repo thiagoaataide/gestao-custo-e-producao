@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 3 — T15 concluída; T16 pronta para execução
+- **Phase / Task**: Fase 4 — T16 concluída; F-01 verificada e encerrada
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -457,13 +457,20 @@
       treats empty, invalid-filter and database-failure states safely, and the
       clean isolated full gate passes with 150 tests, zero failures, errors or
       skips, including frontend build and JAR packaging.
-- **Next step**: Execute T16 atomically: validate F-01 end to end and run the
-  independent verifier.
+- T16 adds the cross-boundary platform provisioning suite with five
+  PostgreSQL-backed scenarios: idempotent owner bootstrap, tenant lifecycle,
+  invitation acceptance and one-tenant membership, platform-admin separation,
+  and denied mutation/audit metadata. The independent evidence review maps
+  F01-01 through F01-16 to passing tests. The discrimination sensor killed
+  both temporary mutations (platform-access resolution and tenant suspension),
+  and the clean isolated full gate passes with 155 tests, zero failures,
+  errors or skips, including frontend build and JAR packaging.
+- **Next step**: Select the next V0 feature from `docs/ROADMAP-V0.md`.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Working tree**: changes for T15 are ready for the atomic commit after the
-  full gate; no unrelated changes were detected.
+- **Working tree**: T16 changes are ready for the atomic commit; no unrelated
+  changes were detected.
 - **Branch**: `main`

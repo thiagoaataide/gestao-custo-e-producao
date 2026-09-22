@@ -1,6 +1,6 @@
 # F-01 — Provisionamento da plataforma
 
-**Status:** Rascunho para confirmação
+**Status:** Confirmada e verificada em 22 de setembro de 2026
 **Escopo:** V0
 **Fonte:** `docs/PRD-V0.md`, `docs/ROADMAP-V0.md`, ADR-015 e decisões
 registradas durante a especificação
@@ -247,24 +247,24 @@ dados operacionais.
 
 | ID | Requisito | História | Origem | Status |
 | --- | --- | --- | --- | --- |
-| F01-01 | Bootstrap idempotente de um único owner | Inicializar | AD-014, AD-015 | Pending |
-| F01-02 | Separar papéis de plataforma e membership de tenant | Inicializar | ADR-015 | Pending |
-| F01-03 | Criar tenant sem membership obrigatória | Criar tenant | PRD 4.2 | Pending |
-| F01-04 | Consultar apenas metadados de plataforma | Criar tenant | ADR-015 | Pending |
-| F01-05 | Suspender e reativar tenant | Criar tenant | AD-015 | Pending |
-| F01-06 | Fechar tenant de forma terminal e sem exclusão | Criar tenant | AD-015 | Pending |
-| F01-07 | Criar convite único com validade de 24 horas | Convidar | Decisão F-01 | Pending |
-| F01-08 | Aceitar convite somente com identidade verificada correspondente | Convidar | Decisão F-01 | Pending |
-| F01-09 | Permitir link, e-mail opcional e associação manual no mesmo fluxo | Convidar | Decisão F-01 | Pending |
-| F01-10 | Impedir membership ativa em dois tenants | Convidar | AD-003 | Pending |
-| F01-11 | Manter somente `TENANT_USER` como papel operacional | Memberships | AD-003, PRD 10 | Pending |
-| F01-12 | Administrar `PLATFORM_ADMIN` somente pelo owner | Memberships | Decisão F-01 | Pending |
-| F01-13 | Revogar membership sem apagar histórico | Memberships | ADR-015 | Pending |
-| F01-14 | Registrar auditoria administrativa mínima | Auditar | ADR-015 | Pending |
-| F01-15 | Consultar auditoria sem dados operacionais | Auditar | ADR-015, LGPD | Pending |
-| F01-16 | Preservar atomicidade e isolamento nas mutações | Todas | ADR-016 a ADR-023 | Pending |
+| F01-01 | Bootstrap idempotente de um único owner | Inicializar | AD-014, AD-015 | Verified |
+| F01-02 | Separar papéis de plataforma e membership de tenant | Inicializar | ADR-015 | Verified |
+| F01-03 | Criar tenant sem membership obrigatória | Criar tenant | PRD 4.2 | Verified |
+| F01-04 | Consultar apenas metadados de plataforma | Criar tenant | ADR-015 | Verified |
+| F01-05 | Suspender e reativar tenant | Criar tenant | AD-015 | Verified |
+| F01-06 | Fechar tenant de forma terminal e sem exclusão | Criar tenant | AD-015 | Verified |
+| F01-07 | Criar convite único com validade de 24 horas | Convidar | Decisão F-01 | Verified |
+| F01-08 | Aceitar convite somente com identidade verificada correspondente | Convidar | Decisão F-01 | Verified |
+| F01-09 | Permitir link, e-mail opcional e associação manual no mesmo fluxo | Convidar | Decisão F-01 | Verified |
+| F01-10 | Impedir membership ativa em dois tenants | Convidar | AD-003 | Verified |
+| F01-11 | Manter somente `TENANT_USER` como papel operacional | Memberships | AD-003, PRD 10 | Verified |
+| F01-12 | Administrar `PLATFORM_ADMIN` somente pelo owner | Memberships | Decisão F-01 | Verified |
+| F01-13 | Revogar membership sem apagar histórico | Memberships | ADR-015 | Verified |
+| F01-14 | Registrar auditoria administrativa mínima | Auditar | ADR-015 | Verified |
+| F01-15 | Consultar auditoria sem dados operacionais | Auditar | ADR-015, LGPD | Verified |
+| F01-16 | Preservar atomicidade e isolamento nas mutações | Todas | ADR-016 a ADR-023 | Verified |
 
-**Coverage:** 16 requisitos definidos, 0 mapeados para tarefas, 16 pendentes
+**Coverage:** 16 requisitos definidos, 16 mapeados para tarefas e verificados; evidências em `validation.md`
 até a confirmação do spec e posterior decomposição.
 
 ## Critérios de sucesso
