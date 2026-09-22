@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.TenantRepository;
 import br.com.taas.saas.gestaoproducao.platform.identity.model.Tenant;
+import br.com.taas.saas.gestaoproducao.platform.identity.persistence.jpa.TenantJpaEntity;
 import br.com.taas.saas.gestaoproducao.platform.identity.persistence.jpa.TenantJpaRepository;
 
 @Repository
@@ -21,5 +22,12 @@ public class JpaTenantRepository implements TenantRepository {
     @Override
     public Optional<Tenant> findById(UUID tenantId) {
         return repository.findById(tenantId).map(entity -> entity.toDomain());
+    }
+
+    @Override
+    public Tenant save(Tenant tenant) {
+        return repository
+                .saveAndFlush(TenantJpaEntity.fromDomain(tenant))
+                .toDomain();
     }
 }

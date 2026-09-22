@@ -212,11 +212,11 @@ ciclo de vida de tenant e transições de membership exigidas pela F-01.
 
 **Done when:**
 
-- [ ] Tenant pode ser criado sem membership.
-- [ ] Transições `ACTIVE ↔ SUSPENDED` e `→ CLOSED` respeitam as regras.
-- [ ] Membership revogada mantém histórico e não cria segundo vínculo ativo.
-- [ ] Queries não aceitam tenant escolhido pelo cliente.
-- [ ] Testes cobrem tenant sem usuário, suspensão, reativação, fechamento e
+- [x] Tenant pode ser criado sem membership.
+- [x] Transições `ACTIVE ↔ SUSPENDED` e `→ CLOSED` respeitam as regras.
+- [x] Membership revogada mantém histórico e não cria segundo vínculo ativo.
+- [x] Queries não aceitam tenant escolhido pelo cliente.
+- [x] Testes cobrem tenant sem usuário, suspensão, reativação, fechamento e
       revogação.
 
 **Tests:** integration — `TenantLifecyclePersistenceIntegrationTests` e

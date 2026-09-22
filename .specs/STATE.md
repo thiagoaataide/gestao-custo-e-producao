@@ -311,7 +311,7 @@
 ## Handoff
 
 - **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 1 — T5 concluída; T6 pronta para execução
+- **Phase / Task**: Fase 1 — T6 concluída; T7 pronta para execução
 - **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
   technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
   application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
@@ -392,15 +392,20 @@
  T5 adds the administrative audit domain vocabulary, controlled metadata
  boundary, JPA JSONB persistence, dynamic filtered pagination, and
  integration evidence for successful, denied and administrative-only
- queries; the isolated full gate passes with 70 tests, no failures, errors or
- skips, and the JAR/frontend build completes.
-- **Next step**: Execute T6 atomically: evolve tenant and membership
-  persistence.
+  queries; the isolated full gate passes with 70 tests, no failures, errors or
+  skips, and the JAR/frontend build completes.
+  T6 evolves tenant and membership persistence with tenant presentation name,
+  lifecycle transitions, historical membership revocation, identity-scoped
+  queries, and enforcement of the one-active-membership constraint; the
+  isolated full gate passes with 74 tests, no failures, errors or skips, and
+  the JAR/frontend build completes.
+- **Next step**: Execute T7 atomically: create the authenticated Supabase
+  profile port and adapter.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Uncommitted files**: T5 administrative audit persistence, tests, task status
+- **Uncommitted files**: T6 tenant/membership persistence, tests, task status
   and this handoff update
 - **Branch**: `main`

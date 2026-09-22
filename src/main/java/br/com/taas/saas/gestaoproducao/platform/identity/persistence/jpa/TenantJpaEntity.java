@@ -20,6 +20,9 @@ public class TenantJpaEntity {
     @Id
     private UUID id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private TenantStatus status;
@@ -30,7 +33,26 @@ public class TenantJpaEntity {
     protected TenantJpaEntity() {
     }
 
+    private TenantJpaEntity(
+            UUID id,
+            String name,
+            TenantStatus status,
+            Instant createdAt) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+        this.createdAt = createdAt;
+    }
+
+    public static TenantJpaEntity fromDomain(Tenant tenant) {
+        return new TenantJpaEntity(
+                tenant.id(),
+                tenant.name(),
+                tenant.status(),
+                tenant.createdAt());
+    }
+
     public Tenant toDomain() {
-        return new Tenant(id, status, createdAt);
+        return new Tenant(id, name, status, createdAt);
     }
 }

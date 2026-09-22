@@ -43,6 +43,34 @@ public class MembershipJpaEntity {
     protected MembershipJpaEntity() {
     }
 
+    private MembershipJpaEntity(
+            UUID id,
+            UUID identityId,
+            UUID tenantId,
+            MembershipStatus status,
+            String role,
+            Instant createdAt,
+            Instant revokedAt) {
+        this.id = id;
+        this.identityId = identityId;
+        this.tenantId = tenantId;
+        this.status = status;
+        this.role = role;
+        this.createdAt = createdAt;
+        this.revokedAt = revokedAt;
+    }
+
+    public static MembershipJpaEntity fromDomain(Membership membership) {
+        return new MembershipJpaEntity(
+                membership.id(),
+                membership.identityId(),
+                membership.tenantId(),
+                membership.status(),
+                membership.role().value(),
+                membership.createdAt(),
+                membership.revokedAt());
+    }
+
     public Membership toDomain() {
         return new Membership(
                 id,

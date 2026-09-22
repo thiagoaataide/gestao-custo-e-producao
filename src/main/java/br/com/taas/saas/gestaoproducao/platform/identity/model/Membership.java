@@ -68,4 +68,22 @@ public final class Membership {
     public boolean isActive() {
         return status == MembershipStatus.ACTIVE && revokedAt == null;
     }
+
+    public Membership revoke(Instant revokedAt) {
+        Objects.requireNonNull(revokedAt, "revokedAt must not be null");
+        if (status == MembershipStatus.REVOKED) {
+            throw new IllegalStateException("membership is already revoked");
+        }
+        if (revokedAt.isBefore(createdAt)) {
+            throw new IllegalArgumentException("revokedAt must not be before createdAt");
+        }
+        return new Membership(
+                id,
+                identityId,
+                tenantId,
+                MembershipStatus.REVOKED,
+                role,
+                createdAt,
+                revokedAt);
+    }
 }
