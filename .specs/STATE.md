@@ -441,13 +441,16 @@
      membership revocation, administrative metadata queries, and transaction-
      bound audit rollback for role and membership mutations. Unit tests pass
      with 5 tests and the PostgreSQL integration suite passes with 6 tests.
- - **Next step**: Execute T13 atomically: integrate optional invitation
-   delivery after commit.
+-     T13 adds the provider-neutral invitation delivery port, post-commit
+     event listener, disabled-by-default configuration, safe delivery-failure
+     audit, and tests proving that delivery never runs before commit. The full
+     gate passes with 141 tests, including Vaadin build and JAR packaging.
+- **Next step**: Execute T14 atomically: create the Vaadin UI for tenants,
+  invitations, and memberships.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
-- **Working tree**: T12 implementation and documentation are included in the
-  current atomic commit.
+- **Working tree**: clean after the latest atomic task commit.
 - **Branch**: `main`

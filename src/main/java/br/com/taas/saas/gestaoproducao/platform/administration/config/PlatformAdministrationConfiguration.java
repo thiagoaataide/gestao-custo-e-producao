@@ -6,7 +6,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({
     PlatformBootstrapProperties.class,
-    InvitationLinkProperties.class
+    InvitationLinkProperties.class,
+    InvitationDeliveryProperties.class
 })
 public class PlatformAdministrationConfiguration {
 }

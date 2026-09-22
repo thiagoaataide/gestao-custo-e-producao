@@ -32,3 +32,5 @@ platform:
     owner-subject: ${PLATFORM_BOOTSTRAP_OWNER_SUBJECT:}
   invitation:
     base-url: ${PLATFORM_INVITATION_BASE_URL:http://localhost:8080}
+    delivery:
+      enabled: ${PLATFORM_INVITATION_DELIVERY_ENABLED:false}

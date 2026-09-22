@@ -387,6 +387,11 @@ e `src/main/java/**/platform/administration/application/role/`.
 
 ### T13: Integrar delivery opcional após commit
 
+**Status:** Concluída em 22 de setembro de 2026. A porta provider-neutral,
+o evento de delivery e o listener `AFTER_COMMIT` foram implementados com
+delivery desabilitado por padrão, auditoria segura de falhas e validação no
+gate completo.
+
 **What:** Criar a porta/adapter de entrega de convite e ligar a tentativa de
 e-mail ao evento pós-commit, mantendo o link manual como caminho garantido.
 
@@ -399,15 +404,16 @@ e-mail ao evento pós-commit, mantendo o link manual como caminho garantido.
 
 **Done when:**
 
-- [ ] Nenhuma chamada de e-mail ocorre antes do commit do convite.
-- [ ] Adapter ausente ou desabilitado não impede criação/cópia do link.
-- [ ] Falha de entrega preserva convite e registra o resultado conforme o
+- [x] Nenhuma chamada de e-mail ocorre antes do commit do convite.
+- [x] Adapter ausente ou desabilitado não impede criação/cópia do link.
+- [x] Falha de entrega preserva convite e registra o resultado conforme o
       contrato de auditoria.
-- [ ] Segredos de integração não aparecem em logs, UI ou commits.
-- [ ] Testes de contrato cobrem sucesso, falha e ausência de configuração.
+- [x] Segredos de integração não aparecem em logs, UI ou commits.
+- [x] Testes de contrato cobrem sucesso, falha e ausência de configuração.
 
-**Tests:** unit/contract — `InvitationDeliveryAdapterTests`.
-**Gate:** quick; full se o adapter subir contexto real.
+**Tests:** unit/contract — `InvitationDeliveryAdapterTests` e
+`InvitationDeliveryAfterCommitIntegrationTests`.
+**Gate:** full.
 
 ### T14: Criar UI de tenants, convites e memberships
 

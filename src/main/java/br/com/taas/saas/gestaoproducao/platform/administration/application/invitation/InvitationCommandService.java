@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationDeniedException;
@@ -17,6 +18,7 @@ import br.com.taas.saas.gestaoproducao.platform.administration.audit.model.Audit
 import br.com.taas.saas.gestaoproducao.platform.administration.audit.model.AuditResult;
 import br.com.taas.saas.gestaoproducao.platform.administration.audit.model.AuditTargetType;
 import br.com.taas.saas.gestaoproducao.platform.administration.audit.port.out.AdministrativeAuditRepository;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.port.out.InvitationDeliveryRequest;
 import br.com.taas.saas.gestaoproducao.platform.administration.config.InvitationLinkProperties;
 import br.com.taas.saas.gestaoproducao.platform.identity.application.exception.InvitationConflictException;
 import br.com.taas.saas.gestaoproducao.platform.identity.application.port.out.InvitationRepository;
@@ -39,6 +41,7 @@ public class InvitationCommandService {
     private final AdministrativeAuditRepository administrativeAuditRepository;
     private final InvitationTokenGenerator tokenGenerator;
     private final InvitationLinkProperties linkProperties;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public InvitationCommandService(
             InvitationRepository invitationRepository,
@@ -46,7 +49,8 @@ public class InvitationCommandService {
             PlatformAuthorizationService platformAuthorizationService,
             AdministrativeAuditRepository administrativeAuditRepository,
             InvitationTokenGenerator tokenGenerator,
-            InvitationLinkProperties linkProperties) {
+            InvitationLinkProperties linkProperties,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.invitationRepository = Objects.requireNonNull(
                 invitationRepository,
                 "invitationRepository must not be null");
@@ -65,6 +69,9 @@ public class InvitationCommandService {
         this.linkProperties = Objects.requireNonNull(
                 linkProperties,
                 "linkProperties must not be null");
+        this.applicationEventPublisher = Objects.requireNonNull(
+                applicationEventPublisher,
+                "applicationEventPublisher must not be null");
     }
 
     @Transactional(noRollbackFor = {
@@ -259,7 +266,15 @@ public class InvitationCommandService {
                 AuditAction.INVITATION_CREATED,
                 AuditResult.SUCCESS,
                 occurredAt);
-        return new InvitationLinkResult(saved, linkProperties.linkFor(rawToken));
+        String link = linkProperties.linkFor(rawToken);
+        applicationEventPublisher.publishEvent(new InvitationDeliveryRequested(
+                new InvitationDeliveryRequest(
+                        saved.id(),
+                        actorIdentityId,
+                        saved.email().value(),
+                        link,
+                        occurredAt)));
+        return new InvitationLinkResult(saved, link);
     }
 
     private void expireExistingPendingIfNecessary(

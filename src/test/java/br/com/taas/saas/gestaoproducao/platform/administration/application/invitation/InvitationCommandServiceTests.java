@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationService;
 import br.com.taas.saas.gestaoproducao.platform.administration.audit.model.AuditAction;
@@ -70,6 +71,34 @@ class InvitationCommandServiceTests {
         assertThat(audits.events).singleElement()
                 .extracting(AuditEvent::action, AuditEvent::result)
                 .containsExactly(AuditAction.INVITATION_CREATED, AuditResult.SUCCESS);
+    }
+
+    @Test
+    void publishesDeliveryRequestAfterCreatingInvitationLink() {
+        var invitations = new InMemoryInvitationRepository();
+        var tenants = activeTenants();
+        var audits = new InMemoryAdministrativeAuditRepository();
+        var events = new ArrayList<Object>();
+        var service = service(
+                invitations,
+                tenants,
+                audits,
+                () -> "token-one",
+                events::add);
+
+        InvitationLinkResult result = service.createInvitation(new CreateInvitationCommand(
+                ADMIN_IDENTITY_ID,
+                TENANT_ID,
+                "user@example.com",
+                NOW));
+
+        assertThat(events).singleElement()
+                .isInstanceOfSatisfying(InvitationDeliveryRequested.class, event -> {
+                    assertThat(event.request().invitationId()).isEqualTo(result.invitation().id());
+                    assertThat(event.request().actorIdentityId()).isEqualTo(ADMIN_IDENTITY_ID);
+                    assertThat(event.request().recipientEmail()).isEqualTo("user@example.com");
+                    assertThat(event.request().link()).isEqualTo(result.link());
+                });
     }
 
     @Test
@@ -216,13 +245,24 @@ class InvitationCommandServiceTests {
             InMemoryTenantRepository tenants,
             InMemoryAdministrativeAuditRepository audits,
             InvitationTokenGenerator tokenGenerator) {
+        return service(invitations, tenants, audits, tokenGenerator, event -> {
+        });
+    }
+
+    private static InvitationCommandService service(
+            InMemoryInvitationRepository invitations,
+            InMemoryTenantRepository tenants,
+            InMemoryAdministrativeAuditRepository audits,
+            InvitationTokenGenerator tokenGenerator,
+            ApplicationEventPublisher applicationEventPublisher) {
         return new InvitationCommandService(
                 invitations,
                 tenants,
                 authorizationService(),
                 audits,
                 tokenGenerator,
-                new InvitationLinkProperties("https://app.example"));
+                new InvitationLinkProperties("https://app.example"),
+                applicationEventPublisher);
     }
 
     private static PlatformAuthorizationService authorizationService() {
