@@ -317,12 +317,12 @@ de convite, com deduplicação e auditoria.
 
 **Done when:**
 
-- [ ] Convite pendente tem validade de 24 horas e token não persistido em claro.
-- [ ] Reenvio invalida o convite anterior e cria um novo link.
-- [ ] Convite duplicado é recusado fora do comando explícito de reenvio.
-- [ ] Convite para tenant suspenso/fechado é negado.
-- [ ] Link sempre pode ser copiado e a falha de e-mail não desfaz o convite.
-- [ ] Testes cobrem duplicidade, expiração, revogação, autorização e rollback.
+- [x] Convite pendente tem validade de 24 horas e token não persistido em claro.
+- [x] Reenvio invalida o convite anterior e cria um novo link.
+- [x] Convite duplicado é recusado fora do comando explícito de reenvio.
+- [x] Convite para tenant suspenso/fechado é negado.
+- [x] Link sempre pode ser copiado e a falha de e-mail não desfaz o convite.
+- [x] Testes cobrem duplicidade, expiração, revogação, autorização e rollback.
 
 **Tests:** unit + integration — `InvitationCommandServiceTests` e
 `InvitationCommandIntegrationTests`.

@@ -423,13 +423,20 @@
     FAILED administrative audit events. Successful mutations and audit writes
     share the local transaction; the integration test proves audit failure
     rolls back tenant creation. The clean isolated full gate passes with 100
-    tests, zero failures/errors/skips, against PostgreSQL 17.11.
- - **Next step**: Execute T10 atomically: implement invitation commands using
-   the T8 platform authorization service and the T9 tenant lifecycle.
+    tests, zero failures/errors/skips, against PostgreSQL 17.11. T10 adds the
+    invitation command service for creation, explicit resend, revocation and
+    expiry; it normalizes e-mail, issues 24-hour opaque links with only a
+    SHA-256 digest persisted, rejects unavailable tenants and duplicates,
+    records administrative audit in the local transaction, and preserves
+    platform authorization. The isolated full gate passes with 114 tests,
+    zero failures/errors/skips, against PostgreSQL 17.11; the JAR/frontend
+    build completes.
+ - **Next step**: Execute T11 atomically: implement authenticated invitation
+   acceptance and membership activation.
 - **Blockers**: none. T1 and T2 are implemented and committed. The shared
   local test database predates V2 and remains untouched; future full gates
   should use a fresh database or an explicitly migrated test database.
   directly to the Supabase
   project; `postgres` remains restricted to administration and migrations.
- - **Uncommitted files**: T9 changes pending atomic commit
+- **Uncommitted files**: none after the T10 atomic commit
 - **Branch**: `main`

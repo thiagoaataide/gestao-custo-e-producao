@@ -60,6 +60,20 @@ public class JpaInvitationRepository implements InvitationRepository {
     }
 
     @Override
+    public Optional<Invitation> findPendingByTenantAndEmailIncludingExpired(
+            UUID tenantId,
+            String email) {
+        return repository
+                .findByTenantIdAndEmailAndStatus(
+                        tenantId,
+                        br.com.taas.saas.gestaoproducao.platform.identity.model.NormalizedEmail
+                                .from(email)
+                                .value(),
+                        InvitationStatus.PENDING)
+                .map(entity -> entity.toDomain());
+    }
+
+    @Override
     public Invitation save(Invitation invitation) {
         try {
             return repository

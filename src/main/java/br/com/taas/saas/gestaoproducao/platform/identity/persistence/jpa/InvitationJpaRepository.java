@@ -21,4 +21,9 @@ public interface InvitationJpaRepository
             String email,
             InvitationStatus status,
             Instant now);
+
+    Optional<InvitationJpaEntity> findByTenantIdAndEmailAndStatus(
+            UUID tenantId,
+            String email,
+            InvitationStatus status);
 }

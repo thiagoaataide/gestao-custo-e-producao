@@ -26,3 +26,5 @@ supabase:
 platform:
   bootstrap:
     owner-subject: ${PLATFORM_BOOTSTRAP_OWNER_SUBJECT:test-subject-a}
+  invitation:
+    base-url: http://test.local

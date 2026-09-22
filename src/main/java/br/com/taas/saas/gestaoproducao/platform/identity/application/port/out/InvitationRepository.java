@@ -17,5 +17,9 @@ public interface InvitationRepository {
             String email,
             Instant now);
 
+    Optional<Invitation> findPendingByTenantAndEmailIncludingExpired(
+            UUID tenantId,
+            String email);
+
     Invitation save(Invitation invitation);
 }

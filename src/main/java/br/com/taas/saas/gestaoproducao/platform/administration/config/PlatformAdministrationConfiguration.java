@@ -4,6 +4,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(PlatformBootstrapProperties.class)
+@EnableConfigurationProperties({
+    PlatformBootstrapProperties.class,
+    InvitationLinkProperties.class
+})
 public class PlatformAdministrationConfiguration {
 }
