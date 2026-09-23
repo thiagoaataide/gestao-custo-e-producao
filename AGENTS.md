@@ -338,6 +338,43 @@ sem `BYPASSRLS` e expõe a porta local 55432 por padrão. Se os valores do
 `.env.local.example` forem alterados, as mesmas variáveis devem estar
 disponíveis no processo Maven do host.
 
+### Ciclo de vida dos containers de teste
+
+A V0 não usa Testcontainers. A suíte de integração aponta para o PostgreSQL
+local do `compose.yaml`, que usa o volume nomeado
+`gestao_producao_postgres_data` e permanece disponível entre execuções. Reuse
+esse serviço no `mvnw.cmd verify`; não crie outro PostgreSQL para cada rodada.
+Esse container e seu volume são o ambiente local compartilhado, não recursos
+temporários de uma tarefa.
+
+Para uma validação que realmente exija banco isolado, aplique o ciclo explícito
+abaixo:
+
+1. Consulte os containers existentes e reutilize um recurso ainda ativo quando
+   ele pertencer à mesma validação e tiver a configuração necessária.
+2. Dê ao recurso novo um nome exclusivo no formato
+   `gestao-producao-test-<feature>-<task>-<yyyymmdd>-<run>`; prefira `docker run`
+   com `--rm` e armazenamento temporário (`tmpfs`) quando possível.
+3. Assim que criar o container, registre em `.specs/STATE.md` o nome, ID,
+   finalidade/tarefa, porta e comando exato de encerramento. Mantenha o registro
+   se o trabalho atravessar uma troca de contexto e não crie duplicata enquanto
+   o mesmo recurso continuar ativo.
+4. Ao terminar a validação, com sucesso ou falha, pare e remova somente o
+   container registrado para essa tarefa: use `docker stop <nome-exato>` para
+   um container iniciado com `--rm`, ou `docker rm -f <nome-exato-ou-id>` caso
+   contrário. Para Compose isolado, use um nome de projeto exclusivo e execute
+   `docker compose -p <nome-exato> down --volumes --remove-orphans` somente após
+   confirmar que esse projeto pertence à tarefa.
+5. Remova o registro de `.specs/STATE.md` depois de confirmar a remoção. Anote
+   o nome do recurso e o resultado da limpeza no documento de validação da
+   tarefa. Se não for possível removê-lo, mantenha o registro e informe o
+   bloqueio antes de encerrar.
+
+Nunca remova o serviço ou volume do Compose local compartilhado, nem containers
+que não tenham sido criados e registrados pela tarefa atual. Não faça limpeza
+por prefixo ou por correspondência ampla. A adoção futura de Testcontainers
+exige uma decisão e atualização explícita desta regra e do `pom.xml`.
+
 ### Contrato do container
 
 O `Dockerfile` usa duas etapas: `eclipse-temurin:21-jdk-jammy` compila o Jar com

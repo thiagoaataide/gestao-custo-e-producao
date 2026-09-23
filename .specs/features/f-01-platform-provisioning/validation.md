@@ -104,8 +104,10 @@ Evidências da validação automatizada:
   para acesso de plataforma após o bootstrap.
 - `mvn verify`: 177 testes, sem falhas ou erros; frontend Vaadin construído e
   JAR executável empacotado.
-- PostgreSQL 17 em container temporário local; nenhuma conexão ou alteração no
-  Supabase ou no banco publicado.
+- PostgreSQL 17 em container temporário
+  `gestao-owner-bootstrap-gate-20260923` (ID `50d6453de649`), usando `--rm` e
+  `tmpfs`; foi parado ao fim da validação e removido automaticamente. Nenhuma
+  conexão ou alteração no Supabase ou no banco publicado.
 - `git diff --check` sem erros.
 
 Esta validação automatizada não confirma a experiência visual no Render. Após

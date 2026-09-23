@@ -351,6 +351,15 @@
 - **Date**: 2026-09-23
 - **Status**: implemented locally; full isolated verification recorded in F-00 `validation.md`; live Supabase/Render UAT pending
 
+## Temporary test containers
+
+Registre aqui cada container descartável criado para uma validação isolada e
+remova a entrada somente depois de confirmar sua remoção. Não liste o serviço
+compartilhado de `compose.yaml` nesta seção.
+
+- **Ativos**: nenhum container temporário do projeto encontrado em 23 de
+  setembro de 2026 (`docker ps -a --filter name=gestao`).
+
 ## Handoff
 
 - **Feature**: F-02 — Cadastro base, compras e estoque.
