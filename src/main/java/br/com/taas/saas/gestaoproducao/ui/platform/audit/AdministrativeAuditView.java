@@ -6,6 +6,9 @@ import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.UUID;
 
+import jakarta.annotation.security.PermitAll;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -22,6 +25,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationDeniedException;
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationService;
@@ -37,11 +41,13 @@ import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
 
 @Route("platform/audit")
 @PageTitle("Auditoria administrativa | Gestão de Produção")
+@PermitAll
 public final class AdministrativeAuditView extends VerticalLayout {
 
     private final AdministrativeAuditQueryService queryService;
     private final PlatformActorIdentityResolver actorIdentityResolver;
     private final PlatformAuthorizationService authorizationService;
+    private final AuthenticationContext authenticationContext;
 
     private UUID actorIdentityId;
     private AdministrativeAuditViewState state;
@@ -59,21 +65,32 @@ public final class AdministrativeAuditView extends VerticalLayout {
     private DateTimePicker occurredFromFilter;
     private DateTimePicker occurredUntilFilter;
 
+    @Autowired
     public AdministrativeAuditView(
             AdministrativeAuditQueryService queryService,
             PlatformActorIdentityResolver actorIdentityResolver,
-            PlatformAuthorizationService authorizationService) {
+            PlatformAuthorizationService authorizationService,
+            AuthenticationContext authenticationContext) {
         this.queryService = Objects.requireNonNull(queryService);
         this.actorIdentityResolver = Objects.requireNonNull(actorIdentityResolver);
         this.authorizationService = Objects.requireNonNull(authorizationService);
+        this.authenticationContext = authenticationContext;
         this.state = loadState();
         render();
+    }
+
+    AdministrativeAuditView(
+            AdministrativeAuditQueryService queryService,
+            PlatformActorIdentityResolver actorIdentityResolver,
+            PlatformAuthorizationService authorizationService) {
+        this(queryService, actorIdentityResolver, authorizationService, null);
     }
 
     AdministrativeAuditView(AdministrativeAuditViewState state) {
         this.queryService = null;
         this.actorIdentityResolver = null;
         this.authorizationService = null;
+        this.authenticationContext = null;
         this.state = Objects.requireNonNull(state);
         render();
     }
@@ -105,7 +122,13 @@ public final class AdministrativeAuditView extends VerticalLayout {
         setMargin(true);
         setSpacing(true);
 
-        add(new H1("Auditoria administrativa"));
+        HorizontalLayout heading = new HorizontalLayout(new H1("Auditoria administrativa"));
+        heading.setWidthFull();
+        heading.setAlignItems(Alignment.CENTER);
+        if (authenticationContext != null) {
+            heading.add(new Button("Sair", event -> authenticationContext.logout()));
+        }
+        add(heading);
         if (!state.platformAccess()) {
             add(new Paragraph(state.feedback()));
             return;

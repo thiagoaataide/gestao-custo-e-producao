@@ -2,6 +2,7 @@ package br.com.taas.saas.gestaoproducao.ui.access;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -13,17 +14,25 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 
 @Route("")
 @PageTitle("Acesso | Gestão de Produção")
 @AnonymousAllowed
 public final class AccessShellView extends VerticalLayout {
 
-    public AccessShellView(AccessShellStateResolver stateResolver) {
-        this(stateResolver.resolve(currentAuthentication()));
+    @Autowired
+    public AccessShellView(
+            AccessShellStateResolver stateResolver,
+            AuthenticationContext authenticationContext) {
+        this(stateResolver.resolve(currentAuthentication()), authenticationContext);
     }
 
     AccessShellView(AccessShellState state) {
+        this(state, null);
+    }
+
+    private AccessShellView(AccessShellState state, AuthenticationContext authenticationContext) {
         setWidthFull();
         setMaxWidth("42rem");
         setMargin(true);
@@ -33,6 +42,9 @@ public final class AccessShellView extends VerticalLayout {
         add(new H2(titleFor(state)));
         add(new Paragraph(messageFor(state)));
         add(actionFor(state));
+        if (state != AccessShellState.UNAUTHENTICATED && authenticationContext != null) {
+            add(new Button("Sair", event -> authenticationContext.logout()));
+        }
     }
 
     private static Authentication currentAuthentication() {

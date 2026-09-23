@@ -17,6 +17,11 @@ spring:
   sql:
     init:
       mode: never
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
 supabase:
   jwt:
     issuer: https://test.supabase.local/auth/v1

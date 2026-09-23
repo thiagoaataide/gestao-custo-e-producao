@@ -6,6 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.security.PermitAll;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -27,6 +30,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationDeniedException;
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationService;
@@ -65,6 +69,7 @@ import br.com.taas.saas.gestaoproducao.platform.identity.model.TenantStatus;
 
 @Route("platform")
 @PageTitle("Administração da plataforma | Gestão de Produção")
+@PermitAll
 public final class PlatformAdministrationView extends VerticalLayout {
 
     private final TenantProvisioningCommandService tenantCommandService;
@@ -74,6 +79,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private final PlatformMembershipAdminService membershipAdminService;
     private final PlatformActorIdentityResolver actorIdentityResolver;
     private final PlatformAuthorizationService authorizationService;
+    private final AuthenticationContext authenticationContext;
 
     private UUID actorIdentityId;
     private PlatformAdministrationViewState state;
@@ -87,6 +93,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private TextField tenantName;
     private TextField platformAdminIdentity;
 
+    @Autowired
     public PlatformAdministrationView(
             TenantProvisioningCommandService tenantCommandService,
             TenantProvisioningQueryService tenantQueryService,
@@ -94,7 +101,8 @@ public final class PlatformAdministrationView extends VerticalLayout {
             InvitationProvisioningQueryService invitationQueryService,
             PlatformMembershipAdminService membershipAdminService,
             PlatformActorIdentityResolver actorIdentityResolver,
-            PlatformAuthorizationService authorizationService) {
+            PlatformAuthorizationService authorizationService,
+            AuthenticationContext authenticationContext) {
         this.tenantCommandService = Objects.requireNonNull(tenantCommandService);
         this.tenantQueryService = Objects.requireNonNull(tenantQueryService);
         this.invitationCommandService = Objects.requireNonNull(invitationCommandService);
@@ -102,6 +110,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
         this.membershipAdminService = Objects.requireNonNull(membershipAdminService);
         this.actorIdentityResolver = Objects.requireNonNull(actorIdentityResolver);
         this.authorizationService = Objects.requireNonNull(authorizationService);
+        this.authenticationContext = Objects.requireNonNull(authenticationContext);
         this.state = loadState();
         render();
     }
@@ -114,6 +123,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
         this.membershipAdminService = null;
         this.actorIdentityResolver = null;
         this.authorizationService = null;
+        this.authenticationContext = null;
         this.state = Objects.requireNonNull(state);
         render();
     }
@@ -146,7 +156,13 @@ public final class PlatformAdministrationView extends VerticalLayout {
         setMargin(true);
         setSpacing(true);
 
-        add(new H1("Administração da plataforma"));
+        HorizontalLayout heading = new HorizontalLayout(new H1("Administração da plataforma"));
+        heading.setWidthFull();
+        heading.setAlignItems(Alignment.CENTER);
+        if (authenticationContext != null) {
+            heading.add(new Button("Sair", event -> authenticationContext.logout()));
+        }
+        add(heading);
         if (!state.platformAccess()) {
             add(new Paragraph("Acesso não autorizado à administração da plataforma."));
             return;
