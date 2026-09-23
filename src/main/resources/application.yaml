@@ -11,6 +11,10 @@ spring:
     url: ${DB_URL}
     user: ${MIGRATION_DB_USER}
     password: ${MIGRATION_DB_PASSWORD}
+    schemas:
+      - platform
+      - operations
+    default-schema: platform
     locations: classpath:db/migration
     clean-disabled: true
     validate-on-migrate: true
