@@ -284,8 +284,11 @@ ou outro componente transversal sem uma necessidade explícita da V0.
   testes; não representa o banco gerenciado de produção.
 - O perfil `test` usa `app_runtime` para a aplicação e `postgres` somente para
   o Flyway. Nunca simplifique o teste usando uma role com `BYPASSRLS`.
-- O arquivo `.env` local não é versionado. O `.env.example` contém somente
-  valores de demonstração e não deve ser usado como segredo de implantação.
+- O arquivo `.env.local` não é versionado; `.env.local.example` contém
+  credenciais demonstrativas exclusivas para o PostgreSQL local do Compose.
+  `.env.supabase.example` documenta os valores não secretos para o ambiente
+  hospedado e mantém senhas como marcadores. Nunca coloque senhas reais, chaves
+  secretas ou identificadores pessoais nos exemplos versionados.
 - Prefira mudanças pequenas, verificáveis e coerentes com o PRD.
 - Não altere arquivos preexistentes sem verificar o diff e sem preservar
   mudanças do usuário.
@@ -329,11 +332,11 @@ separados. O perfil `test` possui defaults locais controlados para executar o
 Compose descartável; eles não devem ser usados como segredo de implantação.
 
 Para validar a fundação localmente, o PostgreSQL deve ser iniciado com
-`docker compose --env-file .env.example up -d`; depois, com Java 21 ativo,
+`docker compose --env-file .env.local.example up -d`; depois, com Java 21 ativo,
 execute `mvnw.cmd verify`. O Compose usa PostgreSQL 17, provisiona `app_runtime`
 sem `BYPASSRLS` e expõe a porta local 55432 por padrão. Se os valores do
-`.env.example` forem alterados, as mesmas variáveis devem estar disponíveis no
-processo Maven do host.
+`.env.local.example` forem alterados, as mesmas variáveis devem estar
+disponíveis no processo Maven do host.
 
 ### Contrato do container
 
@@ -353,11 +356,13 @@ Para construir e executar localmente:
 
 ```text
 docker build -t gestao-producao:local .
-docker run --rm -p 8080:8080 --env-file .env gestao-producao:local
+Copy-Item .env.local.example .env.local
+docker run --rm -p 8080:8080 --env-file .env.local gestao-producao:local
 ```
 
-O arquivo `.env` usado nesse exemplo é local e não deve ser versionado. Não
-use `.env.example` como segredo de implantação.
+O arquivo `.env.local` é local e não deve ser versionado. Use
+`.env.supabase.example` apenas como referência para configurar o serviço
+hospedado; substitua os marcadores de senha diretamente no Render.
 
 ## Atualização obrigatória deste arquivo
 
