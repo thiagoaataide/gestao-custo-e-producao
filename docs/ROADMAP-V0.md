@@ -43,7 +43,7 @@ uma especificação própria antes da implementação.
 | --- | --- | --- | --- | --- |
 | F-00 | Fundação técnica e acesso seguro | Subir aplicação, banco, migrations, autenticação, tenant e RLS | Nenhuma | FR-001, FR-002 |
 | F-01 | Provisionamento da plataforma | Criar tenant, convite e membership sem conceder acesso operacional à plataforma | F-00 | ADR-015 |
-| F-02 | Cadastro base, compras e estoque | Cadastrar insumos, unidades, estabelecimentos, compras, lotes e movimentações | F-00, F-01 | FR-003 a FR-007, FR-019, FR-020 |
+| F-02 | Cadastro base, compras e estoque | Cadastrar insumos, unidades, estabelecimentos, compras, lotes e movimentações | F-00, F-01 | FR-003 a FR-007, FR-019, FR-020, FR-022 (descarte de insumo) |
 | F-03 | Fichas técnicas e rendimentos | Cadastrar receitas, quantidades, preparo e rendimento bruto/pronto | F-02 | FR-008, FR-009 |
 | F-04 | Produtos e cardápios | Compor produtos, definir preços e gerar mensagem para compartilhamento manual | F-03 | FR-010, FR-011 |
 | F-05 | Clientes e pedidos confirmados | Registrar demanda confirmada associada ao período e ao produto | F-01, F-04 | FR-012, FR-013 |
@@ -126,11 +126,21 @@ Inclui:
 - compras, itens, preços e histórico;
 - lotes e entradas de estoque;
 - movimentações rastreáveis;
-- anexos de comprovantes sem OCR;
-- saldo disponível por movimentações.
+- listas de insumos e notas ou recibos em imagem ou PDF, com OCR e revisão
+  humana antes do cadastro ou da confirmação da compra;
+- comprovante obrigatório e preço informado para cada item de compra;
+- responsável operacional designado no tenant para corrigir, cancelar ou
+  acrescentar itens após a confirmação da compra;
+- saldo inicial opcional, descarte de insumo e ajustes manuais de entrada ou
+  saída por responsável operacional, com motivo e sem saldo negativo;
+- saldo disponível por movimentações, excluindo lotes vencidos sem descartar
+  automaticamente seu estoque físico.
 
-As regras de arredondamento e apresentação comercial serão fechadas na
-especificação desta feature.
+Esta feature fecha a conversão e a apresentação da quantidade efetivamente
+comprada. A decisão sobre quanto planejar para compra, mesmo quando a
+necessidade não corresponde a uma embalagem inteira, pertence à F-06.
+A entrada de estoque segue a quantidade documentada e destinada à produção;
+não há quantidade recebida separada nem perda natural automática na F-02.
 
 ### F-03 — Fichas técnicas e rendimentos
 
@@ -245,10 +255,9 @@ Uma feature só pode ser considerada pronta quando:
 - o build e os testes aplicáveis passarem;
 - houver verificação independente da feature antes do encerramento.
 
-## Próxima especificação
+## Estado da sequência
 
-A primeira especificação deverá ser F-00 — Fundação técnica e acesso seguro.
-Ela estabelecerá a base executável para que todas as demais features já nasçam
-com autenticação, tenant, RLS, migrations, transação e validação mínima.
-
-Depois de F-00, a sequência recomendada é iniciar F-01 e, em seguida, F-02.
+F-00 e F-01 estão concluídas. A F-02 tem especificação, desenho e tarefas
+propostos em `.specs/features/f-02-base-purchases-stock/`; a execução ainda
+não começou. A ordem seguinte permanece a definida na matriz de dependências
+deste roadmap.

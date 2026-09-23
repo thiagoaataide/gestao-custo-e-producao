@@ -308,169 +308,68 @@
 - **Date**: 2026-09-21
 - **Status**: active
 
+### AD-024
+- **Decision**: A F-02 planeja o saldo de insumos a partir de movimentos
+  rastreáveis por entrada identificável. Toda saída ou correção de quantidade
+  valida o saldo da própria origem sob trava transacional, sem editar ou
+  apagar movimentos anteriores.
+- **Reason**: Cancelamentos e correções precisam respeitar consumo, descarte
+  e outras saídas já vinculadas à compra, sem permitir que outro lote cubra
+  um saldo insuficiente.
+- **Trade-off**: Consultas de saldo exigem agregação e comandos concorrentes
+  exigem ordenação estável de travas; projeções poderão ser avaliadas depois
+  de medir desempenho.
+- **Scope**: F-02, estoque e integrações futuras de F-06, F-07 e F-08.
+- **Date**: 2026-09-22
+- **Status**: proposed in F-02 design
+
+### AD-025
+- **Decision**: Saldo inicial e ajuste positivo sem compra documentada têm
+  custo desconhecido (`NULL`), nunca custo zero ou preço herdado. Valor e
+  quantidade de compra permanecem vinculados ao documento e às suas revisões.
+- **Reason**: O estoque pode reunir entradas de preços diferentes; preencher
+  custo fictício distorceria o CMV realizado quando ele for implementado.
+- **Trade-off**: Algumas consultas futuras de custo terão resultado incompleto
+  até haver regra explícita de valoração para essas origens.
+- **Scope**: F-02 e cálculo realizado futuro de F-08.
+- **Date**: 2026-09-22
+- **Status**: proposed in F-02 design
+
+### AD-026
+- **Decision**: O login Vaadin usa e-mail/senha validados pelo Supabase Auth e
+  mantém uma sessão Spring Security no servidor. Access e refresh tokens ficam
+  somente nessa sessão; o tenant e as permissões continuam sendo resolvidos
+  pelo domínio da aplicação.
+- **Reason**: Completar o login web da F-00 com o modelo de sessão natural do
+  Vaadin sem deslocar autenticação, autorização de tenant ou dados pessoais
+  para o navegador.
+- **Trade-off**: A aplicação precisa renovar e rotacionar refresh tokens sob
+  sincronização por sessão; cold starts ou reinícios da instância encerram as
+  sessões em memória e exigem novo login.
+- **Scope**: Login Vaadin, sessão de aplicação, refresh/logout Supabase e
+  integração com a identidade e autorização já existentes.
+- **Date**: 2026-09-23
+- **Status**: implemented locally; full isolated verification recorded in F-00 `validation.md`; live Supabase/Render UAT pending
+
 ## Handoff
 
-- **Feature**: F-01 — Platform provisioning
-- **Phase / Task**: Fase 4 — T16 concluída; F-01 verificada e encerrada
-- **Completed**: Product grooming, `docs/PRD-V0.md`, `AGENTS.md`, selected
-  technology baseline, ADR-015 for bounded contexts, ADR-016 and ADR-017 for
-  application plus PostgreSQL RLS tenant isolation, ADR-018 for ACID
-  transaction boundaries, ADR-019 for versioned reversible migrations, and
-  ADR-020 for Flyway as the migration engine, ADR-021 for Flyway Community
-  without Teams in V0, ADR-022 for startup migration execution, ADR-023 for
-  dependency inversion and ports, ADR-024 for logical CQRS in the modular
-  monolith, the PRD
-  synchronization for the resolved user-to-tenant provisioning decision, and
-  `docs/ROADMAP-V0.md`, the confirmed specification and context for F-00, the
-  approved F-00 technical design, and the approved transaction-local tenant
-  context approach, and the F-00 task decomposition in
-  `.specs/features/f-00-foundation-access/tasks.md`, the T1 environmental
-  validation evidence for Supabase project `clcgyhsjbenywugcagjo`, and the T2
-  dependency baseline with its Maven validation evidence, the T3 migration and
-  reviewed reversal procedure, the local PostgreSQL Compose harness, the test
-  profile and the PostgreSQL/RLS integration gate evidence, the T4 startup
-  datasource/Flyway configuration and its failure/restart integration tests,
-  and the T5 Supabase JWT Resource Server adapter with its unit-test evidence,
-  and the T6 domain identity, tenant and membership model, ports, JPA adapters,
-  external-subject relocation, PostgreSQL fixture and integration-test evidence,
-  and the T7 access decision resolver with unit-test evidence, and the T8
-  transaction-local RLS context writer with PostgreSQL integration-test
-  evidence, and the T9 tenant-scoped transaction executor with commit,
-  deny-before-operation and rollback integration-test evidence, and the T11
-  end-to-end PostgreSQL integration suite with isolated empty-database
-  migration/idempotency, tenant-parameter isolation, denied identities, RLS,
-  connection reuse and rollback evidence
-- **In-progress**: F-00 is complete after independent verification. The
-  application requires the database URL,
-  runtime credential, separate migration credential and Supabase JWT settings
-  from the environment; Flyway runs on startup with `classpath:db/migration`.
-  The Resource Server validates issuer, ES256 signature, expiration and
-  configured audience, and maps only `sub` to the domain `ExternalSubject`.
-  The identity model keeps external and internal identifiers separate; JPA
-  adapters expose active-membership queries by internal identity only. The T7
-  resolver maps the authenticated subject to tenant, platform, not-provisioned
-  or ambiguous decisions and creates a tenant context only for an active tenant;
-  the runtime continues to use `app_runtime` without `BYPASSRLS`. The T8
-  adapter accepts only the domain `TenantId`, validates an open transaction-
-  bound connection, and executes `set_config('app.tenant_id', ..., true)` on
-  that same connection; PostgreSQL integration tests prove isolation and pool
-  reuse without context leakage. The T9 executor resolves access before
-  starting the tenant transaction, rejects non-tenant decisions before the
-  operation callback, and uses Spring's local transaction boundary for commit
-  and rollback. T10 adds the Vaadin access shell under `ui/access`, exposes
-  unauthenticated, provisioned, not-provisioned and ambiguous-membership
-  states without operational commands in blocked states, keeps platform access
-  outside tenant operations, and permits only the public shell/login routes in
-  the HTTP security chain. Its integration test covers the four required
-  states against the Spring context and PostgreSQL fixture. T11 adds the
-  cross-boundary integration suite; the full gate passes with 48 tests, no
-  failures, errors or skips, and the Vaadin frontend/Jar build completes. T12
-  adds the multi-stage Temurin 21 runtime image, excludes source/cache/secrets
-  from the final image, documents the environment contract, and confirms that
-  missing `DB_URL` fails startup explicitly. The final verification records 48
-  passing tests, a successful multi-stage Docker build, non-root runtime
-  execution and a clean documentation/build gate. The F-01 discovery decisions
-  cover bootstrap, separate platform identities, owner/admin roles, tenant
-  lifecycle, invitation channels and expiry, one active membership per user,
-  and administrative audit. The user confirmed the domain-first architecture
-  approach for F-01. T1 adds the separate platform-role domain model,
-  owner/admin hierarchy policy, repository port without a tenant parameter, and
-  four unit tests; the quick gate passes with 52 tests, no failures, errors or
-  skips. T2 adds the platform provisioning migration and reviewed reversal
-  script for tenant metadata, platform roles, invitations, audit events,
-  constraints, indexes and least-privilege grants; the isolated full gate
-  passes with 58 tests, no failures, errors or skips, and the JAR/frontend
-  build completes. T3 adds the JPA entity, Spring Data repository and platform-
-  role adapter for active owner/admin assignments, translates the database
-  uniqueness constraints into a predictable application conflict, and proves
-  revocation/history preservation without changing tenant membership; the
-  isolated full gate passes with 62 tests, no failures, errors or skips, and
-  the JAR/frontend build completes. T4 adds the invitation domain state,
-  normalized e-mail and token-digest value objects, JPA persistence and the
- pending-invitation queries; the isolated full gate passes with 67 tests, no
- failures, errors or skips, and the JAR/frontend build completes.
- T5 adds the administrative audit domain vocabulary, controlled metadata
- boundary, JPA JSONB persistence, dynamic filtered pagination, and
- integration evidence for successful, denied and administrative-only
-  queries; the isolated full gate passes with 70 tests, no failures, errors or
-  skips, and the JAR/frontend build completes.
-  T6 evolves tenant and membership persistence with tenant presentation name,
-  lifecycle transitions, historical membership revocation, identity-scoped
-  queries, and enforcement of the one-active-membership constraint; the
-  isolated full gate passes with 74 tests, no failures, errors or skips, and
-  the JAR/frontend build completes.
-   T7 adds the provider-neutral authenticated identity port, validated-token
-  context and Supabase Auth `/user` adapter. The adapter sends the publishable
-  `apikey` and validated bearer token, accepts only a matching subject with a
-  non-blank `email_confirmed_at`, ignores `user_metadata`, applies two-second
-  HTTP timeouts to the shared Supabase client and fails closed for HTTP errors,
-  malformed profiles and timeouts. Its seven contract/unit tests and the full
-  gate pass with 81 tests, zero failures/errors/skips, against isolated
-  PostgreSQL 17.11; the production constructor is explicitly selected for
-    Spring injection while the test-only constructor remains package-private.
-    T8 adds the controlled, idempotent first-owner bootstrap, persists the
-   external identity when necessary, records the successful bootstrap audit,
-   resolves `PLATFORM_OWNER`/`PLATFORM_ADMIN` from the separate platform-role
-   assignments, and removes the legacy membership-role shortcut from access
-   resolution. The unit tests cover owner precedence, admin limitations,
-   revoked/missing roles, unauthorized bootstrap, blocked identity, existing
-   owner and repeated bootstrap. The full isolated gate passes with 89 tests,
-   zero failures/errors/skips, against PostgreSQL 17.11; migrations and the
-    Spring context load successfully. T9 adds command/query services for tenant
-    administration, lets owner/admin create an active tenant without a
-    membership, restricts lifecycle transitions to the owner, preserves
-    memberships and data on suspension/closure, and records SUCCESS, DENIED or
-    FAILED administrative audit events. Successful mutations and audit writes
-    share the local transaction; the integration test proves audit failure
-    rolls back tenant creation. The clean isolated full gate passes with 100
-    tests, zero failures/errors/skips, against PostgreSQL 17.11. T10 adds the
-    invitation command service for creation, explicit resend, revocation and
-    expiry; it normalizes e-mail, issues 24-hour opaque links with only a
-    SHA-256 digest persisted, rejects unavailable tenants and duplicates,
-     records administrative audit in the local transaction, and preserves
-     platform authorization. The isolated full gate passes with 114 tests,
-     zero failures/errors/skips, against PostgreSQL 17.11; the JAR/frontend
-     build completes. T11 adds authenticated invitation acceptance with a
-     provider-neutral verified profile, one-time token consumption, active
-     `TENANT_USER` membership creation, tenant availability and one-tenant
-     enforcement, manual-association confirmation, invitation row locking,
-     and local rollback across identity, membership, invitation and audit.
-     Unit and PostgreSQL integration tests pass with 10 T11-specific tests,
-     including concurrent deduplication and audit-failure rollback.
-     T12 adds owner-only platform-admin grant/revocation, platform-access
-     membership revocation, administrative metadata queries, and transaction-
-     bound audit rollback for role and membership mutations. Unit tests pass
-     with 5 tests and the PostgreSQL integration suite passes with 6 tests.
--     T13 adds the provider-neutral invitation delivery port, post-commit
-     event listener, disabled-by-default configuration, safe delivery-failure
-     audit, and tests proving that delivery never runs before commit. The full
-     gate passes with 141 tests, including Vaadin build and JAR packaging.
--     T14 adds the Vaadin platform administration route, safe administrative
-     queries, tenant lifecycle controls, invitation create/resend/revoke with
-     copyable links, membership and platform-role views/actions, and role-aware
-     blocking for tenant users. The clean isolated full gate passes with 145
-     tests, zero failures/errors/skips, including frontend build and JAR
-     packaging.
--     T15 adds the Vaadin administrative audit route with authorized,
-      server-side paginated filters by action, target, actor, result and period.
-      The UI exposes only administrative metadata, blocks non-platform users,
-      treats empty, invalid-filter and database-failure states safely, and the
-      clean isolated full gate passes with 150 tests, zero failures, errors or
-      skips, including frontend build and JAR packaging.
-- T16 adds the cross-boundary platform provisioning suite with five
-  PostgreSQL-backed scenarios: idempotent owner bootstrap, tenant lifecycle,
-  invitation acceptance and one-tenant membership, platform-admin separation,
-  and denied mutation/audit metadata. The independent evidence review maps
-  F01-01 through F01-16 to passing tests. The discrimination sensor killed
-  both temporary mutations (platform-access resolution and tenant suspension),
-  and the clean isolated full gate passes with 155 tests, zero failures,
-  errors or skips, including frontend build and JAR packaging.
-- **Next step**: Select the next V0 feature from `docs/ROADMAP-V0.md`.
-- **Blockers**: none. T1 and T2 are implemented and committed. The shared
-  local test database predates V2 and remains untouched; future full gates
-  should use a fresh database or an explicitly migrated test database.
-  directly to the Supabase
-  project; `postgres` remains restricted to administration and migrations.
-- **Working tree**: T16 changes are ready for the atomic commit; no unrelated
-  changes were detected.
-- **Branch**: `main`
+- **Feature**: F-02 — Cadastro base, compras e estoque.
+- **Phase / Task**: Specify, Design e Tasks concluídos como propostas; nenhuma
+  tarefa T01–T25 executada ou validada em runtime.
+- **Completed**: F-00 e F-01 encerradas; PRD e roadmap da F-02 alinhados;
+  decisões funcionais em `context.md`; 32 critérios em `spec.md`; desenhos
+  técnicos em `design.md`; 25 tarefas com dependências e gates em `tasks.md`.
+- **In progress**: Revisão dos pressupostos de origem própria para ajuste
+  positivo e preenchimento manual após falha de OCR.
+- **Next step**: Revisar o design e as tarefas; quando a execução da F-02 for
+  autorizada, iniciar pela T01, com um commit e gate por tarefa. Antes da T11,
+  confirmar PDFBox e atualizar `AGENTS.md` junto da dependência.
+- **External prerequisites**: Projeto dedicado de OCR externo com credencial
+  privada, limite de uso e amostras reais para aferir lista manuscrita e
+  comprovante. Google Cloud Vision e seus limites são propostas técnicas.
+- **Preserve local changes**: Alterações em `docs/PRD-V0.md`,
+  `docs/ROADMAP-V0.md` e arquivos da F-02 pertencem ao planejamento.
+  `src/main/resources/application.yaml` tem alteração independente e não
+  deve ser incluído em commits dessas tarefas sem inspeção.
+- **Branch**: `main` (à frente de `origin/main` por um commit, na última
+  verificação deste planejamento).

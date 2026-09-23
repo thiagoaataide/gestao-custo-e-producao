@@ -100,6 +100,12 @@ ADR-015 e não é mais uma pendência arquitetural da V0:
 - o envio efetivo do e-mail de convite pode ser detalhado na implementação sem
   alterar essa decisão de domínio e autorização.
 
+Na F-02, a administração da plataforma pode designar um ou mais responsáveis
+operacionais entre os usuários vinculados a cada tenant. Essa designação não
+concede à plataforma acesso a compras, estoque ou outros dados operacionais.
+O modelo de acesso entregue na F-01 ainda não possui essa autorização e deverá
+evoluir para atender à F-02.
+
 ## 5. Linguagem do domínio
 
 Os conceitos principais da V0 são:
@@ -141,14 +147,31 @@ Os conceitos principais da V0 são:
 
 ### 6.1 Insumos e unidades
 
-O sistema deve permitir cadastrar insumos com uma unidade-base apropriada, como
-gramas, quilogramas, mililitros, litros ou unidades.
+O sistema deve permitir cadastrar insumos com unidade-base em gramas,
+mililitros ou unidades.
 
 Uma compra pode utilizar unidade diferente da unidade-base. O sistema deve
 converter a quantidade comprada para a unidade-base de estoque.
 
-O PRD de execução deve detalhar as regras de apresentação comercial e
-arredondamento quando a necessidade não corresponder a uma embalagem inteira.
+As unidades-base da V0 são grama para peso, mililitro para volume e unidade
+para itens contáveis. A conversão respeita a grandeza do insumo: por exemplo,
+2 kg e 278 g correspondem a 2.278 g. Volume não é convertido em peso sem uma
+regra específica, que não faz parte do cadastro-base.
+
+O usuário pode enviar uma imagem ou um PDF de uma lista digitada ou manuscrita
+para sugerir o cadastro de insumos. Antes de salvar, ele seleciona os itens,
+corrige nomes e informa a unidade-base. O sistema avisa quando encontrar um
+insumo existente ou parecido; não associa nem cria automaticamente um insumo
+com nome ambíguo, como "açúcar" quando é necessário distinguir seu tipo. Marca
+não diferencia insumos: açúcar mascavo de marcas diferentes continua sendo o
+mesmo insumo, e a variação de preço fica no histórico de compras.
+
+Um nome idêntico ao de insumo já cadastrado no mesmo tenant é bloqueado. Um
+nome apenas parecido gera aviso para conferência, sem bloqueio automático.
+
+O planejamento mantém separadas a necessidade calculada e a quantidade que o
+usuário decide comprar. A apresentação comercial da embalagem não determina
+sozinha essa decisão.
 
 ### 6.2 Estabelecimentos e compras
 
@@ -160,8 +183,56 @@ O sistema deve permitir:
 - calcular o custo unitário normalizado;
 - manter o histórico de preços;
 - vincular uma compra ao tenant correto;
-- anexar o comprovante como arquivo, sem leitura automática;
+- exigir nota fiscal ou recibo em imagem ou PDF e preservar o arquivo original;
+- usar OCR para sugerir os dados do documento, sempre com revisão humana;
 - gerar a entrada correspondente no estoque.
+
+Cada item confirmado da compra deve ter insumo identificado, quantidade,
+unidade e preço pago. Dados ausentes ou ilegíveis na leitura devem ser
+preenchidos pelo usuário antes da confirmação. Uma lista de nomes sem
+quantidade e preço serve para sugerir insumos, mas não comprova uma compra.
+Quando a nota discriminar embalagens, a compra preserva essa apresentação e
+registra o total destinado à produção convertido para a unidade-base. Se os
+três pacotes de 500 g a R$ 12 cada forem destinados à produção, a entrada será
+de 1.500 g por R$ 36. Se apenas dois forem destinados à produção, a entrada
+será de 1.000 g por R$ 24. O custo por grama usa o valor da parte selecionada.
+
+Quando houver desconto discriminado no item, seu custo considera o valor do
+próprio item após esse desconto. Se apenas parte da linha for destinada à
+produção, seu valor líquido é proporcional à quantidade selecionada.
+Desconto aplicado apenas ao total da nota ou do recibo não é rateado entre os
+itens nem altera seus custos unitários.
+
+O usuário seleciona somente os itens destinados à produção quando o documento
+também contiver compras pessoais. A seleção pode incluir apenas parte da
+quantidade de uma linha; o arquivo original, com a quantidade total, permanece
+anexado à compra. A confirmação humana precede qualquer entrada de estoque.
+
+Quando a chave da nota estiver legível, o sistema avisa e bloqueia a
+confirmação de outra compra com a mesma chave no mesmo tenant. Itens esquecidos
+podem ser acrescentados à compra original, com histórico da alteração e
+entrada de estoque somente para os itens adicionados. A V0 não importa XML da
+NF-e nem consulta a nota externamente pela chave. A chave lida na imagem ou no
+PDF serve somente para detectar duplicidade.
+
+Para nota ou recibo sem chave disponível, o envio de um arquivo idêntico ao de
+uma compra já confirmada no mesmo tenant gera aviso e bloqueia uma segunda
+confirmação. Outra foto com data, estabelecimento e valor semelhantes gera
+aviso para conferência humana, sem bloqueio automático por semelhança.
+
+Qualquer usuário operacional autorizado pode registrar e confirmar uma compra.
+Após a confirmação, somente um responsável operacional designado para o tenant
+pode corrigir, cancelar ou acrescentar itens. Cada alteração preserva os dados
+anteriores, os novos dados, o autor e o momento da ação. A correção de preço
+com base na nota ou no recibo atualiza os custos derivados, inclusive quando
+parte da entrada já foi consumida. A correção de quantidade também deve fazer
+o registro corresponder ao documento. Se a entrada já teve qualquer saída, a
+quantidade corrigida não pode ser menor que a soma dessas saídas da mesma
+entrada; quando a correção é permitida, o saldo e o custo unitário afetados
+são recalculados. A V0 não registra uma quantidade recebida separada da
+quantidade documentada e selecionada para a produção: se a nota registra 2 kg
+e todo esse item é destinado à produção, a entrada de estoque é de 2 kg.
+O sistema não reduz essa entrada automaticamente por perda natural de peso.
 
 Compra não é sinônimo de consumo. O insumo comprado que não for consumido
 permanece no estoque e pode ser utilizado em ciclos futuros.
@@ -263,6 +334,13 @@ necessidade líquida. O usuário pode:
 - usar percentuais diferentes;
 - ajustar manualmente a quantidade final planejada.
 
+As necessidades de um mesmo insumo, mesmo quando vêm de produtos diferentes,
+são consolidadas antes da decisão de compra. Por exemplo, uma necessidade de
+570 g de arroz pode levar o usuário a planejar a compra de 1 kg. A nota fiscal
+ou o recibo confirma a quantidade efetivamente comprada e seu custo: 1 kg
+entra no estoque. Quando a produção consumir 570 g, os 430 g restantes
+continuam disponíveis para ciclos seguintes.
+
 O planejamento não baixa estoque. A baixa ocorre no consumo real apontado na
 produção.
 
@@ -279,8 +357,31 @@ Movimentações mínimas:
 - descarte ou perda;
 - destinação de produção disponível quando aplicável.
 
+Na F-02, somente o responsável operacional designado pode registrar um ajuste
+manual de entrada ou saída de insumo. Cada ajuste exige motivo, identifica a
+origem afetada e permanece no histórico de movimentações. Uma saída não pode
+deixar saldo negativo; o saldo não é editado diretamente. Uma entrada por
+ajuste sem compra permanece com custo desconhecido.
+
 Os lotes devem permitir registrar quantidade, custo, data de compra e, quando
 aplicável, datas de fabricação, embalagem e validade.
+
+O lote permanece aproveitável durante toda a data de validade informada e
+deixa de compor o saldo disponível aproveitável para o planejamento no dia
+seguinte. O lote continua no
+estoque físico e no histórico até que um usuário registre o descarte; a
+passagem da data não cria automaticamente uma movimentação de perda.
+
+O cadastro de insumos pode incluir uma quantidade inicial opcional em estoque,
+registrada como entrada de saldo inicial, sem criar uma compra fictícia e sem
+exigir custo. Essa quantidade pode reunir sobras de compras anteriores; seu
+custo permanece desconhecido. O descarte de insumo em estoque é rastreado na
+F-02; perdas durante a produção e descarte de preparações são tratados na F-07.
+
+O cancelamento integral de uma compra ou de um de seus itens preserva o
+histórico e reverte a entrada correspondente somente quando a quantidade
+daquela entrada ainda está disponível. O saldo de outras entradas do mesmo
+insumo não libera o cancelamento de uma entrada já consumida.
 
 O saldo remanescente de um ciclo pode ser utilizado em ciclos seguintes se
 estiver apto para consumo. Lotes consumidos devem ser identificáveis quando
@@ -338,6 +439,15 @@ O CMV realizado utiliza o custo real dos lotes efetivamente consumidos. Quando
 mais de um lote for consumido, o sistema calcula o custo pela soma das
 quantidades consumidas multiplicadas pelo custo unitário de cada lote.
 
+Quando o preço de um item de compra é corrigido, o sistema recalcula o custo
+da entrada e os valores realizados derivados dos consumos já registrados,
+inclusive CMV e margens afetadas. O histórico preserva o preço anterior, o
+preço corrigido e a autoria da correção.
+
+Se houver consumo de saldo inicial sem custo conhecido, o CMV afetado deve ser
+identificado como incompleto. O sistema não atribui a esse saldo o preço de
+uma compra posterior nem interpreta custo desconhecido como zero.
+
 O custo da receita considera o custo dos insumos consumidos e o rendimento real.
 O custo da porção utiliza a quantidade da receita aplicada ao produto.
 
@@ -388,8 +498,8 @@ disponíveis:
 | FR-003 | O sistema deve cadastrar insumos e unidades-base. |
 | FR-004 | O sistema deve converter unidades de compra para a unidade-base. |
 | FR-005 | O sistema deve cadastrar estabelecimentos. |
-| FR-006 | O sistema deve registrar compras, itens, preços e histórico. |
-| FR-007 | O sistema deve permitir anexar comprovantes sem leitura automática. |
+| FR-006 | O sistema deve registrar compras com nota fiscal ou recibo, quantidade e preço por item, preservar o histórico e restringir alterações após a confirmação ao responsável operacional designado. |
+| FR-007 | O sistema deve receber imagens e PDFs, sugerir dados por OCR e exigir revisão humana antes de cadastrar insumos ou confirmar compras. |
 | FR-008 | O sistema deve cadastrar receitas, fichas técnicas e rendimentos. |
 | FR-009 | O sistema deve registrar rendimento real de preparações. |
 | FR-010 | O sistema deve cadastrar produtos com composição fixa. |
@@ -414,8 +524,9 @@ disponíveis:
 ### 8.1 Determinismo
 
 Cálculos de quantidade, rendimento, estoque, custo, CMV e margem devem ser
-determinísticos e executados pela aplicação. A V0 deve funcionar plenamente sem
-inteligência artificial.
+determinísticos e executados pela aplicação. O OCR somente sugere dados de
+arquivos; a revisão humana confirma o cadastro ou a compra, e os cálculos não
+dependem da interpretação automática do documento.
 
 ### 8.2 Isolamento de tenant
 
@@ -492,8 +603,11 @@ Não fazem parte da primeira entrega:
 - portal ou login de clientes;
 - pedidos realizados diretamente por clientes;
 - integração com WhatsApp ou envio automático de mensagens;
-- OCR, visão computacional ou leitura automática de comprovantes;
 - entrada automática de estoque por imagem;
+- importação de XML da NF-e;
+- consulta externa da nota fiscal pela chave;
+- cálculo automático de perda natural de peso entre a compra e o uso;
+- confirmação de item de compra sem preço informado;
 - agentes, recomendações ou análises baseadas em inteligência artificial;
 - pesquisa externa de preços;
 - recomendação de mercados ou fornecedores;
@@ -505,6 +619,10 @@ Não fazem parte da primeira entrega:
 - funcionalidades amplas de ERP;
 - microserviços, Kafka ou Kubernetes;
 - estoque de marmitas finais prontas como produto armazenado.
+
+Após a V0, poderá ser avaliado o registro de itens de compra sem preço. Esta é
+uma ideia futura, sem versão ou comportamento definidos, e não altera a
+obrigatoriedade de preço por item na V0.
 
 ## 11. Baseline tecnológico já definido
 
@@ -538,15 +656,14 @@ Os pontos abaixo não ampliam o escopo, mas precisam ser fechados no detalhament
 do PRD e nos critérios de implementação:
 
 1. Definir lote, data de produção e validade para preparações armazenadas.
-2. Definir como preservar o histórico de cancelamentos depois de uma compra.
-3. Formalizar a diferença entre Produção Disponível, Preparação e Marmita Final.
-4. Definir arredondamento e apresentação comercial quando a compra exigir uma
-   embalagem inteira.
-5. Definir o provedor de hospedagem compatível com o plano gratuito da V0.
+2. Formalizar a diferença entre Produção Disponível, Preparação e Marmita Final.
+3. Detalhar como apresentar embalagens e a quantidade planejada de compra sem
+   substituir a decisão manual do usuário por arredondamento obrigatório.
+4. Definir o provedor de hospedagem compatível com o plano gratuito da V0.
 
 ## 13. Estado atual do projeto
 
-O projeto contém atualmente o esqueleto gerado pelo Spring Initializr, com
-Spring Boot, Maven, Java 21, classe principal, configuração YAML e teste de
-carregamento do contexto. As funcionalidades descritas neste PRD ainda não
-estão implementadas.
+As fundações F-00 e F-01 estão implementadas e verificadas. A F-02 possui
+especificação funcional, desenho técnico e tarefas propostos em
+`.specs/features/f-02-base-purchases-stock/`; nenhuma tarefa da F-02 foi
+implementada ou validada em runtime.
