@@ -2,7 +2,7 @@
 
 **Gathered:** 21 de setembro de 2026
 **Spec:** `.specs/features/f-01-platform-provisioning/spec.md`
-**Status:** Decisões de domínio confirmadas; fechamento de implementação pendente após validação publicada em 23 de setembro de 2026.
+**Status:** Decisões de domínio confirmadas; T18 implementada e validada localmente. O fechamento após a validação publicada continua pendente para T19–T23, revisão independente e UAT.
 
 ## Limite da feature
 

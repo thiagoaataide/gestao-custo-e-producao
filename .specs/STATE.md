@@ -363,18 +363,18 @@ compartilhado de `compose.yaml` nesta seção.
 ## Handoff
 
 - **Feature**: F-01 — Fechamento de provisionamento da plataforma.
-- **Phase / Task**: Specify/Design/Tasks de fechamento definidos; T18–T23
-  planejadas e ainda não executadas.
-- **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas e T17 passou pelo
-  gate automatizado (177 testes); PRD e roadmap da F-02 preservados; a
+- **Phase / Task**: T18 implementada e verificada; T19–T23 planejadas.
+- **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas, T17 passou pelo
+  gate automatizado (177 testes) e T18 passou pelo gate completo (182 testes);
+  PRD e roadmap da F-02 preservados; a
   especificação da F-01 agora registra F01-18 a F01-20 e a revisão de status.
 - **In progress**: Fechamento da F-01 reaberto após a validação publicada. As
-  lacunas confirmadas são rota pública e retorno pós-login do convite, origem
-  pública segura do link, adapter SendGrid opcional, responsividade visual e
-  regressão/revisão/UAT final. Nenhuma implementação dessas tasks foi iniciada.
-  O diretório não rastreado da F-02 pertence ao usuário e deve ser preservado.
-- **Next step**: Confirmar as ferramentas de execução conforme o gate
-  `Antes do Execute` de F-01 `tasks.md` e iniciar T18. Executar T18–T23 em
+  lacunas restantes são origem pública segura do link, adapter SendGrid
+  opcional, responsividade visual, regressão, revisão independente e UAT final.
+  A rota/retorno do convite foi implementada e verificada localmente; a UAT
+  publicada continua pendente. O diretório não rastreado da F-02 pertence ao
+  usuário e deve ser preservado.
+- **Next step**: Iniciar T19 e executar T19–T23 em
   ordem, com teste e commit atômico por task; não declarar F-01 concluída antes
   da revisão independente e UAT no Render. Depois, retomar o planejamento da
   F-02 sem presumir autorização para implementar suas tasks; quando houver

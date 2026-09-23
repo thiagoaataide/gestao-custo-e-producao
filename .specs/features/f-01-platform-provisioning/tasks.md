@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** T1–T16 concluídas e verificadas; T17 passou no gate automatizado. O fechamento foi reaberto após a validação publicada; T18–T23 estão planejadas, sem implementação iniciada.
+**Status:** T1–T16 concluídas e verificadas; T17 e T18 passaram pelos gates automatizados. O fechamento continua aberto para T19–T23, revisão independente e UAT publicada.
 
 ## Test Coverage Matrix
 
@@ -548,6 +548,8 @@ da plataforma. Não executar bootstrap automaticamente no login.
 
 ### T18: Abrir e aceitar convites pela rota Vaadin
 
+**Status:** Implementada e validada em 23 de setembro de 2026; `mvnw.cmd verify` passou com 182 testes, sem falhas, erros ou skips.
+
 **What:** Registrar a rota pública `/invitations/{token}` e conectar a tela de
 convite ao serviço de aceitação existente. Se a pessoa não estiver autenticada,
 preservar o destino completo durante o login e retornar ao mesmo convite; não
@@ -559,19 +561,19 @@ aceitar convite por simples GET ou redirecionamento.
 
 **Done when:**
 
-- [ ] Abrir o link apresenta confirmação explícita e não altera estado.
-- [ ] Após autenticar, a pessoa retorna ao mesmo convite e pode confirmar uma
+- [x] Abrir o link apresenta confirmação explícita e não altera estado.
+- [x] Após autenticar, a pessoa retorna ao mesmo convite e pode confirmar uma
       única vez; só o serviço existente decide a aceitação.
-- [ ] E-mail não verificado/divergente, convite expirado, revogado, já aceito,
+- [x] E-mail não verificado/divergente, convite expirado, revogado, já aceito,
       tenant fechado ou membership ativa em outro tenant recebem resultado
       seguro, sem revelar e-mail ou tenant de terceiros.
-- [ ] Token não aparece em logs, telemetria, auditoria ou texto de erro.
-- [ ] Testes de integração cobrem rota direta, sessão ausente/login/retorno,
+- [x] Token não aparece em logs, telemetria, auditoria ou texto de erro.
+- [x] Testes de integração cobrem rota direta, sessão ausente/login/retorno,
       confirmação, estados inválidos e ausência de aceitação automática.
 
 **Tests:** integration/smoke — nova suíte de rota/aceitação, mantendo os
 testes do `InvitationAcceptanceService`.
-**Gate:** full.
+**Gate:** full — PASS (`mvnw.cmd verify`, 182 testes; frontend Vaadin e JAR construídos).
 
 ### T19: Validar a origem pública dos links de convite
 
@@ -719,8 +721,8 @@ credenciais pelo agente.
 | F01-04 | T5, T9, T12, T14, T15, T16 | Verified |
 | F01-05 | T2, T6, T9, T14, T16 | Verified |
 | F01-06 | T2, T6, T9, T14, T16 | Verified |
-| F01-07 | T2, T4, T10, T13, T16, T18, T19, T22, T23 | Core rule verified; route and published origin pending |
-| F01-08 | T7, T10, T11, T16, T18, T22, T23 | Core rule verified; public route pending |
+| F01-07 | T2, T4, T10, T13, T16, T18, T19, T22, T23 | Core rule and route/authentication automated tests passed; published origin and UAT pending |
+| F01-08 | T7, T10, T11, T16, T18, T22, T23 | Core rule, explicit confirmation and login return automated tests passed; published end-to-end UAT pending |
 | F01-09 | T4, T7, T10, T13, T14, T16, T19, T20, T22, T23 | Link/port behavior verified; published origin and SendGrid adapter pending |
 | F01-10 | T4, T6, T11, T16 | Verified |
 | F01-11 | T1, T8, T11, T12, T16 | Verified |
@@ -730,7 +732,7 @@ credenciais pelo agente.
 | F01-15 | T5, T12, T15, T16 | Verified |
 | F01-16 | T2, T5, T9, T10, T11, T12, T13, T16 | Verified |
 | F01-17 | T17, T23 | Automated verification passed; independent review and browser UAT pending |
-| F01-18 | T18, T22, T23 | Pending |
+| F01-18 | T18, T22, T23 | Automated verification passed — T18; published end-to-end/UAT pending |
 | F01-19 | T19, T22, T23 | Pending |
 | F01-20 | T21, T23 | Pending |
 

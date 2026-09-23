@@ -288,14 +288,15 @@ dados operacionais.
 | F01-15 | Consultar auditoria sem dados operacionais | Auditar | ADR-015, LGPD | Verified |
 | F01-16 | Preservar atomicidade e isolamento nas mutações | Todas | ADR-016 a ADR-023 | Verified |
 | F01-17 | Permitir que a identidade configurada solicite explicitamente o bootstrap do owner na tela inicial | Inicializar | F01-01, AD-014, AD-015 | Automated verification passed — T17; browser UAT pending |
-| F01-18 | Abrir, autenticar e aceitar o convite pela rota pública preservando o destino após login | Convidar | F01-07 a F01-10 | Pending — T18 |
+| F01-18 | Abrir, autenticar e aceitar o convite pela rota pública preservando o destino após login | Convidar | F01-07 a F01-10 | Automated verification passed — T18; published UAT pending |
 | F01-19 | Gerar links pela origem pública correta e impedir `localhost` em ambiente publicado | Convidar | F01-07, F01-09 | Pending — T19 |
 | F01-20 | Apresentar a administração com hierarquia visual e layout responsivo | Todas | V0; F01-14, F01-15 | Pending — T21 |
 
 **Coverage:** 20 requisitos definidos e mapeados para tarefas. F01-01 a
-F01-16 permanecem verificados; F01-17 passou pelo gate automatizado da T17.
-F01-18 a F01-20 aguardam implementação e verificação; a revisão independente
-e a UAT publicada da F01-17 também permanecem pendentes.
+F01-16 permanecem verificados; F01-17 passou pelo gate automatizado da T17 e
+F01-18 pelo gate automatizado da T18. F01-19 e F01-20 aguardam implementação;
+a revisão independente e a UAT publicada de F01-17/F01-18 também permanecem
+pendentes.
 
 ## Critérios de sucesso
 

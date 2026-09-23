@@ -10,11 +10,10 @@
 
 ## Estado de fechamento após validação publicada — 23 de setembro de 2026
 
-**Estado atual:** ABERTO — T17 passou no gate automatizado; revisão independente
-e UAT visual no Render não foram concluídas. A inspeção do código e os relatos
-visuais identificaram gaps de interface/configuração que não são cobertos pelo
-gate histórico T16/T17. Tasks corretivas T18–T23 foram planejadas; nenhuma foi
-implementada ou validada nesta atualização documental.
+**Estado atual:** ABERTO — T17 e T18 passaram pelos gates automatizados; revisão
+independente e UAT no Render não foram concluídas. T18 implementa a rota do
+convite e a continuidade após login; T19–T23 seguem pendentes para origem
+pública, e-mail opcional, revisão visual, regressão publicada e UAT.
 
 ## Gate da feature
 
@@ -127,13 +126,12 @@ o próximo deploy, ainda é necessário autenticar com a identidade cujo subject
 está configurado, clicar na ação e verificar a abertura da administração. A
 revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
 
-## Gaps observados para T18–T23
+## Gaps restantes para T19–T23
 
-- **Convite:** o caso de uso `InvitationAcceptanceService` e seus testes
-  existem, mas a aplicação não registra a rota pública `/invitations/{token}`.
-  O erro de navegador “Could not find route” é compatível com essa ausência.
-  A rota e a continuidade do destino de convite durante login ainda precisam
-  ser implementadas e testadas.
+- **Convite publicado:** a rota `/invitations/{token}` e o retorno do destino
+  após login passaram nos testes automatizados T18. Ainda faltam a origem
+  pública segura (T19), a regressão completa publicada (T22) e a UAT real no
+  Render (T23).
 - **Origem pública:** a configuração tem fallback geral para
   `http://localhost:8080`. Mesmo que a URL mostrada no Render já use o domínio
   público, falta impedir que uma configuração de produção ausente ou insegura
@@ -148,5 +146,38 @@ revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
 
 Esses pontos não invalidam os resultados automatizados já registrados; eles
 impedem declarar o fluxo publicado da F-01 como concluído. A próxima evidência
-deve ser produzida por T18–T23, com teste automatizado separado da UAT manual e
+deve ser produzida por T19–T23, com teste automatizado separado da UAT manual e
 sem registrar ou copiar segredos para este arquivo.
+
+## Complemento — T18: rota de aceitação de convites
+
+**Data:** 23 de setembro de 2026
+**Escopo:** T18 / F01-08 / F01-18
+**Resultado automatizado:** PASS
+**Revisão independente e UAT publicada:** pendentes
+
+A aplicação registra a rota Vaadin `/invitations/{token}` como acessível a
+usuários autenticados. A tela não exibe o token, e-mail convidado ou nome do
+tenant; somente a ação explícita de confirmação chama o
+`InvitationAcceptanceService`. Respostas de falha são genéricas e não exibem
+mensagens ou causas do serviço.
+
+Evidências:
+
+- `InvitationAcceptanceViewTests`: 4 testes cobrindo ausência de mutação ao
+  abrir, confirmação explícita com a identidade/token validados da sessão,
+  bloqueio sem autenticação e mensagem genérica sem detalhes sensíveis.
+- `InvitationRouteSecurityIntegrationTests`: GET não autenticado é salvo e
+  redirecionado ao login; a autenticação simulada retorna ao mesmo caminho do
+  convite com o parâmetro `continue` usado pelo fluxo Vaadin. Não há chamada
+  real ao Supabase.
+- `mvnw.cmd verify`: 182 testes, sem falhas, erros ou skips; frontend Vaadin
+  construído e JAR executável empacotado.
+- O gate usou PostgreSQL 17 em um projeto Compose isolado
+  `gestao-producao-t18-gate-20260923`, porta 55433, com volume nomeado
+  temporário próprio. Container, rede e volume temporário foram removidos e a
+  ausência foi confirmada. O volume persistente
+  preexistente do projeto foi preservado. Ele continha schemas não vazios sem
+  histórico Flyway, portanto não foi usado nem alterado pelo gate.
+- O `.env` ativo aponta para Supabase, mas não foi carregado. Nenhuma chamada
+  ou alteração foi feita no Supabase ou no Render.
