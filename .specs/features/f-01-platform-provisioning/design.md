@@ -58,24 +58,32 @@ custos ou indicadores.
 ```mermaid
 sequenceDiagram
     actor Owner as identidade Supabase
+    participant UI as access shell
     participant App as bootstrap application service
     participant Roles as platform role repository
     participant Audit as audit repository
 
-    Owner->>App: solicitar bootstrap autenticado
+    Owner->>UI: autenticar e abrir shell
+    UI-->>Owner: mostrar ação somente se subject corresponder à configuração
+    Owner->>UI: solicitar bootstrap explicitamente
+    UI->>App: bootstrapOwner(subject, occurredAt)
     App->>Roles: verificar owner existente
     alt owner inexistente e identidade autorizada
         App->>Roles: criar PLATFORM_OWNER
         App->>Audit: registrar BOOTSTRAP_OWNER
-        App-->>Owner: acesso de plataforma concedido
+        App-->>UI: acesso de plataforma concedido
+        UI-->>Owner: abrir administração da plataforma
     else bootstrap já concluído ou identidade não autorizada
-        App-->>Owner: negar ou retornar estado idempotente
+        App-->>UI: negar ou retornar estado idempotente
     end
 ```
 
 O bootstrap é uma operação controlada, idempotente e limitada a um owner. A
 identidade autorizada deve vir de configuração de ambiente ou procedimento
-equivalente fora do código; nenhum e-mail, UUID ou segredo é hardcoded.
+equivalente fora do código; nenhum e-mail, UUID ou segredo é hardcoded. O shell
+mostra a ação somente quando o `ExternalSubject` autenticado corresponde ao
+`platform.bootstrap.owner-subject`. A aplicação não inicia o bootstrap
+automaticamente no login; o serviço revalida a identidade no momento da ação.
 
 ### Criação de tenant e convite
 

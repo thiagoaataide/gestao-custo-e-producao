@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -17,9 +18,11 @@ import com.vaadin.flow.component.html.Anchor;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.AccessDecision;
 import br.com.taas.saas.gestaoproducao.platform.access.security.SupabaseAuthenticationToken;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.BootstrapOwnerService;
+import br.com.taas.saas.gestaoproducao.platform.administration.config.PlatformBootstrapProperties;
 import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
 
-@SpringBootTest
+@SpringBootTest(properties = "platform.bootstrap.owner-subject=bootstrap-ui-subject")
 @ActiveProfiles("test")
 class AccessShellViewIntegrationTests {
 
@@ -27,9 +30,45 @@ class AccessShellViewIntegrationTests {
             ExternalSubject.fromSupabase("test-subject-a");
     private static final ExternalSubject UNPROVISIONED_SUBJECT =
             ExternalSubject.fromSupabase("blocked-subject");
+    private static final ExternalSubject BOOTSTRAP_SUBJECT =
+            ExternalSubject.fromSupabase("bootstrap-ui-subject");
 
     @Autowired
     private AccessShellStateResolver stateResolver;
+
+    @Autowired
+    private BootstrapOwnerService bootstrapOwnerService;
+
+    @Autowired
+    private PlatformBootstrapProperties bootstrapProperties;
+
+    @Test
+    @Transactional
+    void configuredOwnerCanStartBootstrapFromTheAccessShell() {
+        SupabaseAuthenticationToken authentication = authenticationFor(BOOTSTRAP_SUBJECT);
+        AccessShellState state = stateResolver.resolve(authentication);
+        AccessShellView view = new AccessShellView(
+                state, BOOTSTRAP_SUBJECT, bootstrapOwnerService, bootstrapProperties);
+
+        assertThat(state).isEqualTo(AccessShellState.NOT_PROVISIONED);
+        Button bootstrap = buttons(view).getFirst();
+        assertThat(bootstrap.getText()).isEqualTo("Ativar administração da plataforma");
+
+        bootstrap.click();
+
+        assertThat(stateResolver.resolve(authentication)).isEqualTo(AccessShellState.PLATFORM_ACCESS);
+    }
+
+    @Test
+    void differentAuthenticatedIdentityDoesNotSeeTheOwnerBootstrapAction() {
+        AccessShellState state = stateResolver.resolve(authenticationFor(UNPROVISIONED_SUBJECT));
+        AccessShellView view = new AccessShellView(
+                state, UNPROVISIONED_SUBJECT, bootstrapOwnerService, bootstrapProperties);
+
+        assertThat(state).isEqualTo(AccessShellState.NOT_PROVISIONED);
+        assertThat(buttons(view)).isEmpty();
+        assertThat(textOf(view)).doesNotContain("Ativar administração da plataforma");
+    }
 
     @Test
     void presentsAuthenticationFlowWithoutProtectedContentWhenUnauthenticated() {

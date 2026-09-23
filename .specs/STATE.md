@@ -356,14 +356,19 @@
 - **Feature**: F-02 — Cadastro base, compras e estoque.
 - **Phase / Task**: Specify, Design e Tasks concluídos como propostas; nenhuma
   tarefa T01–T25 executada ou validada em runtime.
-- **Completed**: F-00 e F-01 encerradas; PRD e roadmap da F-02 alinhados;
+- **Completed**: F-00 encerrada; entregas T1–T16 da F-01 verificadas; PRD e
+  roadmap da F-02 alinhados;
   decisões funcionais em `context.md`; 32 critérios em `spec.md`; desenhos
   técnicos em `design.md`; 25 tarefas com dependências e gates em `tasks.md`.
-- **In progress**: Revisão dos pressupostos de origem própria para ajuste
-  positivo e preenchimento manual após falha de OCR.
-- **Next step**: Revisar o design e as tarefas; quando a execução da F-02 for
-  autorizada, iniciar pela T01, com um commit e gate por tarefa. Antes da T11,
-  confirmar PDFBox e atualizar `AGENTS.md` junto da dependência.
+- **In progress**: Correção de fechamento da F-01 (T17): bootstrap explícito
+  do owner pela tela inicial implementado; gate automatizado passou com 177
+  testes. Revisão independente e UAT visual no Render pendentes. O planejamento
+  da F-02 permanece preservado, sem tasks executadas.
+- **Next step**: Revisar independentemente T17 e validar no Render com a
+  identidade owner configurada; após aprovação, retomar a revisão do design e
+  das tarefas da F-02. Quando a execução da F-02 for autorizada, iniciar pela
+  T01, com um commit e gate por tarefa. Antes da T11, confirmar PDFBox e
+  atualizar `AGENTS.md` junto da dependência.
 - **External prerequisites**: Projeto dedicado de OCR externo com credencial
   privada, limite de uso e amostras reais para aferir lista manuscrita e
   comprovante. Google Cloud Vision e seus limites são propostas técnicas.

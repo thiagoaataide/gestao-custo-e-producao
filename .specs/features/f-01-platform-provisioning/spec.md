@@ -99,6 +99,13 @@ plataforma sem abrir a criação de tenants a qualquer usuário.
 4. **WHEN** a identidade do owner acessa a plataforma **THEN** ela SHALL ver
    somente as capacidades administrativas autorizadas, sem acesso implícito a
    dados operacionais de tenants.
+5. **WHEN** a identidade autenticada corresponde ao `owner-subject`
+   configurado e ainda não possui acesso de plataforma **THEN** a tela inicial
+   SHALL oferecer uma ação explícita para solicitar o bootstrap; identidades
+   diferentes SHALL não receber essa ação, e o login sozinho SHALL não criar
+   o papel.
+6. **WHEN** o bootstrap explícito é concluído com sucesso **THEN** a aplicação
+   SHALL permitir o acesso à administração da plataforma na mesma sessão.
 
 **Teste independente:** executar o bootstrap, repetir a operação e verificar a
 unicidade do owner e a ausência de acesso operacional implícito.
@@ -263,9 +270,11 @@ dados operacionais.
 | F01-14 | Registrar auditoria administrativa mínima | Auditar | ADR-015 | Verified |
 | F01-15 | Consultar auditoria sem dados operacionais | Auditar | ADR-015, LGPD | Verified |
 | F01-16 | Preservar atomicidade e isolamento nas mutações | Todas | ADR-016 a ADR-023 | Verified |
+| F01-17 | Permitir que a identidade configurada solicite explicitamente o bootstrap do owner na tela inicial | Inicializar | F01-01, AD-014, AD-015 | Automated verification passed — T17; browser UAT pending |
 
-**Coverage:** 16 requisitos definidos, 16 mapeados para tarefas e verificados; evidências em `validation.md`
-até a confirmação do spec e posterior decomposição.
+**Coverage:** 17 requisitos definidos e mapeados para tarefas. F01-01 a
+F01-16 permanecem verificados; F01-17 passou pela verificação automatizada da
+T17. A confirmação visual por UAT no ambiente publicado continua pendente.
 
 ## Critérios de sucesso
 

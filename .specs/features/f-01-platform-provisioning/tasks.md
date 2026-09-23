@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** Concluída — tarefas aprovadas, implementadas e verificadas
+**Status:** T1–T16 concluídas e verificadas; T17 implementada e aprovada no gate automatizado. Revisão independente e UAT no ambiente publicado pendentes.
 
 ## Test Coverage Matrix
 
@@ -25,6 +25,7 @@ discrimination sensor.
 | JPA repositories and adapters | integration | Caminhos de leitura/escrita, constraints, estados e queries sem dados de operations | `src/test/java/**/integration/platform/administration/**` | `mvnw.cmd verify` |
 | Supabase identity adapter | unit/contract | Headers, claims confiáveis, e-mail verificado, falhas HTTP e ausência de segredo no cliente | `src/test/java/**/platform/access/security/**`, `src/test/java/**/integration/platform/supabase/**` | `mvnw.cmd test` / `mvnw.cmd verify` |
 | Vaadin Platform Administration | integration/smoke | Fluxos de owner/admin, tenant, convite, membership e auditoria; sem comandos para tenant user | `src/test/java/**/ui/platform/**` | `mvnw.cmd verify` |
+| Access shell owner bootstrap | integration/smoke | Ação exibida somente ao subject configurado; clique executa bootstrap autorizado e concede acesso de plataforma | `src/test/java/**/ui/access/**` | `mvnw.cmd verify` |
 | Runtime/configuration | none | Build e empacotamento; nenhuma credencial versionada | `src/main/resources/**`, `AGENTS.md` | `mvnw.cmd clean verify` |
 
 ## Parallelism Assessment
@@ -75,6 +76,9 @@ Fase 3 — entrega e interface
 
 Fase 4 — validação transversal
   T2, T8, T9, T10, T11, T12, T14, T15 → T16
+
+Fase 5 — completar o bootstrap inicial pelo shell
+  T16 → T17
 ```
 
 Nenhuma task está marcada com `[P]`: embora algumas units sejam paralelizáveis,
@@ -499,11 +503,44 @@ incluindo sensor de discriminação.
 suíte existente.
 **Gate:** full + independent verification.
 
+### T17: Conectar o bootstrap do owner à tela inicial
+
+**Status:** Implementada em 23 de setembro de 2026; gate automatizado PASS. Revisão independente e UAT visual pendentes.
+
+**What:** Mostrar uma ação explícita para iniciar o bootstrap somente quando a
+identidade Supabase autenticada corresponder ao `owner-subject` configurado.
+No clique, chamar `BootstrapOwnerService`, que revalida o subject, registra o
+owner e a auditoria na transação existente; após sucesso, abrir a administração
+da plataforma. Não executar bootstrap automaticamente no login.
+**Where:** `AccessShellView`, testes de integração da tela e documentos F-01
+`spec.md`, `design.md`, `tasks.md` e `validation.md`.
+**Depends on:** T8, T16.
+**Requirements:** F01-01, F01-17.
+
+**Done when:**
+
+- [x] O usuário sem provisionamento vê a ação somente se seu `ExternalSubject`
+      corresponde exatamente ao `platform.bootstrap.owner-subject`.
+- [x] Identidades não autorizadas e estados de acesso já provisionados não
+      recebem a ação de bootstrap.
+- [x] O clique chama o serviço transacional com a identidade da sessão; o
+      serviço revalida o subject e, ao concluir, a mesma identidade resolve para
+      `PLATFORM_ACCESS` e pode abrir a tela administrativa.
+- [x] O login por si só não cria owner; não há UUID hardcoded e nenhuma
+      informação de segredo é mostrada na UI.
+- [x] Testes verificam a ação para o subject configurado, a ausência para
+      subject diferente e o resultado de acesso de plataforma após o bootstrap.
+- [x] `mvnw.cmd verify` passa sem remover ou desabilitar testes (177 testes; frontend e JAR construídos).
+
+**Tests:** integration/smoke — `AccessShellViewIntegrationTests`.
+**Gate:** full — PASS em PostgreSQL 17 temporário local; a revisão independente e a UAT visual permanecem pendentes.
+**Commit:** `fix(platform): expose configured owner bootstrap`
+
 ## Requirement-to-task traceability
 
 | Requirement | Tasks | Status |
 | --- | --- | --- |
-| F01-01 | T1, T3, T8, T16 | Verified |
+| F01-01 | T1, T3, T8, T16, T17 | Verified after T17 |
 | F01-02 | T1, T2, T3, T8, T16 | Verified |
 | F01-03 | T2, T6, T9, T14, T16 | Verified |
 | F01-04 | T5, T9, T12, T14, T15, T16 | Verified |
@@ -519,8 +556,9 @@ suíte existente.
 | F01-14 | T2, T5, T8, T9, T10, T11, T12, T13, T16 | Verified |
 | F01-15 | T5, T12, T15, T16 | Verified |
 | F01-16 | T2, T5, T9, T10, T11, T12, T13, T16 | Verified |
+| F01-17 | T17 | Automated verification passed; independent review and browser UAT pending |
 
-**Coverage:** 16 requisitos definidos, 16 mapeados para tasks, 0 sem cobertura.
+**Coverage:** 17 requisitos definidos e mapeados para tasks, 0 sem cobertura.
 
 ## Task Granularity Check
 
@@ -542,6 +580,7 @@ suíte existente.
 | T14 | UI de tenants/convites/memberships | ✅ Atomic |
 | T15 | UI de auditoria | ✅ Atomic |
 | T16 | Validação transversal e verificador | ✅ Atomic |
+| T17 | Ação de bootstrap do owner no shell | ✅ Atomic |
 
 ## Diagram-Definition Cross-Check
 
@@ -563,6 +602,7 @@ suíte existente.
 | T14 | T9, T10, T11, T12, T13 | T9/T10/T11/T12/T13 → T14 | ✅ Match |
 | T15 | T5, T12, T14 | T5/T12/T14 → T15 | ✅ Match |
 | T16 | T2, T8, T9, T10, T11, T12, T14, T15 | all listed predecessors → T16 | ✅ Match |
+| T17 | T8, T16 | T8/T16 → T17 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -584,6 +624,7 @@ suíte existente.
 | T14 | Vaadin UI | integration/smoke | Platform view integration tests | ✅ OK |
 | T15 | Vaadin UI | integration/smoke | Audit view integration tests | ✅ OK |
 | T16 | Cross-boundary | integration | Full end-to-end suite and verifier | ✅ OK |
+| T17 | Access shell bootstrap | integration/smoke | Configured and non-configured subject, persisted platform access | ✅ OK |
 
 ## Antes do Execute
 
@@ -597,5 +638,6 @@ usar?**
 
 ## Próximo passo
 
-Após a aprovação deste `design.md` e `tasks.md`, executar T1 em ciclo atômico:
-implementar, testar, inspecionar diff, fazer commit e atualizar `.specs/STATE.md`.
+Executar revisão independente e UAT no navegador com a identidade owner
+configurada; após confirmação, fechar F-01 e retomar a próxima feature V0 do
+roadmap.

@@ -82,4 +82,33 @@ traceability de F01-01 a F01-16. Todos os requisitos possuem teste ou
 evidência existente correspondente, e nenhum gap residual exigiu criação de
 tarefa corretiva.
 
-**Resultado final da F-01: PASS — 16/16 requisitos verificados.**
+**Resultado da validação T16: PASS — 16/16 requisitos então definidos foram verificados.**
+
+## Complemento — T17: bootstrap do owner pela tela inicial
+
+**Data:** 23 de setembro de 2026
+**Escopo:** T17 / F01-17
+**Resultado automatizado:** PASS
+**Revisão independente e UAT no ambiente publicado:** pendentes
+
+A tela inicial passou a exibir a ação explícita **“Ativar administração da
+plataforma”** somente quando a identidade autenticada corresponde exatamente
+ao `platform.bootstrap.owner-subject` configurado. O login não cria owner
+automaticamente; ao clicar, o serviço revalida a identidade, persiste owner e
+auditoria na transação existente e a interface navega para a administração.
+
+Evidências da validação automatizada:
+
+- `AccessShellViewIntegrationTests`: 7 testes, sem falhas ou erros; cobre
+  bootstrap explícito, ausência da ação para identidade diferente e transição
+  para acesso de plataforma após o bootstrap.
+- `mvn verify`: 177 testes, sem falhas ou erros; frontend Vaadin construído e
+  JAR executável empacotado.
+- PostgreSQL 17 em container temporário local; nenhuma conexão ou alteração no
+  Supabase ou no banco publicado.
+- `git diff --check` sem erros.
+
+Esta validação automatizada não confirma a experiência visual no Render. Após
+o próximo deploy, ainda é necessário autenticar com a identidade cujo subject
+está configurado, clicar na ação e verificar a abertura da administração. A
+revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
