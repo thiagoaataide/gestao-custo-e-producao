@@ -16,11 +16,20 @@ public final class SupabaseAuthenticationToken extends AbstractAuthenticationTok
 
     private final Jwt jwt;
     private final ExternalSubject externalSubject;
+    private final String refreshToken;
 
     public SupabaseAuthenticationToken(Jwt jwt, ExternalSubject externalSubject) {
+        this(jwt, externalSubject, null);
+    }
+
+    public SupabaseAuthenticationToken(
+            Jwt jwt,
+            ExternalSubject externalSubject,
+            String refreshToken) {
         super(Collections.emptyList());
         this.jwt = jwt;
         this.externalSubject = externalSubject;
+        this.refreshToken = refreshToken;
         setAuthenticated(true);
     }
 
@@ -41,5 +50,13 @@ public final class SupabaseAuthenticationToken extends AbstractAuthenticationTok
 
     public Jwt getJwt() {
         return jwt;
+    }
+
+    boolean hasRefreshToken() {
+        return refreshToken != null && !refreshToken.isBlank();
+    }
+
+    String refreshToken() {
+        return refreshToken;
     }
 }
