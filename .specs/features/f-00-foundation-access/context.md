@@ -45,6 +45,20 @@ não implementa as operações de produção.
 ### Identidade e tenant
 
 - O Supabase Auth autentica a identidade externa.
+- O usuário entra com e-mail e senha de uma conta já existente no Supabase
+  Auth; a aplicação não oferece cadastro público nem criação automática de
+  conta ou tenant.
+- O formulário Vaadin envia a credencial ao backend. O backend valida a
+  resposta do Supabase e cria uma sessão Spring Security mantida no servidor.
+- Access e refresh tokens permanecem somente no contexto server-side da sessão;
+  o navegador recebe apenas o cookie de sessão HttpOnly, Secure no ambiente
+  HTTPS publicado e SameSite Lax.
+- A sessão expira após 30 minutos sem atividade. Enquanto ativa, o backend
+  renova o access token antes do vencimento e substitui junto o refresh token
+  rotacionado; logout encerra a sessão local e solicita logout local ao
+  Supabase.
+- Um reinício ou cold start do serviço pode encerrar a sessão em memória; o
+  usuário deverá entrar novamente.
 - A aplicação não trata o token como fonte autoritativa do tenant.
 - O backend consulta o vínculo persistido e resolve exatamente um tenant para o
   usuário autenticado.
@@ -94,14 +108,17 @@ não implementa as operações de produção.
 ## Flexibilidade do design
 
 O design pode escolher a forma concreta de integração entre Spring Security,
-Supabase Auth, contexto transacional e RLS, desde que preserve os critérios de
-aceitação. Também pode definir o formato de logs e a aparência do shell, sem
-alterar as regras de acesso ou criar novas capacidades na F-00.
+Supabase Auth, contexto transacional e RLS, desde que preserve o login por
+Supabase Auth com sessão Vaadin server-side definido em `ADR-025` e os critérios
+de aceitação. Também pode definir o formato de logs e a aparência do shell,
+sem alterar as regras de acesso ou criar novas capacidades na F-00.
 
 ## Áreas não discutidas → assunções
 
 - O formato exato da mensagem e da tela de acesso bloqueado fica para o design
   da interface, mantendo a informação mínima de "acesso não provisionado".
+- Recuperação de senha e alteração de credenciais não fazem parte do fluxo de
+  login da F-00; a aplicação não mantém senha nem implementa tela de cadastro.
 - O formato de auditoria e logs de falha fica para o design, sem registrar
   tokens, segredos ou dados de outros tenants.
 - A decisão de hospedagem permanece fora desta feature; a fundação não depende

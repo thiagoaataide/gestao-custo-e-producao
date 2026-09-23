@@ -233,7 +233,7 @@ quando forem implementadas.
 
 | Componente | Decisão atual | Regra para definir a versão |
 | --- | --- | --- |
-| Supabase Auth | Resource Server JWT no Spring Security; sem SDK de cliente no backend | T5; integração baseada no protocolo JWT/JWKS do projeto |
+| Supabase Auth | Resource Server JWT mais REST de password sign-in, refresh e logout local para sessão Vaadin server-side; sem SDK de cliente ou credencial administrativa no backend | ADR-025; protocolo REST/JWT e validação com o decoder existente |
 | Supabase Storage | armazenamento de objetos | registrar versão do cliente/SDK escolhido |
 | Spring Cloud | não é necessário no esqueleto atual | só adicionar se uma necessidade da V0 exigir |
 | Implementação JTA | não definida para a V0 | não adicionar sem requisito de transação distribuída |

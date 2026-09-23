@@ -38,6 +38,7 @@ inseguro e depois exigir mudanças incompatíveis no domínio.
 | Criação de tenant | Pertence à F-01 — Provisionamento da plataforma. |
 | Convite e ativação de membership | Pertence à F-01; F-00 apenas consome o vínculo ativo. |
 | Administração de usuários e papéis complexos | Não faz parte da autorização da V0. |
+| Cadastro público e recuperação de senha | F-00 autentica contas existentes; provisionamento de conta permanece fora do formulário de login. |
 | Cadastro de insumos, compras, estoque ou produção | Pertence às features operacionais posteriores. |
 | Envio efetivo de e-mail de convite | Pode ser detalhado na F-01 sem alterar o modelo de acesso. |
 | Alternância entre tenants | A V0 vincula cada usuário a um único tenant. |
@@ -117,10 +118,31 @@ V0.
 5. **WHEN** a credencial é inválida, expirada ou ausente **THEN** a aplicação
    SHALL negar a autenticação e SHALL não executar operação de domínio em nome
    do usuário.
+6. **WHEN** um usuário não autenticado abre a rota de login **THEN** a
+   aplicação SHALL apresentar campos de e-mail e senha, sem ação de cadastro
+   público.
+7. **WHEN** o Supabase Auth aceita as credenciais **THEN** a aplicação SHALL
+   validar o access JWT com as regras existentes e SHALL criar uma sessão
+   Spring Security no servidor; access e refresh tokens SHALL NOT ser enviados
+   ao navegador.
+8. **WHEN** o Supabase Auth rejeita credenciais **THEN** a interface SHALL
+   apresentar mensagem genérica que não diferencie usuário inexistente, senha
+   incorreta ou método de autenticação incompatível.
+9. **WHEN** um access token da sessão está próximo do vencimento **THEN** o
+   backend SHALL renová-lo pelo refresh token, validar o novo JWT e substituir
+   o par de tokens na mesma sessão; requests concorrentes da mesma sessão
+   SHALL NOT reutilizar simultaneamente o mesmo refresh token.
+10. **WHEN** a sessão é encerrada pelo usuário **THEN** a aplicação SHALL
+    invalidar a sessão Spring local e solicitar ao Supabase o logout somente
+    daquela sessão.
+11. **WHEN** o token expira e não pode ser renovado **THEN** a aplicação SHALL
+    invalidar a sessão e SHALL exigir nova autenticação antes de qualquer
+    operação protegida.
 
 **Teste independente:** exercitar os cenários de identidade válida provisionada,
 identidade sem vínculo, vínculo ambíguo e credencial inválida, verificando o
-resultado de acesso e a ausência de criação automática.
+resultado de acesso e a ausência de criação automática; cobrir também login,
+persistência da sessão, erro genérico, rotação e logout.
 
 ### P1: Isolar cada tenant na aplicação e no banco ⭐ MVP
 
@@ -231,9 +253,15 @@ verificar a mensagem e os comandos disponíveis em cada caso.
 | F00-14 | Reverter alterações parciais quando uma etapa falhar. | Atomicidade | ADR-018 | Implementado; verificado em T9/T11 |
 | F00-15 | Não depender de JTA ou transação distribuída. | Atomicidade | ADR-018 | Implementado; verificado em T9/T11 |
 | F00-16 | Exibir estado provisionado, bloqueado ou não autenticado sem dados protegidos. | Shell | PRD seção 4.2 | Implementado; verificado em T10/T11 |
+| F00-17 | Exibir login por e-mail/senha para contas existentes, sem cadastro público. | Acesso | ADR-025 | Implementado; T13/T14 e testes locais; UAT Supabase pendente |
+| F00-18 | Manter a autenticação Vaadin em sessão Spring server-side sem enviar tokens ao navegador. | Acesso | ADR-025 | Implementado; T14 e inspeção do fluxo/configuração; UAT publicado pendente |
+| F00-19 | Renovar access token e rotacionar refresh token com proteção contra requests concorrentes. | Acesso | ADR-025 | Implementado; T15 e testes de rotação, concorrência e expiração |
+| F00-20 | Encerrar sessão local e solicitar logout local ao Supabase; falhar fechado quando a renovação expirar. | Acesso | ADR-025 | Implementado; T14/T15 e testes locais; UAT Supabase pendente |
 
-**Cobertura:** 16 requisitos identificados e 16 mapeados em `tasks.md`. Todos
-foram implementados e verificados pelos gates unitário, full e build da F-00.
+**Cobertura:** 20 requisitos identificados e mapeados em `tasks.md`. F00-01 a
+F00-20 têm implementação e evidência de teste local registradas. O login,
+refresh e logout contra a conta Supabase real e a instância publicada ainda
+precisam de UAT.
 
 ## Critérios de sucesso
 

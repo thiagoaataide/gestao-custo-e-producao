@@ -8,7 +8,7 @@ filesystem path. The skill is the source of truth for the per-task cycle,
 tests, commits, independent verification, and the discrimination sensor.
 
 **Design:** `.specs/features/f-00-foundation-access/design.md`
-**Status:** T1 a T12 concluídas; verificação independente aprovada
+**Status:** T1 a T15 concluídas em 23 de setembro de 2026; validação local isolada registrada em `validation.md`.
 
 ## Test Coverage Matrix
 
@@ -20,10 +20,13 @@ tests, commits, independent verification, and the discrimination sensor.
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | --- | --- | --- | --- | --- |
 | Security adapter and access decision | unit | Todos os branches e estados da especificação, incluindo token inválido, identidade sem vínculo e membership ambígua | `src/test/java/**/platform/access/**` | `./mvnw.cmd test` |
+| Supabase Auth REST and password provider | unit | Login válido/rejeitado, validação do JWT/subject, token ausente/malformado e ausência de exposição de credenciais | `src/test/java/**/platform/access/security/**` | `./mvnw.cmd test` |
+| Server-side session refresh | unit/integration | Token fora da janela não renova; refresh valida subject, atualiza par rotacionado, serializa concorrência e encerra sessão ao expirar sem renovação | `src/test/java/**/platform/access/security/**` | `./mvnw.cmd test` |
 | Platform repositories and entities | integration | Caminhos principais de consulta, status e constraints em PostgreSQL real | `src/test/java/**/platform/identity/**` | `./mvnw.cmd verify` |
 | Flyway, schema, grants and RLS | integration | Migrations desde banco vazio, idempotência, permissões, allow/deny por tenant e ausência de contexto | `src/test/java/**/integration/database/**` | `./mvnw.cmd verify` |
 | Transaction and RLS context | integration | Mesmo connection/transaction, ausência de vazamento no pool, commit e rollback | `src/test/java/**/integration/tenancy/**` | `./mvnw.cmd verify` |
 | Vaadin access shell | integration/smoke | Estados não autenticado, provisionado, não provisionado e membership ambígua sem conteúdo protegido | `src/test/java/**/ui/access/**` | `./mvnw.cmd verify` |
+| Vaadin login and logout | integration/smoke | LoginForm sem cadastro, POST autenticado, sessão server-side, falha genérica, logout local e nenhum token em resposta/cookie | `src/test/java/**/ui/access/**` | `./mvnw.cmd verify` |
 | Application configuration and container | none | Gate de build e empacotamento; não substituir os testes de segurança | `src/main/resources/**`, `Dockerfile` | `./mvnw.cmd clean verify` |
 
 O Maven Wrapper foi executado de fato com o JDK 21. A validação de testes deve
@@ -75,6 +78,12 @@ T5 + T6 → T7; T4 + T7 + T8 → T9
 
 ```text
 T9 → T10 → T11 → T12
+```
+
+### Phase 4: Login e sessão server-side (Sequential)
+
+```text
+T12 → T13 → T14 → T15
 ```
 
 ## Task Breakdown
@@ -588,6 +597,143 @@ entrypoint direto e somente `app.jar` no runtime, sem workspace ou cache Maven.
 **Gate:** build — aprovado
 **Commit:** `build(f00): add multi-stage runtime image`
 
+### T13: Integrar autenticação por senha ao Supabase Auth
+
+**Status:** Concluída em 23 de setembro de 2026. O cliente REST de Supabase Auth e o provider de senha usam o decoder JWT existente, validam subject e tratam falhas sem expor credenciais ou tokens.
+
+**What:** Implementar o cliente REST mínimo para password sign-in e o
+`AuthenticationProvider` Spring que valida o access JWT retornado com o
+`JwtDecoder` existente, vincula o subject Supabase retornado ao `sub` validado
+e mantém o refresh token somente no token de autenticação server-side.
+Credenciais rejeitadas devem produzir falha genérica; erros de transporte não
+podem expor request, resposta, senha ou token.
+**Where:** `src/main/java/br/com/taas/saas/gestaoproducao/platform/access/security/`
+e testes unitários em `src/test/java/**/platform/access/security/`.
+**Depends on:** T5, T12
+**Reuses:** `RestOperations` com timeout e header `apikey`,
+`SupabaseJwtProperties`, `JwtDecoder`,
+`SupabaseJwtAuthenticationConverter` e `SupabaseAuthenticationToken`.
+**Requirement:** F00-04, F00-08, F00-17
+
+**Tools:**
+
+- MCP: Supabase Docs para contrato Auth REST
+- Skills: `supabase:supabase`, `tlc-spec-driven`
+- Fonte oficial: Supabase Auth password sign-in e sessões; Spring Security 7.1.1
+
+**Done when:**
+
+- [x] Password sign-in usa a chave publicável somente como `apikey`, sem
+      `service_role`, SDK Java ou endpoint administrativo.
+- [x] Access JWT é validado pelo decoder existente e o subject retornado pelo
+      Auth corresponde ao claim `sub` validado.
+- [x] Respostas inválidas, credenciais rejeitadas e falhas do provedor não
+      registram nem retornam senha, access token ou refresh token.
+- [x] Testes unitários cobrem sucesso, credencial rejeitada, JWT/subject
+      inválido, resposta incompleta e timeout, com assertions sobre resultado e
+      mensagem genérica.
+- [x] A suíte completa passa sem remover ou desabilitar testes; evidência do gate em `validation.md`.
+
+**Tests:** unit
+**Gate:** quick
+**Commit:** `feat(auth): authenticate existing users with supabase`
+
+### T14: Conectar o formulário Vaadin à sessão Spring
+
+**Status:** Concluída em 23 de setembro de 2026. A rota usa `LoginForm` com autenticação Spring/Vaadin, persiste o contexto em sessão server-side e oferece logout local com solicitação de encerramento de sessão ao Supabase.
+
+**What:** Substituir a página placeholder por `LoginForm` de e-mail/senha,
+configurar o `VaadinSecurityConfigurer` com a rota de login e o provider
+Supabase, persistir a autenticação em sessão Spring server-side, exibir falha
+genérica e disponibilizar logout que encerra a sessão local e solicita logout
+`local` ao Supabase.
+**Where:** `AuthenticationView`, `AccessShellView`,
+`SupabaseResourceServerSecurityConfiguration`, handler de logout, configuração
+de sessão e testes em `src/test/java/**/ui/access/`.
+**Depends on:** T13
+**Reuses:** `VaadinSecurityConfigurer`, `AuthenticationContext`,
+`SupabaseAuthenticationToken`, `SupabaseAuthClient` e a autorização F-00/F-01.
+**Requirement:** F00-16, F00-17, F00-18, F00-20
+
+**Tools:**
+
+- MCP: Supabase Docs para logout local
+- Skills: `supabase:supabase`, `tlc-spec-driven`, `docs-writer`
+- Fonte oficial: Vaadin Flow security e Spring Security 7.1.1 session management
+
+**Done when:**
+
+- [x] `/login` mostra e-mail/senha em português e não oferece cadastro público
+      nem recuperação de senha.
+- [x] `LoginForm` usa o fluxo de form login do `VaadinSecurityConfigurer`; não
+      há configuração paralela de `formLogin` que contorne a segurança Vaadin.
+- [x] Login aceito persiste o contexto Spring na sessão através do repositório
+      configurado; a autorização de tenant/plataforma permanece nas rotas e
+      serviços existentes. O fluxo real com conta Supabase ainda requer UAT.
+- [x] Credencial rejeitada mostra mensagem genérica sem distinguir conta
+      ausente de senha incorreta.
+- [x] Cookie de sessão é HttpOnly, SameSite Lax e Secure por padrão;
+      `.env.local.example` usa `SESSION_COOKIE_SECURE=false` somente para HTTP
+      local e `.env.supabase.example` documenta `true`.
+- [x] Access/refresh tokens são mantidos no contexto server-side; a tela e a
+      configuração não os colocam em HTML, JavaScript ou cookies. Não houve
+      inspeção de tráfego real contra a instância publicada.
+      tokens; nenhum log contém credenciais.
+- [x] Logout sempre invalida a sessão local e solicita ao Supabase `scope=local`
+      sem afetar outras sessões do usuário.
+- [x] Testes unitários cobrem provider, formulário e logout; o gate completo
+      passa contra PostgreSQL isolado. Login interativo real permanece para UAT.
+
+**Tests:** integration/smoke
+**Gate:** full
+**Commit:** `feat(auth): add vaadin login and server session`
+
+### T15: Renovar e rotacionar tokens da sessão
+
+**Status:** Concluída em 23 de setembro de 2026. Refresh validado, serializado por sessão e com substituição atômica do par de tokens; expiração sem renovação invalida a sessão.
+
+**What:** Adicionar filtro server-side que atualiza access e refresh tokens
+antes do vencimento, valida assinatura/issuer/audience/subject e serializa
+requests concorrentes pela sessão. Uma falha temporária só permite o uso do
+access token enquanto ele ainda for válido; quando vencido, a sessão é
+invalidada e o usuário deve entrar novamente.
+**Where:** `src/main/java/br/com/taas/saas/gestaoproducao/platform/access/security/`
+e testes em `src/test/java/**/platform/access/security/`.
+**Depends on:** T13, T14
+**Reuses:** `SupabaseAuthClient`, `JwtDecoder`,
+`SupabaseJwtAuthenticationConverter`, `SecurityContextRepository` e
+`HttpSessionSecurityContextRepository`.
+**Requirement:** F00-19, F00-20
+
+**Tools:**
+
+- MCP: Supabase Docs para refresh-token rotation
+- Skills: `supabase:supabase`, `tlc-spec-driven`
+- Fonte oficial: Supabase Auth sessions/signout e Spring Security 7.1.1
+
+**Done when:**
+
+- [x] Refresh ocorre somente quando o access token da sessão está dentro da
+      janela configurada antes do vencimento.
+- [x] O novo JWT é validado e mantém o mesmo `ExternalSubject`; o refresh token
+      retornado substitui o anterior no contexto salvo no servidor.
+- [x] Requests concorrentes com a mesma sessão não enviam simultaneamente o
+      mesmo refresh token.
+- [x] Falha de refresh mantém apenas um access token ainda válido; depois da
+      expiração, invalida sessão e redireciona ao login.
+- [x] Tokens não são retornados em erros nem registrados pelo fluxo; permanecem
+      apenas na sessão do servidor, sem inclusão na tela ou cookie.
+- [x] Tokens não aparecem em logs, HTML, JavaScript, cookies ou respostas de
+      erro.
+- [x] Testes cobrem não-renovação, renovação/rotação, subject divergente,
+      concorrência serializada, falha antes da expiração e falha após expiração.
+- [x] O gate completo passa contra PostgreSQL isolado; nenhum teste é removido
+      ou ignorado.
+
+**Tests:** unit/integration
+**Gate:** build
+**Commit:** `feat(auth): rotate supabase session tokens`
+
 ## Parallel Execution Map
 
 ```text
@@ -603,6 +749,7 @@ Dependências diretas:
   T5 → T10; T7 → T10
   T4 → T11; T7 → T11; T8 → T11; T9 → T11; T10 → T11
   T4 → T12; T11 → T12
+  T12 → T13; T13 → T14; T14 → T15
 ```
 
 Nenhuma tarefa está marcada com `[P]`. A dependência técnica e os testes com
@@ -625,6 +772,9 @@ esta fundação.
 | T10: Criar shell de acesso | Um componente de UI | ✅ Granular |
 | T11: Validar integração | Uma suíte ponta a ponta da feature | ✅ Granular |
 | T12: Empacotar runtime | Um artefato de build e contrato de ambiente | ✅ Granular |
+| T13: Integrar cliente e provider de autenticação | Um adapter Supabase Auth e autenticação Spring | ✅ Granular |
+| T14: Conectar login Vaadin e logout | Um fluxo de login e sessão UI | ✅ Granular |
+| T15: Renovar sessão Supabase | Um filtro de refresh e ciclo de token | ✅ Granular |
 
 ## Diagram-Definition Cross-Check
 
@@ -642,6 +792,9 @@ esta fundação.
 | T10 | T5, T7 | T5 → T10; T7 → T10 | ✅ Match |
 | T11 | T4, T7, T8, T9, T10 | T4 → T11; T7 → T11; T8 → T11; T9 → T11; T10 → T11 | ✅ Match |
 | T12 | T4, T11 | T4 → T12; T11 → T12 | ✅ Match |
+| T13 | T5, T12 | T12 → T13 | ✅ Match |
+| T14 | T13 | T13 → T14 | ✅ Match |
+| T15 | T13, T14 | T14 → T15 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -659,8 +812,13 @@ esta fundação.
 | T10 | Vaadin shell | integration/smoke | integration | ✅ OK |
 | T11 | Cross-boundary integration suite | integration | integration | ✅ OK |
 | T12 | Container/configuration | none | none | ✅ OK |
+| T13 | Authentication provider/client | unit | unit | ✅ OK |
+| T14 | Vaadin route/session/logout | integration/smoke | integration/smoke | ✅ OK |
+| T15 | Session refresh filter | unit/integration | unit/integration | ✅ OK |
 
 ## Próximo passo
 
-F-00 está concluída após T1–T12 e verificação independente registrada em
-`validation.md`. A próxima ação é selecionar a próxima feature V0 do roadmap.
+F-00 passou pelos gates T1–T15; a implementação local foi validada com banco
+PostgreSQL isolado e o registro está em `validation.md`. O próximo passo é
+realizar UAT de login/logout com a conta Supabase na instância publicada e,
+depois, seguir a próxima feature V0 do roadmap.

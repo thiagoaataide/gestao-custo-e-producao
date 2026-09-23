@@ -14,16 +14,28 @@ um `tenant_id` recebido do cliente.
 
 ```mermaid
 flowchart LR
-    U[Browser e shell Vaadin] --> A[Supabase Auth]
-    A -->|JWT de sessão| S[Spring Security Resource Server]
-    S --> I[Identidade externa]
+    U[Browser] -->|LoginForm HTTPS| V[Vaadin e Spring Form Login]
+    V -->|email/senha + apikey| A[Supabase Auth REST]
+    A -->|access JWT + refresh token| S[Spring Security]
+    S -->|valida assinatura, iss, aud e exp| J[JwtDecoder existente]
+    S -->|SecurityContext + tokens server-side| H[HttpSession]
+    H -->|cookie HttpOnly, Secure, SameSite Lax| U
+    B[Bearer token, quando enviado] --> R[Resource Server]
+    R --> J
+    J --> I[ExternalSubject: somente sub]
     I --> M[Resolver membership ativa]
     M --> T[Contexto de tenant do backend]
     T --> X[Transação local do caso de uso]
     X --> G[set_config app.tenant_id local]
     G --> D[PostgreSQL com RLS]
     F[Flyway no startup] --> D
+    H -->|refresh antes do vencimento| A
 ```
+
+O navegador não recebe access/refresh tokens. O mesmo conversor de identidade
+continua atendendo o Resource Server para requisições Bearer, mas o fluxo
+principal da UI Vaadin autentica pelo formulário server-side e mantém o
+`SecurityContext` em uma sessão HTTP do servidor.
 
 O runtime possui dois caminhos lógicos:
 
@@ -84,18 +96,33 @@ role com `BYPASSRLS` para as operações normais.
 
 ### Autenticação e resolução de acesso
 
-1. O cliente obtém a sessão por Supabase Auth usando somente credencial pública
-   apropriada ao cliente.
-2. A requisição ao monólito transporta o access token como bearer token.
-3. O Resource Server valida assinatura, emissor, expiração e demais validadores
-   configurados para o projeto Supabase.
-4. O adaptador extrai somente o `sub` como identificador externo. Claims de
+1. O `LoginForm` Vaadin envia e-mail e senha por HTTPS ao endpoint `/login` do
+   Spring Security. Não há rota de cadastro público ou de recuperação de senha.
+2. O `AuthenticationProvider` chama o endpoint de password sign-in do Supabase
+   Auth REST com o header `apikey`; não chama o endpoint administrativo nem usa
+   `service_role`.
+3. O backend valida o access JWT retornado com o `JwtDecoder` existente
+   (assinatura ES256/JWKS, issuer, audience e expiração) e confirma que o `sub`
+   corresponde ao usuário retornado pelo Auth. Erros de credencial têm mensagem
+   genérica.
+4. Spring Security salva o principal `ExternalSubject` e o par de tokens na
+   sessão HTTP server-side. O cookie é HttpOnly, Secure no ambiente publicado
+   HTTPS e SameSite Lax; a sessão expira após 30 minutos de inatividade.
+5. O refresh filter sincroniza por sessão. Próximo do vencimento, troca o
+   refresh token por um novo par, valida o JWT e substitui o par inteiro antes
+   de permitir a request. Se o refresh falhar, somente um access token ainda
+   válido pode ser usado; token vencido encerra a sessão e exige novo login.
+6. O logout invalida a sessão Spring local e solicita ao Supabase logout com
+   escopo `local`; falha remota não preserva a sessão local.
+7. O Resource Server continua validando requests Bearer com as mesmas regras,
+   quando esse contrato é usado fora do formulário Vaadin.
+8. O adaptador extrai somente o `sub` como identificador externo. Claims de
    tenant, `user_metadata` e o claim `role` do Supabase não substituem a
    autorização do domínio.
-5. O resolver procura a identidade e sua membership. Uma membership ativa
+9. O resolver procura a identidade e sua membership. Uma membership ativa
    produz um `TenantAccessContext`; nenhuma membership ou mais de uma bloqueia
    a operação de tenant.
-6. Uma autoridade de plataforma pode acessar o contexto administrativo sem
+10. Uma autoridade de plataforma pode acessar o contexto administrativo sem
    receber contexto operacional de tenant.
 
 ### Operação tenant-scoped
@@ -176,6 +203,29 @@ tenant e ao RLS.
   `user_metadata` nem transforma automaticamente claims do provedor em
   permissões de domínio.
 
+### Login Supabase e sessão Vaadin
+
+- **Propósito:** autenticar uma conta Supabase existente e estabelecer a sessão
+  protegida da UI Vaadin sem transportar tokens ao navegador.
+- **Localização:** `platform/access/security` e `ui/access`.
+- **Interfaces:** `LoginForm` publica o POST de formulário esperado pelo
+  `VaadinSecurityConfigurer`; um `AuthenticationProvider` delega ao cliente
+  Supabase Auth e retorna o `SupabaseAuthenticationToken` existente.
+- **Integração:** reaproveita o `RestOperations` com timeout de dois segundos
+  e header `apikey`; o endpoint base deriva do issuer Supabase já configurado.
+  O `JwtDecoder` e o conversor atuais validam/mapam o token.
+- **Sessão:** Spring Security persiste o contexto HTTP; access e refresh tokens
+  ficam no `SupabaseAuthenticationToken` da sessão do servidor. O cookie tem
+  timeout ocioso de 30 minutos, HttpOnly, Secure em produção e SameSite Lax.
+- **Refresh:** filtro depois da autenticação Bearer inspeciona apenas sessões
+  com refresh token. Ele sincroniza no `HttpSession`, recarrega o contexto mais
+  recente e salva o par rotacionado por `SecurityContextRepository`.
+- **Logout:** o logout Vaadin usa um `LogoutHandler` que pede ao Supabase o
+  encerramento de escopo local e deixa Spring invalidar a sessão mesmo se a
+  chamada remota falhar.
+- **Limite:** não implementa cadastro, recuperação de senha, login social,
+  armazenamento externo de sessão ou novos papéis/claims.
+
 ### Resolver de membership
 
 - **Propósito:** converter uma identidade autenticada em uma decisão de acesso
@@ -255,7 +305,9 @@ Representa a fronteira entre o provedor de autenticação e o domínio:
 | `status` | Ativa ou bloqueada. |
 | `created_at` | Timestamp de criação do vínculo local. |
 
-O modelo não persiste senha, refresh token ou segredo do Supabase.
+O domínio não persiste senha, refresh token ou segredo do Supabase. O refresh
+token existe apenas no contexto de segurança da sessão HTTP server-side e não é
+gravado no PostgreSQL.
 
 ### Tenant
 
@@ -434,7 +486,9 @@ reutilizar no estado atual.
 | Role do runtime ignora RLS | A segunda barreira seria falsa. | Validar `NOBYPASSRLS`, evitar superuser/owner e testar com PostgreSQL real; bloquear a execução se não for possível. |
 | Contexto gravado na conexão errada | Pode negar acesso válido ou expor outro tenant em caso de `SET` de sessão. | `set_config(..., true)` depois do início da transação, adapter baseado na conexão transacional e teste de reuso de pool. |
 | JWKS protegido por API key | A descoberta automática pode falhar se o cliente não enviar o header exigido. | Usar um cliente JWKS configurado com a chave publicável ativa; validar `iss`, `exp`, assinatura e `kid` sem usar segredo JWT. |
-| Ponte entre sessão Supabase e shell Vaadin | Usuário autenticado no browser pode não chegar corretamente ao Resource Server. | Isolar a integração em adapter de autenticação, testar o fluxo real e não espalhar token pela camada de domínio. |
+| Renovação concorrente de refresh token de uso único | Requests simultâneas poderiam reutilizar o token anterior e revogar a sessão. | Serializar refresh por `HttpSession`, recarregar o `SecurityContext` depois do lock e salvar juntos o novo access/refresh token. |
+| Sessão perdida em restart/cold start | Usuário precisa se autenticar de novo no Render gratuito. | Aceito para o MVP single-instance; não adicionar armazenamento pago/externo de sessão nesta V0. |
+| Credenciais e tokens em logs ou navegador | Vazamento poderia permitir takeover de uma sessão. | Usar somente POST HTTPS, nunca registrar payloads, manter tokens no servidor e configurar cookie HttpOnly/Secure/SameSite. |
 | Membership consultada antes do tenant context | A consulta pode ser inadvertidamente protegida por policy inadequada. | Manter metadados em schema de plataforma com grants explícitos e separar repositórios de plataforma dos operacionais. |
 | Migrations no startup em múltiplas instâncias | Instâncias podem disputar o início durante evolução futura. | V0 aceita o trade-off; deployment futuro deve revisar ADR-022 antes de escalar horizontalmente. |
 | Testes apenas com H2 | RLS, roles e GUCs podem parecer corretos e falhar no PostgreSQL. | Testes de integração obrigatórios em PostgreSQL real. |
@@ -444,7 +498,9 @@ reutilizar no estado atual.
 | Decisão | Escolha | Justificativa |
 | --- | --- | --- |
 | Modo de execução | Monólito modular | Está definido no baseline e mantém a V0 simples. |
-| Autenticação no backend | Spring Security Resource Server com JWT Supabase | Valida a identidade sem mover o domínio para o provedor. |
+| Login da UI Vaadin | Spring Security form login + Supabase Auth password REST + sessão HttpSession server-side | Completa o formulário e mantém tokens fora do browser, preservando o domínio independente do provedor. |
+| Requests Bearer | Spring Security Resource Server com JWT Supabase | Mantém o contrato Resource Server existente sem utilizá-lo como sessão principal do Vaadin. |
+| Renovação de sessão | Refresh token Supabase rotacionado sob lock por sessão | Cumpre a renovação de tokens de uso único sem dependência Java adicional ou armazenamento pago. |
 | Chave de validação JWT | ES256 com JWKS do Supabase e header `apikey` na leitura | Evita armazenar segredo JWT, permite rotação por chaves públicas e mantém a validação local no backend. |
 | Contexto de tenant | GUC PostgreSQL local à transação | É a abordagem aprovada e evita vazamento por pool. |
 | Isolamento | Filtro de aplicação + PostgreSQL RLS | Defesa em profundidade exigida pelos ADRs. |
@@ -457,6 +513,12 @@ reutilizar no estado atual.
 ## Referências oficiais consultadas
 
 - [Spring Security — Resource Server JWT](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html)
+- [Spring Security 7.1.1 — Authentication persistence and session management](https://docs.spring.io/spring-security/reference/7.1/servlet/authentication/session-management.html)
+- [Vaadin — Security and form login](https://vaadin.com/docs/latest/flow/security/enabling-security)
+- [Supabase — Password-based Auth](https://supabase.com/docs/guides/auth/passwords)
+- [Supabase — Auth server password/refresh endpoints](https://supabase.com/docs/reference/self-hosting-auth)
+- [Supabase — User sessions and refresh rotation](https://supabase.com/docs/guides/auth/sessions)
+- [Supabase — Local sign out](https://supabase.com/docs/guides/auth/signout)
 - [Spring Framework — Dependency Injection](https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html)
 - [Spring Framework — Transaction Management](https://docs.spring.io/spring-framework/reference/data-access/transaction.html)
 - [Spring Boot — Database Initialization e Flyway](https://docs.spring.io/spring-boot/how-to/data-initialization.html)
