@@ -362,22 +362,24 @@ compartilhado de `compose.yaml` nesta seção.
 
 ## Handoff
 
-- **Feature**: F-02 — Cadastro base, compras e estoque.
-- **Phase / Task**: Specify, Design e Tasks concluídos como propostas; nenhuma
-  tarefa T01–T25 executada ou validada em runtime.
-- **Completed**: F-00 encerrada; entregas T1–T16 da F-01 verificadas; PRD e
-  roadmap da F-02 alinhados;
-  decisões funcionais em `context.md`; 32 critérios em `spec.md`; desenhos
-  técnicos em `design.md`; 25 tarefas com dependências e gates em `tasks.md`.
-- **In progress**: Correção de fechamento da F-01 (T17): bootstrap explícito
-  do owner pela tela inicial implementado; gate automatizado passou com 177
-  testes. Revisão independente e UAT visual no Render pendentes. O planejamento
-  da F-02 permanece preservado, sem tasks executadas.
-- **Next step**: Revisar independentemente T17 e validar no Render com a
-  identidade owner configurada; após aprovação, retomar a revisão do design e
-  das tarefas da F-02. Quando a execução da F-02 for autorizada, iniciar pela
-  T01, com um commit e gate por tarefa. Antes da T11, confirmar PDFBox e
-  atualizar `AGENTS.md` junto da dependência.
+- **Feature**: F-01 — Fechamento de provisionamento da plataforma.
+- **Phase / Task**: Specify/Design/Tasks de fechamento definidos; T18–T23
+  planejadas e ainda não executadas.
+- **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas e T17 passou pelo
+  gate automatizado (177 testes); PRD e roadmap da F-02 preservados; a
+  especificação da F-01 agora registra F01-18 a F01-20 e a revisão de status.
+- **In progress**: Fechamento da F-01 reaberto após a validação publicada. As
+  lacunas confirmadas são rota pública e retorno pós-login do convite, origem
+  pública segura do link, adapter SendGrid opcional, responsividade visual e
+  regressão/revisão/UAT final. Nenhuma implementação dessas tasks foi iniciada.
+  O diretório não rastreado da F-02 pertence ao usuário e deve ser preservado.
+- **Next step**: Confirmar as ferramentas de execução conforme o gate
+  `Antes do Execute` de F-01 `tasks.md` e iniciar T18. Executar T18–T23 em
+  ordem, com teste e commit atômico por task; não declarar F-01 concluída antes
+  da revisão independente e UAT no Render. Depois, retomar o planejamento da
+  F-02 sem presumir autorização para implementar suas tasks; quando houver
+  autorização, preservar seus gates e confirmar PDFBox antes da T11, incluindo
+  a atualização correspondente de `AGENTS.md`.
 - **External prerequisites**: Projeto dedicado de OCR externo com credencial
   privada, limite de uso e amostras reais para aferir lista manuscrita e
   comprovante. Google Cloud Vision e seus limites são propostas técnicas.

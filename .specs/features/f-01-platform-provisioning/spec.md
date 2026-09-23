@@ -1,6 +1,7 @@
 # F-01 — Provisionamento da plataforma
 
-**Status:** Confirmada e verificada em 22 de setembro de 2026
+**Status:** Regras de domínio confirmadas; fechamento da implementação
+reaberto em 23 de setembro de 2026 após validação visual no Render.
 **Escopo:** V0
 **Fonte:** `docs/PRD-V0.md`, `docs/ROADMAP-V0.md`, ADR-015 e decisões
 registradas durante a especificação
@@ -65,6 +66,22 @@ As ambiguidades de produto relevantes foram resolvidas durante a especificação
 **Open questions:** nenhuma questão de produto permanece aberta para esta
 especificação. O design deverá detalhar os contratos internos, a forma de
 bootstrap e a proteção das operações sem alterar essas decisões.
+
+## Requisitos de fechamento identificados na validação publicada
+
+Os itens abaixo não alteram as regras do domínio nem ampliam a V0. São
+condições para tornar utilizáveis no ambiente publicado fluxos já definidos
+para a F-01 e para corrigir a apresentação da administração:
+
+| ID | Requisito de fechamento | Regra preservada |
+| --- | --- | --- |
+| F01-18 | O link público de convite abre uma rota Vaadin que apresenta o convite e permite confirmar sua aceitação pelo fluxo de domínio existente. Uma sessão ausente pode autenticar e retornar ao mesmo convite. Abrir o link, por si só, nunca aceita o convite. | F01-07 a F01-10; e-mail verificado e correspondente continua obrigatório. |
+| F01-19 | Links são formados com a origem pública configurada para cada ambiente. Ambiente publicado não pode gerar link `localhost`, origem vazia ou não segura; endereço local pode ser usado somente no perfil local. | Mesmo token opaco e prazo de 24 horas já definidos. |
+| F01-20 | As telas administrativas da V0 apresentam campos, ações e grids alinhados e legíveis em telas estreitas e largas, sem alterar permissões ou fluxos de negócio. | Mesmas capacidades e limites de Platform Administration. |
+
+O adapter de e-mail permanece opcional dentro de F01-09: a implementação
+concreta SendGrid pode ser habilitada apenas quando configurada; o link
+copiável deve continuar funcionando sem credenciais ou serviço pago.
 
 ## Modelo conceitual
 
@@ -271,10 +288,14 @@ dados operacionais.
 | F01-15 | Consultar auditoria sem dados operacionais | Auditar | ADR-015, LGPD | Verified |
 | F01-16 | Preservar atomicidade e isolamento nas mutações | Todas | ADR-016 a ADR-023 | Verified |
 | F01-17 | Permitir que a identidade configurada solicite explicitamente o bootstrap do owner na tela inicial | Inicializar | F01-01, AD-014, AD-015 | Automated verification passed — T17; browser UAT pending |
+| F01-18 | Abrir, autenticar e aceitar o convite pela rota pública preservando o destino após login | Convidar | F01-07 a F01-10 | Pending — T18 |
+| F01-19 | Gerar links pela origem pública correta e impedir `localhost` em ambiente publicado | Convidar | F01-07, F01-09 | Pending — T19 |
+| F01-20 | Apresentar a administração com hierarquia visual e layout responsivo | Todas | V0; F01-14, F01-15 | Pending — T21 |
 
-**Coverage:** 17 requisitos definidos e mapeados para tarefas. F01-01 a
-F01-16 permanecem verificados; F01-17 passou pela verificação automatizada da
-T17. A confirmação visual por UAT no ambiente publicado continua pendente.
+**Coverage:** 20 requisitos definidos e mapeados para tarefas. F01-01 a
+F01-16 permanecem verificados; F01-17 passou pelo gate automatizado da T17.
+F01-18 a F01-20 aguardam implementação e verificação; a revisão independente
+e a UAT publicada da F01-17 também permanecem pendentes.
 
 ## Critérios de sucesso
 
@@ -283,7 +304,12 @@ T17. A confirmação visual por UAT no ambiente publicado continua pendente.
       plataforma aos seus dados operacionais.
 - [ ] Um usuário convidado consegue ativar exatamente um vínculo operacional
       após autenticar e confirmar o e-mail.
+- [ ] Um link de convite abre a aplicação publicada, preserva o destino durante
+      o login e só ativa a membership após confirmação explícita.
+- [ ] A origem dos links publicados não aponta para `localhost`.
 - [ ] Convites expirados, duplicados, revogados ou incompatíveis são negados.
 - [ ] Todas as ações administrativas relevantes são consultáveis em auditoria.
+- [ ] As telas administrativas são utilizáveis em viewport estreito e amplo,
+      sem perda de ações ou legibilidade.
 - [ ] Falhas não deixam tenant, convite, membership ou auditoria em estado
       parcialmente persistido.

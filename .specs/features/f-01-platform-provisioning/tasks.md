@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** T1–T16 concluídas e verificadas; T17 implementada e aprovada no gate automatizado. Revisão independente e UAT no ambiente publicado pendentes.
+**Status:** T1–T16 concluídas e verificadas; T17 passou no gate automatizado. O fechamento foi reaberto após a validação publicada; T18–T23 estão planejadas, sem implementação iniciada.
 
 ## Test Coverage Matrix
 
@@ -25,6 +25,10 @@ discrimination sensor.
 | JPA repositories and adapters | integration | Caminhos de leitura/escrita, constraints, estados e queries sem dados de operations | `src/test/java/**/integration/platform/administration/**` | `mvnw.cmd verify` |
 | Supabase identity adapter | unit/contract | Headers, claims confiáveis, e-mail verificado, falhas HTTP e ausência de segredo no cliente | `src/test/java/**/platform/access/security/**`, `src/test/java/**/integration/platform/supabase/**` | `mvnw.cmd test` / `mvnw.cmd verify` |
 | Vaadin Platform Administration | integration/smoke | Fluxos de owner/admin, tenant, convite, membership e auditoria; sem comandos para tenant user | `src/test/java/**/ui/platform/**` | `mvnw.cmd verify` |
+| Public invitation route and login return | integration/smoke | GET não aceita; confirmação explícita; login retorna ao mesmo convite; estados inválidos não expõem dados | `src/test/java/**/ui/**`, `src/test/java/**/integration/platform/administration/**` | `mvnw.cmd verify` |
+| Invitation public-origin configuration | unit/integration | URL usa host configurado; publicação rejeita origem vazia, localhost ou esquema inseguro; local profile permitido | `src/test/java/**/platform/administration/**` | `mvnw.cmd verify` |
+| Optional SendGrid adapter | contract | HTTP simulado cobre sucesso, erro, segredo ausente e falha pós-commit sem vazamento de token/PII | `src/test/java/**/platform/administration/integration/**` | `mvnw.cmd verify` |
+| Vaadin presentation and responsive layout | integration/smoke + manual browser UAT | Campos e ações alinhados; grids legíveis; layout estreito/largo; foco e fluxo preservados | `src/test/java/**/ui/platform/**` e navegador no Render | `mvnw.cmd verify` + UAT |
 | Access shell owner bootstrap | integration/smoke | Ação exibida somente ao subject configurado; clique executa bootstrap autorizado e concede acesso de plataforma | `src/test/java/**/ui/access/**` | `mvnw.cmd verify` |
 | Runtime/configuration | none | Build e empacotamento; nenhuma credencial versionada | `src/main/resources/**`, `AGENTS.md` | `mvnw.cmd clean verify` |
 
@@ -79,6 +83,12 @@ Fase 4 — validação transversal
 
 Fase 5 — completar o bootstrap inicial pelo shell
   T16 → T17
+
+Fase 6 — fechar o fluxo publicado e a interface administrativa
+  T8, T11, T14 → T18
+  T10, T13 → T19 → T20
+  T14, T15 → T21
+  T17, T18, T19, T20, T21 → T22 → T23
 ```
 
 Nenhuma task está marcada com `[P]`: embora algumas units sejam paralelizáveis,
@@ -536,6 +546,169 @@ da plataforma. Não executar bootstrap automaticamente no login.
 **Gate:** full — PASS em PostgreSQL 17 temporário local; a revisão independente e a UAT visual permanecem pendentes.
 **Commit:** `fix(platform): expose configured owner bootstrap`
 
+### T18: Abrir e aceitar convites pela rota Vaadin
+
+**What:** Registrar a rota pública `/invitations/{token}` e conectar a tela de
+convite ao serviço de aceitação existente. Se a pessoa não estiver autenticada,
+preservar o destino completo durante o login e retornar ao mesmo convite; não
+aceitar convite por simples GET ou redirecionamento.
+
+**Where:** `src/main/java/**/ui/` e testes de UI/integração de convite.
+**Depends on:** T8, T11, T14.
+**Requirements:** F01-08, F01-18.
+
+**Done when:**
+
+- [ ] Abrir o link apresenta confirmação explícita e não altera estado.
+- [ ] Após autenticar, a pessoa retorna ao mesmo convite e pode confirmar uma
+      única vez; só o serviço existente decide a aceitação.
+- [ ] E-mail não verificado/divergente, convite expirado, revogado, já aceito,
+      tenant fechado ou membership ativa em outro tenant recebem resultado
+      seguro, sem revelar e-mail ou tenant de terceiros.
+- [ ] Token não aparece em logs, telemetria, auditoria ou texto de erro.
+- [ ] Testes de integração cobrem rota direta, sessão ausente/login/retorno,
+      confirmação, estados inválidos e ausência de aceitação automática.
+
+**Tests:** integration/smoke — nova suíte de rota/aceitação, mantendo os
+testes do `InvitationAcceptanceService`.
+**Gate:** full.
+
+### T19: Validar a origem pública dos links de convite
+
+**What:** Separar a origem local da origem publicada para que todos os links
+copiados ou entregues sejam navegáveis no ambiente correto.
+
+**Where:** propriedades de convite, configuração por ambiente e testes da
+fábrica de links.
+**Depends on:** T10, T13.
+**Requirements:** F01-09, F01-19.
+
+**Done when:**
+
+- [ ] Perfil local aceita a origem local explicitamente definida.
+- [ ] Ambiente publicado exige origem HTTPS pública e rejeita vazio,
+      `localhost`, loopback e esquema inseguro antes de emitir convite.
+- [ ] Link copiado e link passado ao adapter usam a mesma origem, caminho e
+      token opaco, sem duplicar barras ou acrescentar URLs de callback alheias.
+- [ ] Testes cobrem configuração válida e cada origem inválida; exemplos de
+      ambiente documentam apenas nomes/valores não secretos.
+
+**Tests:** unit/integration — fábrica e binding de configuração por ambiente.
+**Gate:** full.
+
+### T20: Implementar entrega opcional de convite por SendGrid
+
+**What:** Implementar o adapter SendGrid atrás da `InvitationDeliveryPort`
+existente. A entrega segue opcional e posterior ao commit; o fluxo de link
+copiável não depende do adapter.
+
+**Where:** módulo de integração da F-01, configuração de runtime e testes de
+contrato; sem tipo do vendor no domínio.
+**Depends on:** T13, T19.
+**Requirements:** F01-09.
+
+**Done when:**
+
+- [ ] SendGrid implementa somente a porta existente; não é criado bounded
+      context, microserviço ou chamada de vendor no domínio.
+- [ ] Adapter fica inativo se não configurado; quando ativo, entrega o link
+      após commit sem atrasar nem desfazer a criação do convite.
+- [ ] Falha do provedor é tratada/auditada sem invalidar convite nem remover o
+      link copiável.
+- [ ] API key existe apenas como secret de ambiente, sem logs/respostas; testes
+      de contrato simulam sucesso, rejeição e indisponibilidade.
+- [ ] A ativação usa somente o serviço/plano gratuito já disponível; se houver
+      requisito de upgrade ou cobrança, não habilitar e parar para decisão.
+- [ ] Documentação oficial atual do SendGrid é conferida para a chamada e os
+      limites efetivamente usados; UAT real fica para a configuração manual.
+
+**Tests:** contract — HTTP simulado e transação já confirmada antes da entrega.
+**Gate:** full.
+
+### T21: Refinar o estilo responsivo da administração Vaadin
+
+**What:** Melhorar hierarquia visual, alinhamento e responsividade das telas de
+tenants, convites, memberships, papéis e auditoria sem alterar regras ou
+permissões.
+
+**Where:** UI Vaadin e stylesheet da aplicação.
+**Depends on:** T14, T15.
+**Requirements:** F01-20.
+
+**Done when:**
+
+- [ ] Tipografia, espaçamento, alinhamento de labels/campos e hierarquia de
+      botões formam um padrão consistente nas telas administrativas.
+- [ ] Grids apresentam cabeçalhos, ações e conteúdo legíveis sem ocupar área
+      vazia desproporcional; formulários e ações se reorganizam em viewport
+      estreito sem corte horizontal.
+- [ ] Foco, contraste e navegação por teclado continuam perceptíveis e
+      nenhuma ação/autorização existente muda.
+- [ ] A implementação usa tema/variantes/custom properties e CSS documentados
+      na versão Vaadin 25.2.8; sem hacks de Shadow DOM ou dependência visual
+      adicional não aprovada.
+- [ ] Testes smoke e checklist de inspeção visual cobrem viewport estreito e
+      amplo; APIs exatas foram conferidas em documentação oficial versionada.
+
+**Tests:** integration/smoke; confirmação visual manual no navegador fica em
+T23.
+**Gate:** full.
+
+### T22: Revalidar os fluxos publicados da F-01
+
+**What:** Adicionar regressão transversal que prova convite emitido → link
+público → autenticação preservando retorno → confirmação → membership ativa;
+revalidar configuração da origem e entrega opcional isolada.
+
+**Where:** `src/test/java/**/integration/platform/administration/` e
+`.specs/features/f-01-platform-provisioning/validation.md`.
+**Depends on:** T17, T18, T19, T20, T21.
+**Requirements:** F01-01 a F01-20.
+
+**Done when:**
+
+- [ ] PostgreSQL é o serviço compartilhado previsto no Compose/Testcontainers
+      existente; nenhum container descartável é deixado após os testes.
+- [ ] Fluxo completo confirma token, origem, autenticação, confirmação, estado
+      da membership e auditoria sem exibir dados de outro tenant.
+- [ ] Caminho sem SendGrid continua disponível; adapter é provado com HTTP
+      simulado, sem chamada real no suite automatizado.
+- [ ] `mvnw.cmd clean verify` e `git diff --check` passam sem excluir testes.
+- [ ] `validation.md` distingue testes locais, testes com serviço simulado e
+      UAT ainda não executada no Render.
+
+**Tests:** integration — extensão da suíte ponta a ponta existente.
+**Gate:** build limpo + full.
+
+### T23: Revisar independentemente e concluir UAT da F-01
+
+**What:** Após o último commit de implementação, executar revisão fresh-eyes
+com sensor de discriminação e roteiro de UAT no Render para fechar as lacunas
+visíveis em ambiente publicado.
+
+**Where:** relatório final em `validation.md`; checklist de UAT da F-01.
+**Depends on:** T22.
+**Requirements:** F01-01 a F01-20.
+
+**Done when:**
+
+- [ ] Verificador independente confirma cada requisito, relatório por
+      requisito e discriminação das regras críticas; gaps geram nova task.
+- [ ] Com identidade de plataforma, UI alinha e funciona em viewport estreito
+      e amplo; origem dos links é o domínio público do Render.
+- [ ] Link real de convite abre a rota publicada, permite login/retorno e só
+      ativa o vínculo após confirmação com identidade de e-mail verificado
+      correspondente.
+- [ ] Envio real por SendGrid é verificado apenas se configurado pelo usuário;
+      ausência/falha mantém o link copiável e nenhum plano pago é ativado.
+- [ ] Nenhum segredo é solicitado, copiado para os documentos ou exposto em
+      evidência; UAT ausente fica explicitamente pendente e F01 não é declarada
+      concluída.
+
+**Tests:** independent review + manual browser UAT; sem dependência de acesso a
+credenciais pelo agente.
+**Gate:** revisão independente + UAT publicada.
+
 ## Requirement-to-task traceability
 
 | Requirement | Tasks | Status |
@@ -546,9 +719,9 @@ da plataforma. Não executar bootstrap automaticamente no login.
 | F01-04 | T5, T9, T12, T14, T15, T16 | Verified |
 | F01-05 | T2, T6, T9, T14, T16 | Verified |
 | F01-06 | T2, T6, T9, T14, T16 | Verified |
-| F01-07 | T2, T4, T10, T13, T16 | Verified |
-| F01-08 | T7, T10, T11, T16 | Verified |
-| F01-09 | T4, T7, T10, T13, T14, T16 | Verified |
+| F01-07 | T2, T4, T10, T13, T16, T18, T19, T22, T23 | Core rule verified; route and published origin pending |
+| F01-08 | T7, T10, T11, T16, T18, T22, T23 | Core rule verified; public route pending |
+| F01-09 | T4, T7, T10, T13, T14, T16, T19, T20, T22, T23 | Link/port behavior verified; published origin and SendGrid adapter pending |
 | F01-10 | T4, T6, T11, T16 | Verified |
 | F01-11 | T1, T8, T11, T12, T16 | Verified |
 | F01-12 | T1, T3, T8, T12, T16 | Verified |
@@ -556,9 +729,12 @@ da plataforma. Não executar bootstrap automaticamente no login.
 | F01-14 | T2, T5, T8, T9, T10, T11, T12, T13, T16 | Verified |
 | F01-15 | T5, T12, T15, T16 | Verified |
 | F01-16 | T2, T5, T9, T10, T11, T12, T13, T16 | Verified |
-| F01-17 | T17 | Automated verification passed; independent review and browser UAT pending |
+| F01-17 | T17, T23 | Automated verification passed; independent review and browser UAT pending |
+| F01-18 | T18, T22, T23 | Pending |
+| F01-19 | T19, T22, T23 | Pending |
+| F01-20 | T21, T23 | Pending |
 
-**Coverage:** 17 requisitos definidos e mapeados para tasks, 0 sem cobertura.
+**Coverage:** 20 requisitos definidos e mapeados para tasks, 0 sem cobertura.
 
 ## Task Granularity Check
 
@@ -581,6 +757,12 @@ da plataforma. Não executar bootstrap automaticamente no login.
 | T15 | UI de auditoria | ✅ Atomic |
 | T16 | Validação transversal e verificador | ✅ Atomic |
 | T17 | Ação de bootstrap do owner no shell | ✅ Atomic |
+| T18 | Rota pública e continuidade do aceite | ✅ Atomic |
+| T19 | Origem pública de links por ambiente | ✅ Atomic |
+| T20 | Adapter opcional SendGrid atrás da porta existente | ✅ Atomic |
+| T21 | Estilo responsivo das telas administrativas | ✅ Atomic |
+| T22 | Regressão transversal publicada da F-01 | ✅ Atomic |
+| T23 | Revisão independente e UAT Render | ✅ Atomic |
 
 ## Diagram-Definition Cross-Check
 
@@ -603,6 +785,12 @@ da plataforma. Não executar bootstrap automaticamente no login.
 | T15 | T5, T12, T14 | T5/T12/T14 → T15 | ✅ Match |
 | T16 | T2, T8, T9, T10, T11, T12, T14, T15 | all listed predecessors → T16 | ✅ Match |
 | T17 | T8, T16 | T8/T16 → T17 | ✅ Match |
+| T18 | T8, T11, T14 | T8/T11/T14 → T18 | ✅ Match |
+| T19 | T10, T13 | T10/T13 → T19 | ✅ Match |
+| T20 | T13, T19 | T13/T19 → T20 | ✅ Match |
+| T21 | T14, T15 | T14/T15 → T21 | ✅ Match |
+| T22 | T17, T18, T19, T20, T21 | all listed predecessors → T22 | ✅ Match |
+| T23 | T22 | T22 → T23 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -625,6 +813,12 @@ da plataforma. Não executar bootstrap automaticamente no login.
 | T15 | Vaadin UI | integration/smoke | Audit view integration tests | ✅ OK |
 | T16 | Cross-boundary | integration | Full end-to-end suite and verifier | ✅ OK |
 | T17 | Access shell bootstrap | integration/smoke | Configured and non-configured subject, persisted platform access | ✅ OK |
+| T18 | Public invitation route | integration/smoke | Explicit acceptance, auth return continuity, invalid invitation states | ✅ OK |
+| T19 | Invitation URL configuration | unit/integration | Local/public profiles and rejection of unsafe published origins | ✅ OK |
+| T20 | SendGrid adapter | contract | Mock HTTP client, after-commit ordering, failure without losing copied link | ✅ OK |
+| T21 | Vaadin visual refinement | integration/smoke | Component hierarchy, responsive layout rules and no authorization regression | ✅ OK |
+| T22 | Cross-boundary regression | integration | Existing PostgreSQL-backed suite plus invite/auth/accept flow; no leaked test containers | ✅ OK |
+| T23 | Independent verification and Render UAT | independent/manual | Fresh-eyes report and evidence for deployed URL, invite, authentication and viewports | ✅ OK |
 
 ## Antes do Execute
 
@@ -638,6 +832,7 @@ usar?**
 
 ## Próximo passo
 
-Executar revisão independente e UAT no navegador com a identidade owner
-configurada; após confirmação, fechar F-01 e retomar a próxima feature V0 do
-roadmap.
+Confirmar as ferramentas de execução conforme o gate **Antes do Execute** e
+iniciar T18. A ordem proposta termina em T23; só declarar F-01 concluída após
+revisão independente e UAT no Render. A F-02 permanece preservada como
+planejamento, sem tarefas implementadas.

@@ -2,7 +2,7 @@
 
 **Gathered:** 21 de setembro de 2026
 **Spec:** `.specs/features/f-01-platform-provisioning/spec.md`
-**Status:** Pronto para revisão da especificação
+**Status:** Decisões de domínio confirmadas; fechamento de implementação pendente após validação publicada em 23 de setembro de 2026.
 
 ## Limite da feature
 
@@ -93,3 +93,20 @@ dados de negócio dos tenants.
 - Papéis e permissões granulares dentro do tenant.
 - SSO, domínio corporativo e provisionamento em lote.
 - Cobrança, planos e onboarding comercial.
+
+## Lacunas de fechamento encontradas na validação publicada
+
+Estas são lacunas de execução/apresentação, não novas decisões de domínio nem
+expansão da V0:
+
+- O caso de uso de aceitação do convite existe, mas a URL pública
+  `/invitations/{token}` ainda não possui uma rota Vaadin que conclua o fluxo.
+- Quando a pessoa precisa autenticar, a aplicação deve preservar o destino do
+  convite e retornar ao mesmo link após o login.
+- A origem pública do link deve ser configurada por ambiente; Render não pode
+  emitir URLs locais. O perfil local pode continuar usando endereço local.
+- O desenho prevê uma porta opcional de entrega, mas não há adapter de produção
+  SendGrid. A entrega automática continuará opcional e o link copiável será o
+  caminho de contingência.
+- A tela administrativa precisa de ajustes de alinhamento e responsividade,
+  mantendo a mesma hierarquia de acesso e os mesmos dados apresentados.

@@ -4,6 +4,18 @@
 **Escopo:** T16 — validação ponta a ponta da F-01 Platform Provisioning
 **Resultado:** PASS
 
+> Este resultado PASS é histórico e permanece válido para o gate T16 e os
+> requisitos F01-01 a F01-16 então definidos. Ele não significa que o
+> fechamento atual da F-01 esteja completo.
+
+## Estado de fechamento após validação publicada — 23 de setembro de 2026
+
+**Estado atual:** ABERTO — T17 passou no gate automatizado; revisão independente
+e UAT visual no Render não foram concluídas. A inspeção do código e os relatos
+visuais identificaram gaps de interface/configuração que não são cobertos pelo
+gate histórico T16/T17. Tasks corretivas T18–T23 foram planejadas; nenhuma foi
+implementada ou validada nesta atualização documental.
+
 ## Gate da feature
 
 A validação foi executada contra um PostgreSQL 17 recém-criado pelo compose
@@ -114,3 +126,27 @@ Esta validação automatizada não confirma a experiência visual no Render. Ap�
 o próximo deploy, ainda é necessário autenticar com a identidade cujo subject
 está configurado, clicar na ação e verificar a abertura da administração. A
 revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
+
+## Gaps observados para T18–T23
+
+- **Convite:** o caso de uso `InvitationAcceptanceService` e seus testes
+  existem, mas a aplicação não registra a rota pública `/invitations/{token}`.
+  O erro de navegador “Could not find route” é compatível com essa ausência.
+  A rota e a continuidade do destino de convite durante login ainda precisam
+  ser implementadas e testadas.
+- **Origem pública:** a configuração tem fallback geral para
+  `http://localhost:8080`. Mesmo que a URL mostrada no Render já use o domínio
+  público, falta impedir que uma configuração de produção ausente ou insegura
+  produza link local.
+- **E-mail:** existe `InvitationDeliveryPort` e o teste da entrega pós-commit,
+  mas não foi encontrada implementação de produção SendGrid. E-mail continua
+  opcional; link copiado permanece o fallback garantido. A integração real não
+  foi testada nem configurada nesta rodada.
+- **Apresentação:** a tela administrativa requer revisão de alinhamento e
+  adaptação a viewports estreitos, preservando permissões e ações. A validação
+  visual publicada ainda está pendente.
+
+Esses pontos não invalidam os resultados automatizados já registrados; eles
+impedem declarar o fluxo publicado da F-01 como concluído. A próxima evidência
+deve ser produzida por T18–T23, com teste automatizado separado da UAT manual e
+sem registrar ou copiar segredos para este arquivo.

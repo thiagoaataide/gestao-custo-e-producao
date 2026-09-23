@@ -663,7 +663,15 @@ do PRD e nos critérios de implementação:
 
 ## 13. Estado atual do projeto
 
-As fundações F-00 e F-01 estão implementadas e verificadas. A F-02 possui
-especificação funcional, desenho técnico e tarefas propostos em
+F-00 e o núcleo administrativo da F-01 estão implementados e passaram pelos
+gates automatizados registrados. O fechamento da F-01 permanece aberto: a
+validação publicada identificou pendências de rota/retorno para aceitação de
+convite, validação da origem pública dos links, adapter opcional de e-mail,
+acabamento responsivo da administração, regressão transversal, revisão
+independente e UAT no Render. Essas tarefas estão detalhadas em
+`.specs/features/f-01-platform-provisioning/tasks.md` e não alteram as regras
+de domínio aprovadas para a V0.
+
+A F-02 possui especificação funcional, desenho técnico e tarefas propostos em
 `.specs/features/f-02-base-purchases-stock/`; nenhuma tarefa da F-02 foi
 implementada ou validada em runtime.

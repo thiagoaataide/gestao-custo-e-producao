@@ -2,7 +2,7 @@
 
 **Spec:** `.specs/features/f-01-platform-provisioning/spec.md`
 **Contexto:** `.specs/features/f-01-platform-provisioning/context.md`
-**Status:** Rascunho — abordagem confirmada, aguardando aprovação do design
+**Status:** Baseline implementada; desenho de fechamento pendente para T18–T23, sem alteração dos limites de domínio da V0.
 
 ## Abordagem selecionada
 
@@ -376,3 +376,63 @@ que o JWT validado contém a identidade e o e-mail, e que transações Spring
 locais não devem abranger chamadas remotas. A implementação deverá validar os
 endpoints e configurações exatas contra as páginas oficiais das versões
 efetivas antes de adicionar qualquer dependência ou segredo.
+
+## Complemento de desenho para o fechamento da F-01
+
+### Rota e continuidade da aceitação
+
+- Registrar a rota Vaadin pública `/invitations/{token}` e encaminhar a
+  confirmação ao `InvitationAcceptanceService` já existente.
+- A leitura por GET não altera o convite. A membership só é ativada após ação
+  explícita do usuário e todas as validações existentes permanecem no serviço
+  de domínio.
+- Se não houver sessão, iniciar o login preservando a URL de retorno completa,
+  inclusive o token opaco; concluído o login, retornar à mesma rota para
+  confirmação. E-mail não verificado/divergente e convite indisponível geram
+  mensagens seguras, sem expor tenant ou e-mail de terceiros.
+- Não registrar o token em logs, telemetria ou auditoria; não persistir token
+  em claro.
+
+### Origem do link por ambiente
+
+- `PLATFORM_INVITATION_BASE_URL` é a origem canônica usada pelo gerador atual.
+- Perfil local pode fornecer `http://localhost:8080`; ambiente publicado deve
+  receber a origem HTTPS pública explicitamente e rejeitar vazio, localhost ou
+  esquema inseguro antes de gerar convite.
+- Manter host/origem fora do modelo de domínio; somente o endereço de navegação
+  é construído a partir da configuração de ambiente.
+
+### Adapter de entrega SendGrid
+
+- Implementar SendGrid como adapter da `InvitationDeliveryPort`, fora do
+  domínio e do caso de uso; não criar bounded context, microserviço ou
+  dependência direta de vendor no domínio.
+- Ativar apenas quando a configuração estiver completa. A falha ocorre após o
+  commit, não desfaz convite/membership e mantém o link copiável disponível.
+- Chave de API somente em variável de ambiente/secret do serviço; nunca em
+  repositório, resposta da UI ou log. Usar a conta/plano gratuito já obtido,
+  sem habilitar recurso pago; se o caminho exigir cobrança, parar e pedir
+  decisão antes de habilitar.
+- Validar integração com contrato HTTP simulado e documentação oficial vigente
+  do SendGrid; UAT de entrega real requer configuração manual do usuário.
+
+### Aparência da administração Vaadin
+
+- Manter o conjunto funcional existente e usar o tema Aura disponível no
+  Vaadin fixado em `pom.xml` (25.2.8), tipografia e propriedades de estilo do
+  tema, variantes oficiais de botão/grid e CSS de aplicação para layout.
+- Alinhar labels, campos e ações em grupos; limitar larguras de formulários e
+  grids ao conteúdo; evitar altura vazia que domine a viewport; permitir
+  quebra/empilhamento de formulários e ações em telas estreitas.
+- Preservar navegação por teclado, foco visível, contraste e conteúdo/ações
+  existentes. Não usar seletores internos de Shadow DOM nem adicionar
+  dependência visual sem necessidade.
+- Confirmar os nomes de APIs e custom properties na documentação oficial
+  correspondente ao Vaadin 25.2.8 durante T21.
+
+Referências oficiais de estilo consultadas para planejar a T21:
+
+- Vaadin styling: https://vaadin.com/docs/latest/styling
+- Vaadin themes: https://vaadin.com/docs/latest/styling/themes
+- Button styling: https://vaadin.com/docs/latest/components/button/styling
+- Grid styling: https://vaadin.com/docs/latest/components/grid/styling
