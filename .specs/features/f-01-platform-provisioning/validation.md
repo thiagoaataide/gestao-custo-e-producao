@@ -158,7 +158,10 @@ o próximo deploy, ainda é necessário autenticar com a identidade cujo subject
 está configurado, clicar na ação e verificar a abertura da administração. A
 revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
 
-## Gaps restantes para T20–T23
+## Gaps registrados antes de T20 — histórico
+
+> Este registro antecede a conclusão de T20–T22 e não representa o estado
+> atual. O fechamento atualizado está em “Estado de fechamento após T22”.
 
 - **Convite publicado:** a rota `/invitations/{token}`, o retorno após login e
   a origem pública HTTPS explícita passaram nos gates automatizados T18/T19.
@@ -263,6 +266,57 @@ Evidências:
         de aceite continua ativando a membership.
 
 O checklist é um plano de inspeção, não uma afirmação de UAT visual executada.
+
+## Roteiro UAT T23 — pendente de execução pelo owner
+
+Execute esta validação somente depois de publicar o commit T22 e confirmar que
+o deploy terminou com sucesso. Codex não alterou o serviço Render nem fez
+deploy nesta rodada.
+
+### Preparação
+
+- No Web Service do Render, configure
+  `PLATFORM_INVITATION_BASE_URL=https://gestao-custo-e-producao.onrender.com`.
+- Mantenha `PLATFORM_INVITATION_DELIVERY_ENABLED=false`, salvo se você
+  confirmar no painel do provedor que o envio está disponível sem custo e
+  decidir habilitá-lo. Não cole chaves em arquivos versionados nem as envie
+  nesta conversa.
+- Use uma identidade operacional de teste sob seu controle, com e-mail
+  verificado e diferente da identidade `PLATFORM_OWNER`.
+- Não inclua token de convite, senha, chave ou endereço de e-mail pessoal em
+  capturas ou neste documento.
+
+### Verificações
+
+- [ ] Confirme que o serviço implantou o commit T22 e que `/` permite entrar
+      sem retornar repetidamente à tela inicial de login.
+- [ ] Entre em `/platform`; confirme que a conta está autorizada e que as abas
+      Tenants, Convites, Membros e Papéis da plataforma aparecem sem dados
+      operacionais de tenants.
+- [ ] Em aproximadamente 390 px e 1366 px, verifique abas, campos, botões,
+      grids, rolagem e foco por teclado conforme o checklist de T21 acima.
+- [ ] Crie um tenant de teste e um convite para a identidade operacional
+      controlada. Confirme que o convite fica pendente e que o link copiado
+      começa com a origem pública HTTPS e `/invitations/`, nunca `localhost`.
+- [ ] Abra o link numa janela privada sem sessão; confirme que o login retorna
+      ao mesmo caminho de convite e que abrir a rota não ativa a membership.
+- [ ] Autentique com a identidade cujo e-mail verificado corresponde ao
+      convite. Confirme que a membership só fica ativa depois da ação explícita
+      de confirmação e que o reuso do convite não cria outro vínculo.
+- [ ] Confirme que a identidade operacional consegue acesso ao tenant
+      provisionado; confirme que a administração da plataforma não passa a
+      expor pedidos, estoque, produção, custos ou indicadores desse tenant.
+- [ ] Verifique na tela de auditoria o aceite e o ator/alvo/resultado; não
+      exponha token, senha, chave, e-mail ou dados operacionais na evidência.
+- [ ] Opcional: se você configurar o SendGrid e confirmar a condição gratuita,
+      teste apenas com um destinatário sob seu controle. Caso contrário, marque
+      o envio real como não executado; o link copiável continua sendo o caminho
+      de convite e nenhum plano pago deve ser ativado.
+
+**Resultado desta rodada:** roteiro preparado; nenhum passo acima foi executado
+contra o Render. A revisão independente fresh-eyes também permanece pendente,
+pois não foi entregue um relatório verificável nesta rodada. Portanto, T23 e a
+F-01 seguem abertas.
 
 ## Complemento — T18: rota de aceitação de convites
 

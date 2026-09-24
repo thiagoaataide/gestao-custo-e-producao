@@ -704,7 +704,7 @@ visíveis em ambiente publicado.
       correspondente.
 - [ ] Envio real por SendGrid é verificado apenas se configurado pelo usuário;
       ausência/falha mantém o link copiável e nenhum plano pago é ativado.
-- [ ] Nenhum segredo é solicitado, copiado para os documentos ou exposto em
+- [x] Nenhum segredo é solicitado, copiado para os documentos ou exposto em
       evidência; UAT ausente fica explicitamente pendente e F01 não é declarada
       concluída.
 
