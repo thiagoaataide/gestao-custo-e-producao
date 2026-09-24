@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({
     PlatformBootstrapProperties.class,
     InvitationLinkProperties.class,
-    InvitationDeliveryProperties.class
+    InvitationDeliveryProperties.class,
+    SendGridInvitationDeliveryProperties.class
 })
 public class PlatformAdministrationConfiguration {
 }

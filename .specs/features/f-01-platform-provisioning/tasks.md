@@ -611,17 +611,17 @@ contrato; sem tipo do vendor no domínio.
 
 **Done when:**
 
-- [ ] SendGrid implementa somente a porta existente; não é criado bounded
+- [x] SendGrid implementa somente a porta existente; não é criado bounded
       context, microserviço ou chamada de vendor no domínio.
-- [ ] Adapter fica inativo se não configurado; quando ativo, entrega o link
+- [x] Adapter fica inativo se não configurado; quando ativo, entrega o link
       após commit sem atrasar nem desfazer a criação do convite.
-- [ ] Falha do provedor é tratada/auditada sem invalidar convite nem remover o
+- [x] Falha do provedor é tratada/auditada sem invalidar convite nem remover o
       link copiável.
-- [ ] API key existe apenas como secret de ambiente, sem logs/respostas; testes
+- [x] API key existe apenas como secret de ambiente, sem logs/respostas; testes
       de contrato simulam sucesso, rejeição e indisponibilidade.
-- [ ] A ativação usa somente o serviço/plano gratuito já disponível; se houver
+- [x] A ativação usa somente o serviço/plano gratuito já disponível; se houver
       requisito de upgrade ou cobrança, não habilitar e parar para decisão.
-- [ ] Documentação oficial atual do SendGrid é conferida para a chamada e os
+- [x] Documentação oficial atual do SendGrid é conferida para a chamada e os
       limites efetivamente usados; UAT real fica para a configuração manual.
 
 **Tests:** contract — HTTP simulado e transação já confirmada antes da entrega.

@@ -46,3 +46,6 @@ platform:
     base-url: ${PLATFORM_INVITATION_BASE_URL}
     delivery:
       enabled: ${PLATFORM_INVITATION_DELIVERY_ENABLED:false}
+      sendgrid:
+        api-key: ${PLATFORM_INVITATION_DELIVERY_SENDGRID_API_KEY:}
+        from-email: ${PLATFORM_INVITATION_DELIVERY_SENDGRID_FROM_EMAIL:}

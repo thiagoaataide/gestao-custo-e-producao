@@ -12,9 +12,9 @@
 
 **Estado atual:** ABERTO — T17 e T18 passaram pelos gates automatizados; revisão
 independente e UAT no Render não foram concluídas. T18 implementa a rota do
-convite e a continuidade após login; T19 passou pelo gate automatizado. T20–T23
-seguem pendentes para e-mail opcional, revisão visual, regressão publicada e
-UAT.
+convite e a continuidade após login; T19, T20 e T21 passaram pelos gates
+automatizados. T22 e T23 seguem pendentes para regressão publicada, revisão
+independente e UAT.
 
 ## Gate da feature
 
@@ -265,3 +265,54 @@ Evidências:
   histórico Flyway, portanto não foi usado nem alterado pelo gate.
 - O `.env` ativo aponta para Supabase, mas não foi carregado. Nenhuma chamada
   ou alteração foi feita no Supabase ou no Render.
+
+## Complemento — T20: adapter opcional de entrega SendGrid
+
+**Data:** 24 de setembro de 2026
+**Escopo:** T20 / F01-09
+**Resultado automatizado:** PASS
+**Envio real/UAT no Render:** pendente; adapter permanece desabilitado
+
+O adapter implementa somente `InvitationDeliveryPort`, usa a API Mail Send v3
+por HTTPS e só é registrado quando delivery está habilitado e a chave e o
+remetente estão configurados. A chamada ocorre no listener existente após o
+commit; somente HTTP 202 é considerado aceito. Connect/read timeout são
+limitados a 2/3 segundos. Rejeição ou indisponibilidade gera uma falha
+provider-neutral sem causa, resposta HTTP, destinatário ou link no texto da
+exceção; o listener mantém o convite já confirmado e registra metadados
+seguros. Não foi adicionada dependência Maven nem tipo SendGrid ao domínio.
+
+As variáveis documentadas são `PLATFORM_INVITATION_DELIVERY_ENABLED` (default
+`false`), `PLATFORM_INVITATION_DELIVERY_SENDGRID_API_KEY` (secret) e
+`PLATFORM_INVITATION_DELIVERY_SENDGRID_FROM_EMAIL` (remetente autenticado).
+O `.env.local` real não foi aberto/alterado e nenhum segredo foi usado.
+Nenhuma variável foi aplicada ao Render e nenhum envio real foi feito.
+
+Evidências:
+
+- `SendGridInvitationDeliveryAdapterTests`: 3 testes de contrato simulam HTTP
+  202 com URL/header/payload, rejeição e indisponibilidade sem vazamento.
+- `SendGridInvitationDeliveryConfigurationTests`: 1 teste cobre delivery
+  desligado e configuração incompleta.
+- `InvitationDeliveryAfterCommitIntegrationTests`: 2 testes confirmam entrega
+  somente após commit e falha não fatal/auditada.
+- `mvnw.cmd verify`: 193 testes, 0 falhas, 0 erros, 0 skips; frontend Vaadin
+  construído e JAR Spring Boot empacotado. Compilação principal e de testes
+  também passaram com JDK 21.0.12.
+- O primeiro gate contra o volume persistente local existente falhou antes de
+  migrar: Flyway encontrou schemas não vazios sem histórico. Nenhum schema ou
+  volume foi limpo/alterado para contornar a falha. O gate PASS foi repetido
+  contra PostgreSQL 17 limpo em Compose isolado
+  `gestao-producao-test-f01-t20-20260924-01`, host port 55433; o stack fica
+  registrado em `.specs/STATE.md` para ser removido após T22, preservando o
+  volume persistente do Compose local.
+- `git diff --check` passou antes do gate completo.
+- Documentação oficial conferida: [SendGrid Mail Send API](https://www.twilio.com/docs/sendgrid/api-reference/mail-send/mail-send),
+  [SendGrid trial/plan](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/upgrading-your-plan) e
+  [Spring Framework REST clients](https://docs.spring.io/spring-framework/reference/integration/rest-clients.html).
+
+A documentação pública atual descreve o Email API em teste grátis como até
+100 envios/dia por 60 dias e exige upgrade após o período. O estado/validade
+da conta específica do owner não foi consultado. Portanto a aplicação fica
+com `PLATFORM_INVITATION_DELIVERY_ENABLED=false`; o owner deve confirmar no
+painel que a conta permanece em condição de custo zero antes de habilitar.
