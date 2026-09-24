@@ -12,8 +12,9 @@
 
 **Estado atual:** ABERTO — T17 e T18 passaram pelos gates automatizados; revisão
 independente e UAT no Render não foram concluídas. T18 implementa a rota do
-convite e a continuidade após login; T19–T23 seguem pendentes para origem
-pública, e-mail opcional, revisão visual, regressão publicada e UAT.
+convite e a continuidade após login; T19 passou pelo gate automatizado. T20–T23
+seguem pendentes para e-mail opcional, revisão visual, regressão publicada e
+UAT.
 
 ## Gate da feature
 
@@ -126,16 +127,14 @@ o próximo deploy, ainda é necessário autenticar com a identidade cujo subject
 está configurado, clicar na ação e verificar a abertura da administração. A
 revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
 
-## Gaps restantes para T19–T23
+## Gaps restantes para T20–T23
 
-- **Convite publicado:** a rota `/invitations/{token}` e o retorno do destino
-  após login passaram nos testes automatizados T18. Ainda faltam a origem
-  pública segura (T19), a regressão completa publicada (T22) e a UAT real no
-  Render (T23).
-- **Origem pública:** a configuração tem fallback geral para
-  `http://localhost:8080`. Mesmo que a URL mostrada no Render já use o domínio
-  público, falta impedir que uma configuração de produção ausente ou insegura
-  produza link local.
+- **Convite publicado:** a rota `/invitations/{token}`, o retorno após login e
+  a origem pública HTTPS explícita passaram nos gates automatizados T18/T19.
+  Ainda faltam a regressão completa publicada (T22) e a UAT real no Render
+  (T23). O valor `PLATFORM_INVITATION_BASE_URL` precisa ser cadastrado
+  manualmente no Render antes do próximo deploy; não alteramos a configuração
+  do serviço.
 - **E-mail:** existe `InvitationDeliveryPort` e o teste da entrega pós-commit,
   mas não foi encontrada implementação de produção SendGrid. E-mail continua
   opcional; link copiado permanece o fallback garantido. A integração real não
@@ -146,8 +145,42 @@ revisão independente fresh-eyes da T17 também não foi executada nesta rodada.
 
 Esses pontos não invalidam os resultados automatizados já registrados; eles
 impedem declarar o fluxo publicado da F-01 como concluído. A próxima evidência
-deve ser produzida por T19–T23, com teste automatizado separado da UAT manual e
+deve ser produzida por T20–T23, com teste automatizado separado da UAT manual e
 sem registrar ou copiar segredos para este arquivo.
+
+## Complemento — T19: origem pública dos links de convite
+
+**Data:** 23 de setembro de 2026
+
+**Escopo:** T19 / F01-09 / F01-19
+
+**Resultado automatizado:** PASS
+**Deploy e UAT publicados:** pendentes; dependem de configuração manual pelo owner
+
+A origem dos links não possui mais fallback para `localhost`: deve ser definida
+por `PLATFORM_INVITATION_BASE_URL`. Perfis locais/testes podem usar HTTP local;
+fora deles, a inicialização valida origem HTTPS absoluta e rejeita hosts locais,
+endereços IP não públicos, host de rótulo único, userinfo, path, query e
+fragmento. A normalização elimina barra final, e os links mantêm o caminho
+`/invitations/{token}` e token opaco existentes.
+
+Evidências:
+
+- `InvitationLinkPropertiesTests`: 4 testes cobrindo normalização local,
+  origem HTTPS do Render e origens/formatos rejeitados.
+- `mvnw.cmd verify`: 186 testes, sem falhas, erros ou skips; frontend Vaadin
+  construído e JAR executável empacotado.
+- O gate usou PostgreSQL 17 em Compose isolado
+  `gestao-producao-test-f01-t19-20260923-01`, porta 55432. O comando exato
+  `docker compose -p gestao-producao-test-f01-t19-20260923-01 down --volumes --remove-orphans`
+  removeu container, rede e volume temporário ao final; os recursos foram
+  confirmados como removidos. Os demais volumes foram preservados.
+- `git diff --check` passou. Nenhuma variável/secreto foi configurado no Render
+  e nenhuma alteração foi feita no Supabase.
+
+Antes do próximo deploy, o owner deve adicionar no serviço Render a variável
+`PLATFORM_INVITATION_BASE_URL=https://gestao-custo-e-producao.onrender.com`.
+Esta rodada não executou deploy nem UAT do link publicado.
 
 ## Complemento — T18: rota de aceitação de convites
 

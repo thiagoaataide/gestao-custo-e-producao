@@ -326,6 +326,9 @@ de produção no `application.yaml`:
 - `PLATFORM_BOOTSTRAP_OWNER_SUBJECT`: subject Supabase autorizado para o
   bootstrap controlado do primeiro `PLATFORM_OWNER`; sem esse valor o bootstrap
   permanece bloqueado.
+- `PLATFORM_INVITATION_BASE_URL`: origem canônica dos convites. O perfil
+  local pode usar `http://localhost:8080`; fora dos perfis local e test,
+  a aplicação exige HTTPS e rejeita localhost, loopback e endereços privados.
 
 O `spring.flyway.url` usa o mesmo `DB_URL`, mas mantém usuário e senha
 separados. O perfil `test` possui defaults locais controlados para executar o

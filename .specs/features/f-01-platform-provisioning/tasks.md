@@ -587,12 +587,12 @@ fábrica de links.
 
 **Done when:**
 
-- [ ] Perfil local aceita a origem local explicitamente definida.
-- [ ] Ambiente publicado exige origem HTTPS pública e rejeita vazio,
+- [x] Perfil local aceita a origem local explicitamente definida.
+- [x] Ambiente publicado exige origem HTTPS pública e rejeita vazio,
       `localhost`, loopback e esquema inseguro antes de emitir convite.
-- [ ] Link copiado e link passado ao adapter usam a mesma origem, caminho e
+- [x] Link copiado e link passado ao adapter usam a mesma origem, caminho e
       token opaco, sem duplicar barras ou acrescentar URLs de callback alheias.
-- [ ] Testes cobrem configuração válida e cada origem inválida; exemplos de
+- [x] Testes cobrem configuração válida e cada origem inválida; exemplos de
       ambiente documentam apenas nomes/valores não secretos.
 
 **Tests:** unit/integration — fábrica e binding de configuração por ambiente.
