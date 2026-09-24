@@ -155,6 +155,13 @@ sequenceDiagram
   papéis administrativos e auditoria.
 - **Regra:** a UI chama casos de uso; não consulta `JdbcTemplate`, JPA ou
   Supabase diretamente.
+- **Apresentação administrativa (T21):** `/platform` organiza os recursos em
+  quatro abas — Tenants, Convites, Membros e Papéis da plataforma. Auditoria
+  permanece na rota `/platform/audit`, acessível por navegação explícita.
+  A aba Membros informa que a membership nasce no aceite do convite e oferece
+  um atalho para Convites; não existe criação direta de membership pela UI.
+  Formulários usam layout responsivo e grades dimensionadas ao conteúdo, sem
+  alterar autorização ou regras de domínio.
 
 ### `tenant operations`
 

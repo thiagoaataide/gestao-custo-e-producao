@@ -357,28 +357,29 @@ Registre aqui cada container descartável criado para uma validação isolada e
 remova a entrada somente depois de confirmar sua remoção. Não liste o serviço
 compartilhado de `compose.yaml` nesta seção.
 
-- Nenhum container temporário ativo. O PostgreSQL isolado da T19 foi removido
+- Nenhum container temporário ativo. O PostgreSQL isolado da T21 foi removido
   junto com sua rede e volume temporário; volumes preexistentes foram
   preservados.
 
 ## Handoff
 
 - **Feature**: F-01 — Fechamento de provisionamento da plataforma.
-- **Phase / Task**: T19 implementada e verificada; T20–T23 planejadas.
+- **Phase / Task**: T19 e T21 implementadas e verificadas; T20, T22 e T23 pendentes.
 - **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas, T17 passou pelo
   gate automatizado (177 testes), T18 passou pelo gate completo (182 testes) e
-  T19 passou por `mvnw.cmd verify` (186 testes);
+  T19 passou por `mvnw.cmd verify` (186 testes) e T21 passou por
+  `mvnw.cmd verify` (189 testes);
   PRD e roadmap da F-02 preservados; a
   especificação da F-01 agora registra F01-18 a F01-20 e a revisão de status.
 - **In progress**: Fechamento da F-01 reaberto após a validação publicada. As
-  lacunas restantes são adapter SendGrid opcional, responsividade visual,
-  regressão, revisão independente e UAT final. A origem HTTPS dos links foi
+  lacunas restantes são adapter SendGrid opcional, regressão, revisão
+  independente e UAT final. A origem HTTPS dos links foi
   validada localmente; falta configurar `PLATFORM_INVITATION_BASE_URL` no
   Render manualmente antes do próximo deploy.
   A rota/retorno do convite foi implementada e verificada localmente; a UAT
   publicada continua pendente. O diretório não rastreado da F-02 pertence ao
   usuário e deve ser preservado.
-- **Next step**: Iniciar T20 e executar T20–T23 em
+- **Next step**: Iniciar T20 e executar T20, T22 e T23 em
   ordem, com teste e commit atômico por task; não declarar F-01 concluída antes
   da revisão independente e UAT no Render. Depois, retomar o planejamento da
   F-02 sem presumir autorização para implementar suas tasks; quando houver

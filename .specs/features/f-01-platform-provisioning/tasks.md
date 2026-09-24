@@ -639,17 +639,17 @@ permissões.
 
 **Done when:**
 
-- [ ] Tipografia, espaçamento, alinhamento de labels/campos e hierarquia de
+- [x] Tipografia, espaçamento, alinhamento de labels/campos e hierarquia de
       botões formam um padrão consistente nas telas administrativas.
-- [ ] Grids apresentam cabeçalhos, ações e conteúdo legíveis sem ocupar área
+- [x] Grids apresentam cabeçalhos, ações e conteúdo legíveis sem ocupar área
       vazia desproporcional; formulários e ações se reorganizam em viewport
       estreito sem corte horizontal.
-- [ ] Foco, contraste e navegação por teclado continuam perceptíveis e
+- [x] Foco, contraste e navegação por teclado continuam perceptíveis e
       nenhuma ação/autorização existente muda.
-- [ ] A implementação usa tema/variantes/custom properties e CSS documentados
+- [x] A implementação usa tema/variantes/custom properties e CSS documentados
       na versão Vaadin 25.2.8; sem hacks de Shadow DOM ou dependência visual
       adicional não aprovada.
-- [ ] Testes smoke e checklist de inspeção visual cobrem viewport estreito e
+- [x] Testes smoke e checklist de inspeção visual cobrem viewport estreito e
       amplo; APIs exatas foram conferidas em documentação oficial versionada.
 
 **Tests:** integration/smoke; confirmação visual manual no navegador fica em

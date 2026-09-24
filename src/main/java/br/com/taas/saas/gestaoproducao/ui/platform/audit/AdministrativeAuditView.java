@@ -14,13 +14,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
@@ -42,6 +47,7 @@ import br.com.taas.saas.gestaoproducao.platform.identity.model.ExternalSubject;
 @Route("platform/audit")
 @PageTitle("Auditoria administrativa | Gestão de Produção")
 @PermitAll
+@StyleSheet("css/platform-administration.css")
 public final class AdministrativeAuditView extends VerticalLayout {
 
     private final AdministrativeAuditQueryService queryService;
@@ -117,17 +123,23 @@ public final class AdministrativeAuditView extends VerticalLayout {
     }
 
     private void render() {
+        addClassNames("platform-administration", "platform-administration--audit");
         setWidthFull();
         setMaxWidth("90rem");
         setMargin(true);
         setSpacing(true);
 
-        HorizontalLayout heading = new HorizontalLayout(new H1("Auditoria administrativa"));
-        heading.setWidthFull();
-        heading.setAlignItems(Alignment.CENTER);
+        FlexLayout heading = new FlexLayout();
+        heading.add(new H1("Auditoria administrativa"));
+        heading.add(new Anchor("/platform", "Administração"));
         if (authenticationContext != null) {
             heading.add(new Button("Sair", event -> authenticationContext.logout()));
         }
+        heading.setWidthFull();
+        heading.setAlignItems(Alignment.CENTER);
+        heading.setJustifyContentMode(FlexLayout.JustifyContentMode.BETWEEN);
+        heading.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        heading.addClassName("platform-administration__header");
         add(heading);
         if (!state.platformAccess()) {
             add(new Paragraph(state.feedback()));
@@ -144,6 +156,8 @@ public final class AdministrativeAuditView extends VerticalLayout {
 
         auditGrid = new Grid<>();
         auditGrid.setWidthFull();
+        auditGrid.setAllRowsVisible(true);
+        auditGrid.addClassName("platform-administration__grid");
         auditGrid.addColumn(event -> event.occurredAt().toString()).setHeader("Ocorrido em");
         auditGrid.addColumn(event -> actorLabel(event.actorIdentityId())).setHeader("Ator");
         auditGrid.addColumn(event -> event.action().name()).setHeader("Ação");
@@ -162,6 +176,7 @@ public final class AdministrativeAuditView extends VerticalLayout {
     private Component filterSection() {
         VerticalLayout section = new VerticalLayout();
         section.setPadding(false);
+        section.addClassName("platform-administration__panel");
         section.add(new Span("Filtros"));
 
         actionFilter = new ComboBox<>("Ação");
@@ -182,11 +197,21 @@ public final class AdministrativeAuditView extends VerticalLayout {
         occurredUntilFilter = new DateTimePicker("Até (UTC)");
 
         Button filter = new Button("Filtrar", event -> applyFilters(0));
+        filter.addThemeVariants(ButtonVariant.AURA_PRIMARY);
+        filter.addClassName("platform-administration__form-action");
         Button clear = new Button("Limpar", event -> clearFilters());
-        section.add(
-                new HorizontalLayout(actionFilter, targetTypeFilter, resultFilter),
-                new HorizontalLayout(actorFilter, targetFilter),
-                new HorizontalLayout(occurredFromFilter, occurredUntilFilter, filter, clear));
+        clear.addThemeVariants(ButtonVariant.AURA_TERTIARY);
+        clear.addClassName("platform-administration__form-action");
+        FormLayout form = new FormLayout();
+        form.setWidthFull();
+        form.setResponsiveSteps(
+                new ResponsiveStep("0", 1),
+                new ResponsiveStep("40em", 2),
+                new ResponsiveStep("64em", 3));
+        form.addClassName("platform-administration__form");
+        form.add(actionFilter, targetTypeFilter, resultFilter, actorFilter, targetFilter,
+                occurredFromFilter, occurredUntilFilter, filter, clear);
+        section.add(form);
         return section;
     }
 
@@ -195,7 +220,11 @@ public final class AdministrativeAuditView extends VerticalLayout {
         nextPage = new Button("Próxima", event -> loadPage(state.page().page() + 1));
         pageSummary = new Span();
         updatePaginationControls();
-        return new HorizontalLayout(previousPage, pageSummary, nextPage);
+        FlexLayout pagination = new FlexLayout(previousPage, pageSummary, nextPage);
+        pagination.setAlignItems(FlexLayout.Alignment.CENTER);
+        pagination.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        pagination.addClassName("platform-administration__pagination");
+        return pagination;
     }
 
     private void applyFilters(int page) {

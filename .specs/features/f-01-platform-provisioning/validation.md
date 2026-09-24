@@ -182,6 +182,57 @@ Antes do próximo deploy, o owner deve adicionar no serviço Render a variável
 `PLATFORM_INVITATION_BASE_URL=https://gestao-custo-e-producao.onrender.com`.
 Esta rodada não executou deploy nem UAT do link publicado.
 
+## Complemento — T21: interface administrativa responsiva
+
+**Data:** 23 de setembro de 2026
+
+**Escopo:** T21 / F01-20
+
+**Resultado automatizado:** PASS
+
+**Inspeção manual em navegador/Render:** pendente para T23; este commit não faz deploy.
+
+`/platform` agora separa Tenants, Convites, Membros e Papéis da plataforma em
+abas. A auditoria continua em `/platform/audit`, com navegação de ida e volta.
+Os formulários usam `FormLayout` responsivo; as ações primárias/destrutivas
+usam variantes Aura; os grids deixam de reservar uma área vazia fixa e exibem
+as linhas carregadas. A aba Membros explica que o vínculo é ativado no aceite
+do convite e leva ao formulário de convite, sem criar membership diretamente.
+
+Evidências:
+
+- `PlatformAdministrationViewIntegrationTests`: 5 testes aprovados, incluindo
+  as quatro abas, aba inicial, encaminhamento de “Convidar membro”, formulários
+  responsivos, grids dimensionados ao conteúdo e preservação de acesso.
+- `AdministrativeAuditViewIntegrationTests`: 6 testes aprovados, incluindo
+  formulário responsivo e grid dimensionado ao conteúdo; autorização e
+  mensagens seguras seguem cobertas.
+- `mvnw.cmd verify`: 189 testes, sem falhas, erros ou skips; frontend Vaadin
+  de produção construído e JAR executável empacotado.
+- O gate usou PostgreSQL 17 em Compose isolado
+  `gestao-producao-test-f01-t21-20260923-01`, porta 55434. O comando exato
+  `docker compose -p gestao-producao-test-f01-t21-20260923-01 down --volumes --remove-orphans`
+  removeu container, rede e volume temporário; ausência confirmada, demais
+  volumes preservados.
+- `git diff --check` passou. Nenhuma chamada ao Supabase ou ao Render foi feita.
+- Dependência e APIs conferidas contra Vaadin Flow 25.2.8 do `pom.xml` e seus
+  artefatos de fonte; documentação oficial: [Form Layout](https://vaadin.com/docs/latest/components/form-layout),
+  [Tabs/TabSheet](https://vaadin.com/docs/latest/components/tabs),
+  [Aura](https://vaadin.com/docs/latest/styling/themes/aura) e
+  [Stylesheets](https://vaadin.com/docs/latest/styling/stylesheets).
+- Checklist manual para a inspeção publicada na T23:
+  - [ ] largura estreita (aprox. 390 px): abas utilizáveis; campos empilhados;
+        botões e conteúdo sem corte ou rolagem horizontal da página;
+  - [ ] largura ampla (aprox. 1366 px): campos e ações alinhados; grids sem
+        grande área vazia;
+  - [ ] teclado: foco visível, setas/Enter nas abas e foco no e-mail após
+        “Convidar membro”;
+  - [ ] atalho de auditoria abre `/platform/audit` e retorna para `/platform`;
+  - [ ] convite criado/reenviado mantém a origem pública do Render, e o fluxo
+        de aceite continua ativando a membership.
+
+O checklist é um plano de inspeção, não uma afirmação de UAT visual executada.
+
 ## Complemento — T18: rota de aceitação de convites
 
 **Data:** 23 de setembro de 2026

@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationDeniedException;
@@ -111,6 +112,23 @@ class AdministrativeAuditViewIntegrationTests {
         assertThat(textOf(view))
                 .contains("Nenhum evento administrativo encontrado.")
                 .doesNotContain("Não foi possível consultar");
+    }
+
+    @Test
+    void auditFiltersAndGridUseResponsiveContentSizedLayout() {
+        AdministrativeAuditView view = new AdministrativeAuditView(
+                AdministrativeAuditViewState.loaded(
+                        new AuditEventPage(List.of(), 0, 20, 0)));
+
+        FormLayout form = allComponents(view)
+                .filter(FormLayout.class::isInstance)
+                .map(FormLayout.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertThat(form.getResponsiveSteps()).hasSize(3);
+        assertThat(component(view, Grid.class).isAllRowsVisible()).isTrue();
+        assertThat(view.getClassNames())
+                .contains("platform-administration", "platform-administration--audit");
     }
 
     @Test

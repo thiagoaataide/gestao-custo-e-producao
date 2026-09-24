@@ -13,6 +13,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.tabs.TabSheet;
 
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.PlatformMembershipAdministrationView;
 import br.com.taas.saas.gestaoproducao.platform.identity.model.Tenant;
@@ -41,11 +44,52 @@ class PlatformAdministrationViewIntegrationTests {
                 .contains("Administração da plataforma")
                 .contains("Tenants")
                 .contains("Convites")
-                .contains("Memberships")
-                .contains("Papéis de plataforma")
-                .contains("Tenants sem membership ativa: 1")
+                .contains("Membros")
+                .contains("Papéis da plataforma")
+                .contains("Auditoria")
+                .contains("Tenants sem membro ativo: 1")
                 .contains("Criar tenant")
                 .contains("Conceder PLATFORM_ADMIN");
+
+        TabSheet tabs = component(view, TabSheet.class);
+        assertThat(tabs.getTabCount()).isEqualTo(4);
+        assertThat(tabs.getSelectedIndex()).isZero();
+    }
+
+    @Test
+    void memberInviteActionOpensInvitationsTab() {
+        PlatformAdministrationView view = new PlatformAdministrationView(
+                new PlatformAdministrationViewState(
+                        true,
+                        true,
+                        List.of(new Tenant(TENANT_ID, "Tenant", TenantStatus.ACTIVE,
+                                Instant.parse("2026-09-22T10:00:00Z"))),
+                        List.of(),
+                        new PlatformMembershipAdministrationView(List.of(), List.of())));
+        TabSheet tabs = component(view, TabSheet.class);
+        tabs.setSelectedIndex(2);
+
+        button(view, "Convidar membro").click();
+
+        assertThat(tabs.getSelectedIndex()).isEqualTo(1);
+    }
+
+    @Test
+    void formsAndGridsUseResponsiveAndContentSizedLayouts() {
+        PlatformAdministrationView view = new PlatformAdministrationView(
+                new PlatformAdministrationViewState(
+                        true,
+                        true,
+                        List.of(),
+                        List.of(),
+                        new PlatformMembershipAdministrationView(List.of(), List.of())));
+
+        FormLayout form = component(view, FormLayout.class);
+        assertThat(form.getResponsiveSteps()).hasSize(3);
+        assertThat(allComponents(view)
+                .filter(Grid.class::isInstance)
+                .map(Grid.class::cast)
+                .allMatch(Grid::isAllRowsVisible)).isTrue();
     }
 
     @Test
@@ -55,7 +99,7 @@ class PlatformAdministrationViewIntegrationTests {
 
         assertThat(textOf(view))
                 .contains("Acesso não autorizado")
-                .doesNotContain("Criar tenant", "Criar convite", "Revogar", "Memberships");
+                .doesNotContain("Criar tenant", "Criar convite", "Convidar membro", "Revogar", "Membros");
         assertThat(buttons(view)).isEmpty();
     }
 
@@ -74,7 +118,25 @@ class PlatformAdministrationViewIntegrationTests {
                 .contains("PLATFORM_ADMIN")
                 .contains("Criar tenant")
                 .contains("Criar convite")
+                .contains("Membros")
                 .doesNotContain("Conceder PLATFORM_ADMIN");
+    }
+
+    private static Button button(PlatformAdministrationView view, String text) {
+        return allComponents(view)
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .filter(button -> text.equals(button.getText()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static <T extends Component> T component(PlatformAdministrationView view, Class<T> type) {
+        return allComponents(view)
+                .filter(type::isInstance)
+                .map(type::cast)
+                .findFirst()
+                .orElseThrow();
     }
 
     private static String textOf(PlatformAdministrationView view) {
@@ -90,7 +152,7 @@ class PlatformAdministrationViewIntegrationTests {
 
     private static String textOfComponent(Component component) {
         return component.getElement().getText() + " "
-                + component.getChildren()
+                + childComponents(component)
                         .map(PlatformAdministrationViewIntegrationTests::textOfComponent)
                         .collect(Collectors.joining(" "));
     }
@@ -98,6 +160,17 @@ class PlatformAdministrationViewIntegrationTests {
     private static java.util.stream.Stream<Component> allComponents(Component component) {
         return java.util.stream.Stream.concat(
                 java.util.stream.Stream.of(component),
-                component.getChildren().flatMap(PlatformAdministrationViewIntegrationTests::allComponents));
+                childComponents(component).flatMap(PlatformAdministrationViewIntegrationTests::allComponents));
+    }
+
+    private static java.util.stream.Stream<Component> childComponents(Component component) {
+        java.util.stream.Stream<Component> children = component.getChildren();
+        if (component instanceof TabSheet tabs) {
+            java.util.stream.Stream<Component> tabContents = java.util.stream.IntStream
+                    .range(0, tabs.getTabCount())
+                    .mapToObj(index -> tabs.getComponent(tabs.getTabAt(index)));
+            return java.util.stream.Stream.concat(children, tabContents).distinct();
+        }
+        return children;
     }
 }

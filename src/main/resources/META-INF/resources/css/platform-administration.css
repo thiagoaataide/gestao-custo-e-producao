@@ -1,0 +1,116 @@
+.platform-administration {
+  --aura-base-size: 18;
+  --aura-base-radius: 6;
+  --aura-base-font-size: 15;
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding: var(--vaadin-padding-l, 1.5rem);
+  color: var(--vaadin-text-color, #202124);
+  font-family: var(--aura-font-family, system-ui, sans-serif);
+}
+
+.platform-administration__header {
+  gap: var(--vaadin-gap, 1rem);
+  margin-block-end: var(--vaadin-padding-m, 1rem);
+}
+
+.platform-administration__header h1 {
+  margin: 0;
+  color: var(--aura-accent-text-color, var(--vaadin-text-color, #202124));
+  font-size: 1.75rem;
+  font-weight: var(--aura-font-weight-semibold, 600);
+  line-height: 1.2;
+}
+
+.platform-administration__header a {
+  color: var(--aura-accent-text-color, var(--vaadin-text-color, #202124));
+  font-weight: var(--aura-font-weight-semibold, 600);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.platform-administration__panel {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--vaadin-padding-l, 1.5rem);
+  border: 1px solid var(--aura-accent-border-color, #d5d9df);
+  border-radius: var(--vaadin-radius-l, 0.75rem);
+  background: var(--aura-surface-color, var(--vaadin-background-color, #fff));
+}
+
+.platform-administration__panel h2 {
+  margin-block: 0 var(--vaadin-gap, 1rem);
+  color: var(--aura-accent-text-color, var(--vaadin-text-color, #202124));
+  font-size: 1.25rem;
+  font-weight: var(--aura-font-weight-semibold, 600);
+}
+
+.platform-administration__form {
+  width: 100%;
+}
+
+vaadin-button.platform-administration__form-action {
+  align-self: end;
+  justify-self: start;
+  margin-block-end: var(--vaadin-padding-xs, 0.25rem);
+}
+
+.platform-administration__tabs {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-administration__grid {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--aura-accent-border-color, #d5d9df);
+  border-radius: var(--vaadin-radius-m, 0.5rem);
+}
+
+.platform-administration__actions,
+.platform-administration__pagination {
+  gap: var(--vaadin-gap, 0.75rem);
+}
+
+.platform-administration__summary,
+.platform-administration__hint {
+  display: block;
+  margin-block-start: var(--vaadin-gap, 0.75rem);
+  line-height: 1.5;
+}
+
+.platform-administration__member-invite {
+  margin-block-end: var(--vaadin-padding-m, 1rem);
+}
+
+.platform-administration__pagination {
+  width: 100%;
+  justify-content: space-between;
+}
+
+@media (max-width: 40rem) {
+  .platform-administration {
+    padding: var(--vaadin-padding-s, 0.75rem);
+  }
+
+  .platform-administration__panel {
+    padding: var(--vaadin-padding-m, 1rem);
+  }
+
+  .platform-administration__header {
+    align-items: flex-start;
+  }
+
+  .platform-administration__header h1 {
+    width: 100%;
+    font-size: 1.5rem;
+  }
+
+  .platform-administration__pagination {
+    justify-content: flex-start;
+  }
+}
