@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.ActiveProfiles;
 
 import br.com.taas.saas.gestaoproducao.platform.access.application.AccessDecisionType;
@@ -64,6 +66,8 @@ import br.com.taas.saas.gestaoproducao.tenancy.application.TenantScopedTransacti
 @Import(PlatformProvisioningEndToEndIntegrationTests.TestSupportConfiguration.class)
 class PlatformProvisioningEndToEndIntegrationTests {
 
+    private static final String PUBLIC_INVITATION_ORIGIN =
+            "https://gestao-custo-e-producao.onrender.com";
     private static final UUID OWNER_IDENTITY_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000101");
     private static final ExternalSubject OWNER_SUBJECT =
@@ -104,6 +108,11 @@ class PlatformProvisioningEndToEndIntegrationTests {
     private StubAuthenticatedIdentityPort authenticatedIdentityPort;
 
     private boolean ownerCreatedByTest;
+
+    @DynamicPropertySource
+    static void configurePublicInvitationOrigin(DynamicPropertyRegistry registry) {
+        registry.add("platform.invitation.base-url", () -> PUBLIC_INVITATION_ORIGIN);
+    }
 
     @BeforeEach
     void ensureOwnerAndResetIdentityStub() {
@@ -187,7 +196,7 @@ class PlatformProvisioningEndToEndIntegrationTests {
     }
 
     @Test
-    void invitationAcceptanceCreatesOneMembershipAndRlsReceivesItsTenant() {
+    void publicOriginInvitationFlowCreatesLinkAndActivatesMembershipWithAudit() {
         Tenant tenant = createTenant("invitation");
         String subject = unique("invited-subject");
         String email = unique("invited") + "@example.com";
@@ -197,7 +206,8 @@ class PlatformProvisioningEndToEndIntegrationTests {
                 new CreateInvitationCommand(OWNER_IDENTITY_ID, tenant.id(), email, NOW));
         assertThat(link.invitation().status()).isEqualTo(InvitationStatus.PENDING);
         assertThat(link.invitation().expiresAt()).isEqualTo(NOW.plusSeconds(24 * 60 * 60));
-        assertThat(link.link()).startsWith("http://test.local/invitations/");
+        assertThat(link.link()).startsWith(PUBLIC_INVITATION_ORIGIN + "/invitations/");
+        assertThat(link.link()).isEqualTo(PUBLIC_INVITATION_ORIGIN + "/invitations/" + tokenFrom(link));
 
         InvitationAcceptanceResult accepted = invitationAcceptanceService.acceptInvitation(
                 new AcceptInvitationCommand(
@@ -208,6 +218,12 @@ class PlatformProvisioningEndToEndIntegrationTests {
         assertThat(accepted.invitation().status()).isEqualTo(InvitationStatus.ACCEPTED);
         assertThat(accepted.membership().status()).isEqualTo(MembershipStatus.ACTIVE);
         assertThat(accepted.membership().tenantId()).isEqualTo(tenant.id());
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM platform.membership "
+                        + "WHERE identity_id = ? AND tenant_id = ? AND status = 'ACTIVE'",
+                Long.class,
+                accepted.membership().identityId(),
+                tenant.id())).isEqualTo(1L);
         assertThat(accessDecisionResolver.resolve(ExternalSubject.fromSupabase(subject)).type())
                 .isEqualTo(AccessDecisionType.TENANT_ACCESS);
         assertThat(transactionExecutor.execute(
@@ -216,6 +232,23 @@ class PlatformProvisioningEndToEndIntegrationTests {
                         "SELECT current_setting('app.tenant_id', true)",
                         String.class)))
                 .isEqualTo(tenant.id().toString());
+
+        AuditEventPage acceptedInvitationAudit = auditQueryService.findPage(
+                OWNER_IDENTITY_ID,
+                new AuditEventQuery(
+                        accepted.membership().identityId(),
+                        AuditAction.INVITATION_ACCEPTED,
+                        AuditTargetType.INVITATION,
+                        link.invitation().id(),
+                        AuditResult.SUCCESS,
+                        null,
+                        null,
+                        0,
+                        20));
+        assertThat(acceptedInvitationAudit.content()).singleElement().satisfies(event -> {
+            assertThat(event.actorIdentityId()).isEqualTo(accepted.membership().identityId());
+            assertThat(event.metadata().values()).isEmpty();
+        });
 
         Tenant secondTenant = createTenant("second-invitation");
         InvitationLinkResult secondLink = invitationCommandService.createInvitation(

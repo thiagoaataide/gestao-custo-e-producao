@@ -8,13 +8,44 @@
 > requisitos F01-01 a F01-16 então definidos. Ele não significa que o
 > fechamento atual da F-01 esteja completo.
 
-## Estado de fechamento após validação publicada — 23 de setembro de 2026
+## Estado de fechamento registrado antes do T22 — 23 de setembro de 2026 (histórico)
 
 **Estado atual:** ABERTO — T17 e T18 passaram pelos gates automatizados; revisão
 independente e UAT no Render não foram concluídas. T18 implementa a rota do
 convite e a continuidade após login; T19, T20 e T21 passaram pelos gates
 automatizados. T22 e T23 seguem pendentes para regressão publicada, revisão
 independente e UAT.
+
+## Estado de fechamento após T22 — 24 de setembro de 2026
+
+**Estado atual:** ABERTO — T22 passou pelos gates automatizados locais; T23
+continua pendente para revisão independente e UAT manual publicada. A F-01 não
+está concluída. Nenhum deploy, alteração no Render/Supabase ou envio real de
+e-mail foi feito.
+
+### Evidência de T22
+
+- A regressão `PlatformProvisioningEndToEndIntegrationTests.publicOriginInvitationFlowCreatesLinkAndActivatesMembershipWithAudit`
+  passou em PostgreSQL 17 local: convite emitido com origem
+  `https://gestao-custo-e-producao.onrender.com`, token no caminho canônico,
+  aceite autenticado, uma membership ativa, contexto de tenant aplicado na
+  transação RLS e auditoria de aceite sem metadata sensível.
+- A classe ponta a ponta executou 5 testes: 0 falhas, 0 erros e 0 skips.
+- `mvnw.cmd clean verify`, com Java 21.0.12 e PostgreSQL 17 isolado e vazio na
+  porta 55433: 193 testes, 0 falhas, 0 erros e 0 skips; build Vaadin e JAR
+  Spring Boot concluídos.
+- O primeiro gate após o teste focado encontrou um erro em
+  `AdministrativeAuditPersistenceIntegrationTests`, pois o banco temporário
+  continha dados persistidos da execução focada. O Compose isolado registrado
+  foi recriado vazio; o gate completo repetido passou. O serviço/volume local
+  compartilhado (porta 55432) não foi modificado.
+- `git diff --check` passou. O container, volume e rede do Compose temporário
+  `gestao-producao-test-f01-t20-20260924-01` foram removidos após o gate e a
+  ausência dos três recursos foi confirmada.
+- Os testes de email usam HTTP simulado. O adapter SendGrid segue desabilitado
+  por padrão; nenhuma credencial foi usada e nenhum e-mail foi enviado.
+- A UAT no Render permanece pendente, inclusive a configuração manual de
+  `PLATFORM_INVITATION_BASE_URL` para a origem HTTPS pública.
 
 ## Gate da feature
 

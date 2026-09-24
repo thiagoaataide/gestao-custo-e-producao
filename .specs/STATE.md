@@ -357,19 +357,14 @@ Registre aqui cada container descartável criado para uma validação isolada e
 remova a entrada somente depois de confirmar sua remoção. Não liste o serviço
 compartilhado de `compose.yaml` nesta seção.
 
-- **F-01 T20 gate (temporário)**: Compose project
-  `gestao-producao-test-f01-t20-20260924-01`; container
-  `gestao-producao-test-f01-t20-20260924-01-postgres-1`;
-  ID `b6e6040f707b8daa7a18a3bd4f572223f1bcbd17afa834cbdb79817ce5f9228a`;
-  volume `gestao-producao-test-f01-t20-20260924-01_gestao_producao_postgres_data`;
-  host port `55433`. Remover somente com
-  `docker compose -p gestao-producao-test-f01-t20-20260924-01 --env-file .env.local.example down --volumes --remove-orphans`
-  após o gate e confirmar a ausência de container, rede e volume.
+Nenhum container temporário está ativo ou pendente de remoção. O Compose
+isolado registrado para T20/T22 foi removido após a validação; container,
+volume e rede tiveram a ausência confirmada.
 
 ## Handoff
 
 - **Feature**: F-01 — Fechamento de provisionamento da plataforma.
-- **Phase / Task**: T19–T21 implementadas e verificadas; T22 e T23 pendentes.
+- **Phase / Task**: T19–T22 implementadas e verificadas; T23 pendente.
 - **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas, T17 passou pelo
   gate automatizado (177 testes), T18 passou pelo gate completo (182 testes) e
   T19 passou por `mvnw.cmd verify` (186 testes), T20 passou por
@@ -377,20 +372,22 @@ compartilhado de `compose.yaml` nesta seção.
   (189 testes);
   PRD e roadmap da F-02 preservados; a
   especificação da F-01 agora registra F01-18 a F01-20 e a revisão de status.
-- **In progress**: Fechamento da F-01 reaberto após a validação publicada. As
-  lacunas restantes são regressão, revisão independente e UAT final. T20
+- T22 passou por `mvnw.cmd clean verify` (193 testes), incluindo regressão de
+  origem pública do convite, aceite, membership, RLS e auditoria.
+- **In progress**: Fechamento da F-01 reaberto após a validação publicada. A
+  lacuna restante é a revisão independente e UAT final. T20
   adicionou o adapter opcional, ainda desabilitado até o owner confirmar
   elegibilidade sem custo no SendGrid. O serviço compartilhado local
   `gestao-producao-postgres-1` está ativo usando um volume preexistente com
-  schemas sem histórico Flyway; não limpar nem baselinar esse volume. T20 usou
-  Compose isolado para obter um banco limpo. A origem HTTPS dos links foi
+  schemas sem histórico Flyway; não limpar nem baselinar esse volume. T22 usou
+  Compose isolado vazio e removeu seus recursos ao concluir. A origem HTTPS dos links foi
   validada localmente; falta configurar `PLATFORM_INVITATION_BASE_URL` no
   Render manualmente antes do próximo deploy.
   A rota/retorno do convite foi implementada e verificada localmente; a UAT
   publicada continua pendente. O diretório não rastreado da F-02 pertence ao
   usuário e deve ser preservado.
-- **Next step**: Executar T22 e depois T23 em ordem, com teste e commit
-  atômico por task; não declarar F-01 concluída antes
+- **Next step**: Executar T23 com revisão independente e roteiro de UAT; não
+  declarar F-01 concluída antes
   da revisão independente e UAT no Render. Depois, retomar o planejamento da
   F-02 sem presumir autorização para implementar suas tasks; quando houver
   autorização, preservar seus gates e confirmar PDFBox antes da T11, incluindo
@@ -401,5 +398,5 @@ compartilhado de `compose.yaml` nesta seção.
 - **Preserve local changes**: Alterações em `docs/PRD-V0.md`,
   `docs/ROADMAP-V0.md` e arquivos não rastreados da F-02 pertencem ao
   planejamento e não devem ser incluídos nos commits de fechamento da F-01.
-- **Branch**: `main` (à frente de `origin/main` por um commit, na última
-  verificação deste planejamento).
+- **Branch**: `main`; commits de fechamento locais ainda não foram enviados ao
+  remoto.

@@ -8,7 +8,7 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** T1–T16 concluídas e verificadas; T17 e T18 passaram pelos gates automatizados. O fechamento continua aberto para T19–T23, revisão independente e UAT publicada.
+**Status:** T1–T22 concluídas e verificadas por seus gates automatizados. O fechamento continua aberto para T23: revisão independente e UAT publicada.
 
 ## Test Coverage Matrix
 
@@ -669,14 +669,15 @@ revalidar configuração da origem e entrega opcional isolada.
 
 **Done when:**
 
-- [ ] PostgreSQL é o serviço compartilhado previsto no Compose/Testcontainers
-      existente; nenhum container descartável é deixado após os testes.
-- [ ] Fluxo completo confirma token, origem, autenticação, confirmação, estado
+- [x] PostgreSQL de teste usa o `compose.yaml` existente; quando necessário,
+      projeto temporário é registrado e removido ao fim, sem container
+      descartável remanescente.
+- [x] Fluxo completo confirma token, origem, autenticação, confirmação, estado
       da membership e auditoria sem exibir dados de outro tenant.
-- [ ] Caminho sem SendGrid continua disponível; adapter é provado com HTTP
+- [x] Caminho sem SendGrid continua disponível; adapter é provado com HTTP
       simulado, sem chamada real no suite automatizado.
-- [ ] `mvnw.cmd clean verify` e `git diff --check` passam sem excluir testes.
-- [ ] `validation.md` distingue testes locais, testes com serviço simulado e
+- [x] `mvnw.cmd clean verify` e `git diff --check` passam sem excluir testes.
+- [x] `validation.md` distingue testes locais, testes com serviço simulado e
       UAT ainda não executada no Render.
 
 **Tests:** integration — extensão da suíte ponta a ponta existente.

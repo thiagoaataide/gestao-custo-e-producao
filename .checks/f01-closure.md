@@ -59,7 +59,6 @@ Proof: `InvitationAcceptanceViewTests.acceptsOnlyAfterExplicitConfirmationUsingV
 
 **C8** - The regression issues a public-origin invitation, accepts it only for the matching verified identity, activates one tenant membership, records acceptance audit, and establishes its tenant RLS context.
 Proof: `PlatformProvisioningEndToEndIntegrationTests.publicOriginInvitationFlowCreatesLinkAndActivatesMembershipWithAudit`
-Proof: `PlatformProvisioningEndToEndIntegrationTests.invitationAcceptanceCreatesOneMembershipAndRlsReceivesItsTenant`
 
 **C9** - Rejected acceptance shows a generic message without disclosing the token, recipient, or tenant.
 Proof: `InvitationAcceptanceViewTests.domainRejectionIsShownAsGenericMessageWithoutSensitiveDetails`
