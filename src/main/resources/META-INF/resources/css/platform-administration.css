@@ -114,3 +114,56 @@ vaadin-button.platform-administration__form-action {
     justify-content: flex-start;
   }
 }
+
+.platform-administration__invite-form {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--vaadin-padding-m, 1rem);
+  border: 1px solid var(--aura-accent-border-color, #d5d9df);
+  border-radius: var(--vaadin-radius-m, 0.5rem);
+  background: var(--aura-surface-color, var(--vaadin-background-color, #fff));
+}
+
+.platform-administration__invite-form h3 {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.platform-administration__member-list {
+  width: 100%;
+  min-width: 0;
+}
+
+.platform-administration__member-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--vaadin-padding-m, 1rem);
+  border: 1px solid var(--aura-accent-border-color, #d5d9df);
+  border-radius: var(--vaadin-radius-m, 0.5rem);
+  background: var(--aura-surface-color, var(--vaadin-background-color, #fff));
+}
+
+.platform-administration__member-person,
+.platform-administration__member-details {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.platform-administration__member-person {
+  margin: 0 0 var(--vaadin-padding-xs, 0.25rem);
+  font-size: 1rem;
+  text-wrap: balance;
+}
+
+.platform-administration__member-details {
+  line-height: 1.5;
+}
+
+.platform-administration__empty-state {
+  display: block;
+  padding: var(--vaadin-padding-m, 1rem);
+  border: 1px dashed var(--aura-accent-border-color, #d5d9df);
+  border-radius: var(--vaadin-radius-m, 0.5rem);
+  line-height: 1.5;
+}

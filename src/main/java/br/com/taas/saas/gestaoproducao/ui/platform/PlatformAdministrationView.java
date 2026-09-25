@@ -1,6 +1,7 @@
 package br.com.taas.saas.gestaoproducao.ui.platform;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -24,11 +25,13 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -92,12 +95,17 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private UUID actorIdentityId;
     private PlatformAdministrationViewState state;
     private Grid<Tenant> tenantGrid;
-    private Grid<InvitationAdministrationView> invitationGrid;
     private Grid<PlatformRoleAdministrationView> roleGrid;
-    private Grid<MembershipAdministrationView> membershipGrid;
     private Span tenantMembershipSummary;
     private ComboBox<Tenant> invitationTenant;
     private EmailField invitationEmail;
+    private ComboBox<Tenant> memberTenantFilter;
+    private ComboBox<MemberStatusFilter> memberStatusFilter;
+    private VerticalLayout memberRows;
+    private VerticalLayout invitationForm;
+    private Button addMemberButton;
+    private Dialog pendingRevocationDialog;
+    private Dialog lastInvitationLinkDialog;
     private TextField tenantName;
     private TextField platformAdminIdentity;
     private TabSheet administrationTabs;
@@ -133,6 +141,26 @@ public final class PlatformAdministrationView extends VerticalLayout {
         this.actorIdentityResolver = null;
         this.authorizationService = null;
         this.authenticationContext = null;
+        this.state = Objects.requireNonNull(state);
+        render();
+    }
+
+    PlatformAdministrationView(
+            PlatformAdministrationViewState state,
+            UUID actorIdentityId,
+            TenantProvisioningQueryService tenantQueryService,
+            InvitationCommandService invitationCommandService,
+            InvitationProvisioningQueryService invitationQueryService,
+            PlatformMembershipAdminService membershipAdminService) {
+        this.tenantCommandService = null;
+        this.tenantQueryService = tenantQueryService;
+        this.invitationCommandService = invitationCommandService;
+        this.invitationQueryService = invitationQueryService;
+        this.membershipAdminService = membershipAdminService;
+        this.actorIdentityResolver = null;
+        this.authorizationService = null;
+        this.authenticationContext = null;
+        this.actorIdentityId = Objects.requireNonNull(actorIdentityId);
         this.state = Objects.requireNonNull(state);
         render();
     }
@@ -191,7 +219,6 @@ public final class PlatformAdministrationView extends VerticalLayout {
         administrationTabs.setWidthFull();
         administrationTabs.addClassName("platform-administration__tabs");
         administrationTabs.add("Tenants", tenantSection());
-        administrationTabs.add("Convites", invitationSection());
         administrationTabs.add("Membros", membershipSection());
         administrationTabs.add("Papéis da plataforma", platformRoleSection());
         add(administrationTabs);
@@ -251,39 +278,154 @@ public final class PlatformAdministrationView extends VerticalLayout {
         return actions;
     }
 
-    private Component invitationSection() {
+    private Component membershipSection() {
         VerticalLayout section = new VerticalLayout();
         section.setPadding(false);
         section.addClassName("platform-administration__panel");
-        section.add(new H2("Convites"));
+        FlexLayout heading = new FlexLayout();
+        heading.add(new H2("Membros"));
+        addMemberButton = new Button("Adicionar membro", event -> toggleInvitationForm(true));
+        stylePrimaryAction(addMemberButton);
+        heading.add(addMemberButton);
+        heading.setWidthFull();
+        heading.setAlignItems(Alignment.CENTER);
+        heading.setJustifyContentMode(FlexLayout.JustifyContentMode.BETWEEN);
+        heading.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        section.add(heading);
+        section.add(new Paragraph(
+                "Acompanhe os acessos ativos e os convites. O acesso começa após a pessoa verificar o e-mail e aceitar o convite."));
 
+        memberTenantFilter = new ComboBox<>("Tenant");
+        memberTenantFilter.setItemLabelGenerator(Tenant::name);
+        memberTenantFilter.setItems(state.tenants());
+        memberTenantFilter.setPlaceholder("Todos os tenants");
+        memberTenantFilter.setClearButtonVisible(true);
+        memberTenantFilter.addValueChangeListener(event -> renderMemberRows());
+        memberStatusFilter = new ComboBox<>("Situação");
+        memberStatusFilter.setItemLabelGenerator(MemberStatusFilter::label);
+        memberStatusFilter.setItems(MemberStatusFilter.values());
+        memberStatusFilter.setValue(MemberStatusFilter.ALL);
+        memberStatusFilter.addValueChangeListener(event -> renderMemberRows());
+        section.add(responsiveForm(memberTenantFilter, memberStatusFilter));
+
+        invitationForm = new VerticalLayout();
+        invitationForm.setPadding(false);
+        invitationForm.setSpacing(true);
+        invitationForm.addClassName("platform-administration__invite-form");
+        invitationForm.setVisible(false);
+        invitationForm.add(new H3("Adicionar membro"));
+        invitationForm.add(new Paragraph(
+                "O convite fica pendente até a pessoa entrar com a conta cujo e-mail verificado corresponde ao destinatário e confirmar o aceite."));
         invitationTenant = new ComboBox<>("Tenant");
         invitationTenant.setItemLabelGenerator(Tenant::name);
-        invitationTenant.setItems(state.tenants().stream()
-                .filter(Tenant::isAvailable)
-                .toList());
+        invitationTenant.setItems(state.tenants().stream().filter(Tenant::isAvailable).toList());
         invitationTenant.setRequired(true);
-        invitationEmail = new EmailField("E-mail do usuário");
+        invitationTenant.setClearButtonVisible(true);
+        invitationEmail = new EmailField("E-mail do destinatário");
         invitationEmail.setRequired(true);
-        Button create = new Button("Criar convite");
+        invitationEmail.getElement().setAttribute("autocomplete", "email");
+        invitationEmail.getElement().setAttribute("spellcheck", "false");
+        Button cancel = new Button("Cancelar", event -> toggleInvitationForm(false));
+        Button create = new Button("Criar convite", event -> createInvitation());
         stylePrimaryAction(create);
-        create.addClickListener(event -> createInvitation());
-        section.add(responsiveForm(invitationTenant, invitationEmail, create));
+        HorizontalLayout formActions = new HorizontalLayout(cancel, create);
+        formActions.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        invitationForm.add(responsiveForm(invitationTenant, invitationEmail), formActions);
+        section.add(invitationForm);
 
-        invitationGrid = new Grid<>();
-        styleGrid(invitationGrid);
-        invitationGrid.addColumn(InvitationAdministrationView::email).setHeader("E-mail");
-        invitationGrid.addColumn(view -> tenantName(view.tenantId())).setHeader("Tenant");
-        invitationGrid.addColumn(view -> view.status().name()).setHeader("Estado");
-        invitationGrid.addColumn(InvitationAdministrationView::expiresAt).setHeader("Expira em");
-        invitationGrid.addComponentColumn(this::invitationActions).setHeader("Ações");
-        invitationGrid.setItems(state.invitations());
-        section.add(invitationGrid);
         Span guidance = new Span(
-                "O envio de e-mail é opcional nesta V0; copie o link para compartilhá-lo por um canal seguro.");
+                "O envio de e-mail é opcional nesta V0; o link pode ser copiado para compartilhamento por um canal seguro.");
         guidance.addClassName("platform-administration__hint");
         section.add(guidance);
+        memberRows = new VerticalLayout();
+        memberRows.setPadding(false);
+        memberRows.setSpacing(true);
+        memberRows.addClassName("platform-administration__member-list");
+        section.add(memberRows);
+        renderMemberRows();
         return section;
+    }
+
+    private void toggleInvitationForm(boolean visible) {
+        invitationForm.setVisible(visible);
+        addMemberButton.setVisible(!visible);
+        if (visible) {
+            invitationTenant.focus();
+        }
+    }
+
+    private void renderMemberRows() {
+        if (memberRows == null) {
+            return;
+        }
+        memberRows.removeAll();
+        List<MemberDirectoryRow> rows = memberDirectoryRows().stream()
+                .filter(row -> memberTenantFilter.getValue() == null
+                        || row.tenantId().equals(memberTenantFilter.getValue().id()))
+                .filter(row -> memberStatusFilter.getValue() == null
+                        || memberStatusFilter.getValue() == MemberStatusFilter.ALL
+                        || memberStatusFilter.getValue().matches(row))
+                .toList();
+        if (rows.isEmpty()) {
+            boolean noData = memberDirectoryRows().isEmpty();
+            Span empty = new Span(noData
+                    ? "Ainda não há membros ou convites. Adicione um membro para começar."
+                    : "Nenhum registro corresponde aos filtros selecionados.");
+            empty.addClassName("platform-administration__empty-state");
+            memberRows.add(empty);
+            if (!noData) {
+                Button clear = new Button("Limpar filtros", event -> {
+                    memberTenantFilter.clear();
+                    memberStatusFilter.setValue(MemberStatusFilter.ALL);
+                });
+                memberRows.add(clear);
+            }
+            return;
+        }
+        rows.forEach(row -> memberRows.add(memberCard(row)));
+    }
+
+    private List<MemberDirectoryRow> memberDirectoryRows() {
+        List<MemberDirectoryRow> rows = new java.util.ArrayList<>();
+        for (MembershipAdministrationView membership : state.membershipAdministration().memberships()) {
+            InvitationAdministrationView associated = state.invitations().stream()
+                    .filter(invitation -> invitation.tenantId().equals(membership.tenantId()))
+                    .filter(invitation -> membership.identityId().equals(invitation.identityId()))
+                    .max(java.util.Comparator.comparing(InvitationAdministrationView::createdAt))
+                    .orElse(null);
+            String person = associated == null || associated.email() == null || associated.email().isBlank()
+                    ? membership.identityId().toString()
+                    : associated.email();
+            rows.add(MemberDirectoryRow.membership(membership, person));
+        }
+        for (InvitationAdministrationView invitation : state.invitations()) {
+            if (invitation.status() == InvitationStatus.ACCEPTED) {
+                continue;
+            }
+            rows.add(MemberDirectoryRow.invitation(invitation));
+        }
+        rows.sort(java.util.Comparator
+                .comparing((MemberDirectoryRow row) -> tenantName(row.tenantId()), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(MemberDirectoryRow::person, String.CASE_INSENSITIVE_ORDER));
+        return rows;
+    }
+
+    private Component memberCard(MemberDirectoryRow row) {
+        VerticalLayout card = new VerticalLayout();
+        card.setPadding(true);
+        card.setSpacing(false);
+        card.addClassName("platform-administration__member-card");
+        H3 person = new H3(row.person());
+        person.addClassName("platform-administration__member-person");
+        Span details = new Span(tenantName(row.tenantId()) + " · " + row.statusLabel()
+                + " · " + row.roleLabel() + " · " + row.dateLabel());
+        details.addClassName("platform-administration__member-details");
+        card.add(person, details);
+        Component actions = row.invitation() != null
+                ? invitationActions(row.invitation())
+                : membershipActions(row.membership());
+        card.add(actions);
+        return card;
     }
 
     private Component invitationActions(InvitationAdministrationView invitation) {
@@ -295,9 +437,9 @@ public final class PlatformAdministrationView extends VerticalLayout {
             actions.add(resend);
         }
         if (invitation.status() == InvitationStatus.PENDING) {
-            Button revoke = new Button("Revogar");
+            Button revoke = new Button("Revogar convite");
             revoke.addThemeVariants(ButtonVariant.AURA_DANGER);
-            revoke.addClickListener(event -> revokeInvitation(invitation));
+            revoke.addClickListener(event -> requestInvitationRevocation(invitation));
             actions.add(revoke);
         }
         if (actions.getComponentCount() == 0) {
@@ -306,41 +448,63 @@ public final class PlatformAdministrationView extends VerticalLayout {
         return actions;
     }
 
-    private Component membershipSection() {
-        VerticalLayout section = new VerticalLayout();
-        section.setPadding(false);
-        section.addClassName("platform-administration__panel");
-        section.add(new H2("Membros"));
-        section.add(new Paragraph(
-                "O vínculo é criado quando o usuário aceita um convite. Para incluir alguém, envie um convite ao tenant."));
-        Button inviteMember = new Button("Convidar membro", event -> {
-            administrationTabs.setSelectedIndex(1);
-            invitationEmail.focus();
-        });
-        stylePrimaryAction(inviteMember);
-        inviteMember.addClassName("platform-administration__member-invite");
-        section.add(inviteMember);
-        membershipGrid = new Grid<>();
-        styleGrid(membershipGrid);
-        membershipGrid.addColumn(MembershipAdministrationView::identityId).setHeader("Identidade");
-        membershipGrid.addColumn(view -> tenantName(view.tenantId())).setHeader("Tenant");
-        membershipGrid.addColumn(view -> view.role().value()).setHeader("Papel");
-        membershipGrid.addColumn(view -> view.status().name()).setHeader("Estado");
-        membershipGrid.addComponentColumn(this::membershipActions).setHeader("Ações");
-        membershipGrid.setItems(state.membershipAdministration().memberships());
-        section.add(membershipGrid);
-        return section;
-    }
-
     private Component membershipActions(MembershipAdministrationView membership) {
         if (membership.status() != MembershipStatus.ACTIVE
                 || membership.role() != MembershipRole.TENANT_USER) {
             return new Span("Sem ações");
         }
-        Button revoke = new Button("Revogar");
+        Button revoke = new Button("Revogar acesso");
         revoke.addThemeVariants(ButtonVariant.AURA_DANGER);
-        revoke.addClickListener(event -> revokeMembership(membership));
+        revoke.addClickListener(event -> requestMembershipRevocation(membership));
         return revoke;
+    }
+
+    private void requestInvitationRevocation(InvitationAdministrationView invitation) {
+        requestRevocation(
+                "Revogar convite?",
+                invitation.email() + " deixará de poder aceitar o convite do tenant "
+                        + tenantName(invitation.tenantId()) + ".",
+                "Revogar convite",
+                () -> revokeInvitation(invitation));
+    }
+
+    private void requestMembershipRevocation(MembershipAdministrationView membership) {
+        InvitationAdministrationView associated = state.invitations().stream()
+                .filter(invitation -> invitation.tenantId().equals(membership.tenantId()))
+                .filter(invitation -> membership.identityId().equals(invitation.identityId()))
+                .max(java.util.Comparator.comparing(InvitationAdministrationView::createdAt))
+                .orElse(null);
+        String person = associated == null || associated.email() == null || associated.email().isBlank()
+                ? membership.identityId().toString()
+                : associated.email();
+        requestRevocation(
+                "Revogar acesso?",
+                person + " perderá o acesso ao tenant " + tenantName(membership.tenantId()) + ".",
+                "Revogar acesso",
+                () -> revokeMembership(membership));
+    }
+
+    private void requestRevocation(String title, String message, String confirmText, Runnable revoke) {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle(title);
+        dialog.add(new Paragraph(message));
+        Button cancel = new Button("Cancelar", event -> dialog.close());
+        Button confirm = new Button(confirmText, event -> {
+            dialog.close();
+            revoke.run();
+        });
+        confirm.addThemeVariants(ButtonVariant.AURA_DANGER);
+        dialog.getFooter().add(cancel, confirm);
+        pendingRevocationDialog = dialog;
+        dialog.open();
+    }
+
+    Dialog pendingRevocationDialog() {
+        return pendingRevocationDialog;
+    }
+
+    Dialog lastInvitationLinkDialog() {
+        return lastInvitationLinkDialog;
     }
 
     private Component platformRoleSection() {
@@ -431,9 +595,11 @@ public final class PlatformAdministrationView extends VerticalLayout {
                             invitationTenant.getValue().id(),
                             invitationEmail.getValue(),
                             Instant.now()));
-            showInvitationLink(result, "Convite criado");
             invitationEmail.clear();
+            invitationTenant.clear();
+            toggleInvitationForm(false);
             refresh();
+            showInvitationLink(result, "Convite criado");
         } catch (InvitationTenantUnavailableException exception) {
             notifyUser("O tenant está suspenso ou fechado e não aceita convites.");
         } catch (InvitationConflictException exception) {
@@ -511,6 +677,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private void showInvitationLink(InvitationLinkResult result, String title) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(title);
+        lastInvitationLinkDialog = dialog;
         TextArea link = new TextArea("Link do convite");
         link.setWidthFull();
         link.setReadOnly(true);
@@ -538,8 +705,8 @@ public final class PlatformAdministrationView extends VerticalLayout {
                 membershipAdminService.view(actorIdentityId));
         tenantGrid.setItems(state.tenants());
         invitationTenant.setItems(state.tenants().stream().filter(Tenant::isAvailable).toList());
-        invitationGrid.setItems(state.invitations());
-        membershipGrid.setItems(state.membershipAdministration().memberships());
+        memberTenantFilter.setItems(state.tenants());
+        renderMemberRows();
         roleGrid.setItems(state.membershipAdministration().platformRoles());
         updateTenantMembershipSummary();
     }
@@ -568,6 +735,12 @@ public final class PlatformAdministrationView extends VerticalLayout {
                 .count();
         tenantMembershipSummary.setText(
                 "Tenants sem membro ativo: " + tenantsWithoutActiveMembership);
+    }
+
+    private static String formatDate(Instant instant) {
+        return java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", java.util.Locale.forLanguageTag("pt-BR"))
+                .withZone(java.time.ZoneId.systemDefault())
+                .format(instant);
     }
 
     private static FormLayout responsiveForm(Component... controls) {
@@ -604,4 +777,76 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private void notifyUser(String message) {
         Notification.show(message, 5_000, Position.MIDDLE);
     }
+
+    private enum MemberStatusFilter {
+        ALL("Todas as situações"),
+        ACTIVE("Ativos"),
+        PENDING("Convites pendentes"),
+        EXPIRED("Convites expirados"),
+        REVOKED("Convites revogados"),
+        ACCESS_REVOKED("Acessos revogados");
+
+        private final String label;
+
+        MemberStatusFilter(String label) {
+            this.label = label;
+        }
+
+        String label() {
+            return label;
+        }
+
+        boolean matches(MemberDirectoryRow row) {
+            return switch (this) {
+                case ALL -> true;
+                case ACTIVE -> row.membership() != null && row.membership().status() == MembershipStatus.ACTIVE;
+                case PENDING -> row.invitation() != null && row.invitation().status() == InvitationStatus.PENDING;
+                case EXPIRED -> row.invitation() != null && row.invitation().status() == InvitationStatus.EXPIRED;
+                case REVOKED -> row.invitation() != null && row.invitation().status() == InvitationStatus.REVOKED;
+                case ACCESS_REVOKED -> row.membership() != null && row.membership().status() == MembershipStatus.REVOKED;
+            };
+        }
+    }
+
+    private record MemberDirectoryRow(
+            UUID tenantId,
+            String person,
+            String statusLabel,
+            String roleLabel,
+            String dateLabel,
+            InvitationAdministrationView invitation,
+            MembershipAdministrationView membership) {
+
+        static MemberDirectoryRow invitation(InvitationAdministrationView invitation) {
+            String status = switch (invitation.status()) {
+                case PENDING -> "Convite pendente";
+                case EXPIRED -> "Convite expirado";
+                case REVOKED -> "Convite revogado";
+                case ACCEPTED -> "Convite aceito";
+            };
+            return new MemberDirectoryRow(
+                    invitation.tenantId(),
+                    invitation.email(),
+                    status,
+                    invitation.role().value(),
+                    formatDate(invitation.expiresAt()),
+                    invitation,
+                    null);
+        }
+
+        static MemberDirectoryRow membership(MembershipAdministrationView membership, String person) {
+            String status = membership.status() == MembershipStatus.ACTIVE
+                    ? "Acesso ativo"
+                    : membership.status() == MembershipStatus.REVOKED ? "Acesso revogado" : "Acesso pendente";
+            return new MemberDirectoryRow(
+                    membership.tenantId(),
+                    person,
+                    status,
+                    membership.role().value(),
+                    formatDate(membership.createdAt()),
+                    null,
+                    membership);
+        }
+    }
+
 }
