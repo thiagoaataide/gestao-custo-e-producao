@@ -89,11 +89,15 @@ Multi-tenancy é requisito transversal da V0:
 - funcionalidades de planos, cobrança, onboarding comercial, administração
   avançada e permissões complexas estão fora do escopo;
 
-O fluxo de associação inicial entre usuário e tenant está definido pelo
-ADR-015 e não é mais uma pendência arquitetural da V0:
+O fluxo de associação inicial entre usuário e tenant está definido pelos
+ADRs 015 e 026 e não é mais uma pendência arquitetural da V0:
 
 - o tenant é criado pelo contexto de Platform Administration;
-- o usuário recebe um convite e um membership ativo após o provisionamento;
+- o administrador envia um convite para o e-mail do usuário; se a pessoa ainda
+  não tiver conta Supabase Auth, pode criá-la a partir do convite;
+- concluir o cadastro cria a conta de autenticação, mas não cria membership nem
+  concede acesso operacional; isso só ocorre após verificar o mesmo e-mail e
+  confirmar explicitamente o convite válido;
 - um usuário autenticado sem membership ativo é bloqueado com mensagem de
   acesso não provisionado;
 - o usuário não cria o próprio tenant automaticamente;

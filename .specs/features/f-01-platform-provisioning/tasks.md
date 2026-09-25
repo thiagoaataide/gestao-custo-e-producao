@@ -8,7 +8,11 @@ for the per-task cycle, tests, atomic commits, independent verification and
 discrimination sensor.
 
 **Design:** `.specs/features/f-01-platform-provisioning/design.md`
-**Status:** T1–T22 concluídas e verificadas por seus gates automatizados. O fechamento continua aberto para T23: revisão independente e UAT publicada.
+**UI specs vinculantes:** `ui-spec.md` (administração) e
+`invitation-onboarding-spec.md` (cadastro/aceite público).
+**Status:** T1–T22 concluídas; T24 executa a interface unificada de Membros;
+T25 adiciona cadastro restrito ao convite; T23 fecha a revisão independente e
+UAT após T24 e T25.
 
 ## Test Coverage Matrix
 
@@ -28,7 +32,7 @@ discrimination sensor.
 | Public invitation route and login return | integration/smoke | GET não aceita; confirmação explícita; login retorna ao mesmo convite; estados inválidos não expõem dados | `src/test/java/**/ui/**`, `src/test/java/**/integration/platform/administration/**` | `mvnw.cmd verify` |
 | Invitation public-origin configuration | unit/integration | URL usa host configurado; publicação rejeita origem vazia, localhost ou esquema inseguro; local profile permitido | `src/test/java/**/platform/administration/**` | `mvnw.cmd verify` |
 | Optional SendGrid adapter | contract | HTTP simulado cobre sucesso, erro, segredo ausente e falha pós-commit sem vazamento de token/PII | `src/test/java/**/platform/administration/integration/**` | `mvnw.cmd verify` |
-| Vaadin presentation and responsive layout | integration/smoke + manual browser UAT | Campos e ações alinhados; grids legíveis; layout estreito/largo; foco e fluxo preservados | `src/test/java/**/ui/platform/**` e navegador no Render | `mvnw.cmd verify` + UAT |
+| Vaadin presentation and responsive layout | integration/smoke + manual browser UAT | Membros reúne ativos e convites; filtro por tenant/situação, formulário inline e confirmações de revogação funcionam em telas estreitas/largas | `src/test/java/**/ui/platform/**` e navegador no Render | `mvnw.cmd verify` + UAT |
 | Access shell owner bootstrap | integration/smoke | Ação exibida somente ao subject configurado; clique executa bootstrap autorizado e concede acesso de plataforma | `src/test/java/**/ui/access/**` | `mvnw.cmd verify` |
 | Runtime/configuration | none | Build e empacotamento; nenhuma credencial versionada | `src/main/resources/**`, `AGENTS.md` | `mvnw.cmd clean verify` |
 
@@ -88,7 +92,7 @@ Fase 6 — fechar o fluxo publicado e a interface administrativa
   T8, T11, T14 → T18
   T10, T13 → T19 → T20
   T14, T15 → T21
-  T17, T18, T19, T20, T21 → T22 → T23
+  T17, T18, T19, T20, T21 → T22 → T24, T25 → T23
 ```
 
 Nenhuma task está marcada com `[P]`: embora algumas units sejam paralelizáveis,
@@ -683,25 +687,119 @@ revalidar configuração da origem e entrega opcional isolada.
 **Tests:** integration — extensão da suíte ponta a ponta existente.
 **Gate:** build limpo + full.
 
+### T24: Unificar convites e memberships na aba Membros
+
+**Status:** Implementada no workspace; testes e gate Maven aguardam execução em ambiente com Java 21; inspeção visual publicada fica na T23.
+
+**What:** Substituir as abas separadas Convites/Membros por uma única aba
+Membros, com filtro por tenant e situação, convite criado na própria página e
+visão distinguível de membership ativa versus convite pendente.
+
+**Where:** UI Vaadin de Platform Administration e seus testes de integração/
+smoke.
+**Depends on:** T21, T22.
+**Requirements:** F01-21.
+**Binding design:** `.specs/features/f-01-platform-provisioning/ui-spec.md`.
+
+**Done when:**
+
+- [ ] `/platform` apresenta Tenants, Membros e Papéis da plataforma; não há aba
+      Convites nem redirecionamento de Membros para outra aba.
+- [ ] A lista única filtra por tenant e situação e apresenta memberships ativas,
+      convites pendentes e o histórico de convites expirados/revogados sem
+      duplicar convites aceitos que correspondam a memberships.
+- [ ] A pessoa é identificada pelo e-mail disponível no convite associado; se
+      não houver e-mail associado, a identidade continua visível pelo ID.
+- [ ] **Adicionar membro** abre o formulário na mesma página; tenant e e-mail
+      são obrigatórios; após criar, a pessoa aparece como **Convite pendente**,
+      o link pode ser copiado e nenhuma membership ativa é criada pela tela.
+- [ ] Reenviar, revogar convite e revogar membership preservam as regras atuais;
+      cada revogação requer confirmação que identifica e-mail/identidade e
+      tenant antes da mutação.
+- [ ] A lista, os filtros, o formulário, estados vazios/erro e as ações são
+      utilizáveis sem rolagem horizontal em viewport estreito; teclado, foco,
+      rótulos e mensagens acessíveis são verificados.
+- [ ] Testes da tela cobrem filtro, mapeamento ativo/pendente sem duplicidade,
+      convite inline, cancelamento/confirmação da revogação e ausência de acesso
+      para usuários não autorizados.
+- [ ] As regras de domínio, o papel único `TENANT_USER`, a rota de aceite e a
+      autorização operacional não mudam.
+
+**Tests:** integration/smoke da UI, mais inspeção manual em viewport estreito e
+amplo.
+**Gate:** full.
+
+**Out of scope:** recuperação de convite aberto com sessão autenticada de e-mail
+incompatível e cadastro Auth são cobertos separadamente por T25; T24 não torna
+e-mail obrigatório nem cria papéis operacionais além de `TENANT_USER`.
+
+### T25: Cadastrar e verificar o destinatário a partir do convite
+
+**Status:** Implementada no workspace; testes e gate Maven aguardam execução
+em ambiente com Java 21. A entrega OTP via SMTP e a UAT publicada ficam
+pendentes na T23. OTP é universal para destinatários cujo e-mail Supabase Auth
+ainda não está verificado.
+
+**What:** Permitir que o destinatário sem conta Auth crie sua conta Supabase
+somente a partir de convite válido, verifique o e-mail convidado, recupere o
+contexto após sair da conta Gmail já autenticada e confirme explicitamente o
+convite para então ativar a membership. A conta Auth isolada não cria
+`ExternalIdentity` nem concede acesso operacional.
+
+**Where:** adapter de autenticação Supabase, rota pública de convite, login e
+retorno Vaadin, testes de contrato/integrados e documentos F-01.
+**Depends on:** T7, T11, T18, T22.
+**Requirements:** F01-07, F01-08, F01-10, F01-16, F01-22.
+**Design:** `.specs/features/f-01-platform-provisioning/invitation-onboarding-spec.md`.
+
+**Done when:**
+
+- [ ] Na aplicação, cadastro só é oferecido a partir de convite pendente,
+      válido e não expirado; e-mail convidado fica imutável na etapa de cadastro.
+- [ ] Uma conta Auth criada fora dessa jornada permanece sem `ExternalIdentity`,
+      membership ou qualquer acesso operacional.
+- [ ] A pessoa sem conta Supabase consegue criar credencial Auth e verificar o
+      e-mail sem expor senha ou tokens no browser, URL, logs ou auditoria.
+- [ ] Destinatários sem endereço Auth já verificado recebem e informam um
+      código OTP antes do aceite, independentemente do provedor/domínio; não há
+      exceções específicas para Gmail, Outlook, Yahoo, UOL ou outros provedores.
+- [ ] Testes provam que a regra não depende do domínio e a UAT verifica ao menos
+      os fluxos representativos de Gmail e Outlook.
+- [ ] Uma sessão Gmail não aceita convite Outlook; o fluxo permite sair e
+      continuar com o mesmo convite usando o endereço convidado.
+- [ ] Cadastro e verificação não criam `ExternalIdentity`, membership nem
+      tenant; somente aceite explícito e transação existente associam a
+      identidade e ativam `TENANT_USER`.
+- [ ] Falhas, expiração, revogação, e-mail incompatível, Auth já existente e
+      corrida/deduplicação são cobertos por testes de contrato e integração.
+- [ ] A entrega de e-mail Auth é dependência documentada da configuração de
+      produção e a UAT publicada confirma recebimento/verificação real.
+
+**Tests:** unit/contract + integration/smoke — Supabase signup/verify, troca de
+conta e continuidade do aceite; sem criar conta real nos testes automatizados.
+**Gate:** full + UAT de e-mail publicada.
+
 ### T23: Revisar independentemente e concluir UAT da F-01
 
-**What:** Após o último commit de implementação, executar revisão fresh-eyes
-com sensor de discriminação e roteiro de UAT no Render para fechar as lacunas
-visíveis em ambiente publicado.
+**What:** Após T24 e T25, executar revisão fresh-eyes com sensor de discriminação e
+roteiro de UAT no Render para fechar as lacunas visíveis em ambiente publicado.
 
 **Where:** relatório final em `validation.md`; checklist de UAT da F-01.
-**Depends on:** T22.
-**Requirements:** F01-01 a F01-20.
+**Depends on:** T22, T24, T25.
+**Requirements:** F01-01 a F01-22.
 
 **Done when:**
 
 - [ ] Verificador independente confirma cada requisito, relatório por
       requisito e discriminação das regras críticas; gaps geram nova task.
 - [ ] Com identidade de plataforma, UI alinha e funciona em viewport estreito
-      e amplo; origem dos links é o domínio público do Render.
-- [ ] Link real de convite abre a rota publicada, permite login/retorno e só
-      ativa o vínculo após confirmação com identidade de e-mail verificado
-      correspondente.
+      e amplo; a aba Membros filtra por tenant/situação, cria convites sem mudar
+      de página, e exibe ativos e pendentes sem duplicação; origem dos links é o
+      domínio público do Render.
+- [ ] Convite real para um endereço ainda sem conta permite cadastro e
+      verificação do destinatário, troca segura da sessão Gmail para Outlook,
+      retorno ao mesmo convite e ativação somente após aceite explícito.
+- [ ] O Auth account criado sem membership não acessa operações do tenant.
 - [ ] Envio real por SendGrid é verificado apenas se configurado pelo usuário;
       ausência/falha mantém o link copiável e nenhum plano pago é ativado.
 - [x] Nenhum segredo é solicitado, copiado para os documentos ou exposto em
@@ -711,6 +809,7 @@ visíveis em ambiente publicado.
 **Tests:** independent review + manual browser UAT; sem dependência de acesso a
 credenciais pelo agente.
 **Gate:** revisão independente + UAT publicada.
+
 
 ## Requirement-to-task traceability
 
@@ -736,8 +835,10 @@ credenciais pelo agente.
 | F01-18 | T18, T22, T23 | Automated verification passed — T18; published end-to-end/UAT pending |
 | F01-19 | T19, T22, T23 | Pending |
 | F01-20 | T21, T23 | Pending |
+| F01-21 | T24, T23 | Pending |
+| F01-22 | T25, T23 | Pending |
 
-**Coverage:** 20 requisitos definidos e mapeados para tasks, 0 sem cobertura.
+**Coverage:** 22 requisitos definidos e mapeados para tasks, 0 sem cobertura.
 
 ## Task Granularity Check
 
@@ -765,7 +866,9 @@ credenciais pelo agente.
 | T20 | Adapter opcional SendGrid atrás da porta existente | ✅ Atomic |
 | T21 | Estilo responsivo das telas administrativas | ✅ Atomic |
 | T22 | Regressão transversal publicada da F-01 | ✅ Atomic |
-| T23 | Revisão independente e UAT Render | ✅ Atomic |
+| T23 | Revisão independente e UAT Render após T24 e T25 | ✅ Atomic |
+| T24 | Unificar convites e memberships na aba Membros | ✅ Atomic |
+| T25 | Cadastro Auth restrito ao convite, OTP universal e retorno para aceite | ✅ Atomic |
 
 ## Diagram-Definition Cross-Check
 
@@ -793,7 +896,9 @@ credenciais pelo agente.
 | T20 | T13, T19 | T13/T19 → T20 | ✅ Match |
 | T21 | T14, T15 | T14/T15 → T21 | ✅ Match |
 | T22 | T17, T18, T19, T20, T21 | all listed predecessors → T22 | ✅ Match |
-| T23 | T22 | T22 → T23 | ✅ Match |
+| T24 | T21, T22 | T21 → T22 → T24 | ✅ Match |
+| T25 | T7, T11, T18, T22 | those prerequisites → T25 | ✅ Match |
+| T23 | T22, T24, T25 | T22 → T24/T25 → T23 | ✅ Match |
 
 ## Test Co-location Validation
 
@@ -821,7 +926,9 @@ credenciais pelo agente.
 | T20 | SendGrid adapter | contract | Mock HTTP client, after-commit ordering, failure without losing copied link | ✅ OK |
 | T21 | Vaadin visual refinement | integration/smoke | Component hierarchy, responsive layout rules and no authorization regression | ✅ OK |
 | T22 | Cross-boundary regression | integration | Existing PostgreSQL-backed suite plus invite/auth/accept flow; no leaked test containers | ✅ OK |
-| T23 | Independent verification and Render UAT | independent/manual | Fresh-eyes report and evidence for deployed URL, invite, authentication and viewports | ✅ OK |
+| T23 | Independent verification and Render UAT | independent/manual | Fresh-eyes report and evidence for deployed URL, invite, authentication, unified Membros page and viewports | ✅ OK |
+| T24 | Unified Vaadin members/invitations screen | integration/smoke + manual | Filtering, pending/active states, inline invite, confirmation, authorization, responsive and keyboard use | ✅ OK |
+| T25 | Invitation-scoped Auth signup and acceptance | contract + integration/smoke + manual email UAT | New Auth user, verified invited email, account switch, no pre-acceptance membership, explicit acceptance | Required |
 
 ## Antes do Execute
 
@@ -836,6 +943,6 @@ usar?**
 ## Próximo passo
 
 Confirmar as ferramentas de execução conforme o gate **Antes do Execute** e
-iniciar T18. A ordem proposta termina em T23; só declarar F-01 concluída após
-revisão independente e UAT no Render. A F-02 permanece preservada como
+executar T24 e T25 com OTP universal para destinatários ainda não verificados.
+Em seguida, concluir T23 com revisão independente e UAT no Render. Só declarar F-01 concluída após esses gates. A F-02 permanece preservada como
 planejamento, sem tarefas implementadas.

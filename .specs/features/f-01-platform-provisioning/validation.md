@@ -226,12 +226,12 @@ Esta rodada não executou deploy nem UAT do link publicado.
 
 **Inspeção manual em navegador/Render:** pendente para T23; este commit não faz deploy.
 
-`/platform` agora separa Tenants, Convites, Membros e Papéis da plataforma em
-abas. A auditoria continua em `/platform/audit`, com navegação de ida e volta.
-Os formulários usam `FormLayout` responsivo; as ações primárias/destrutivas
-usam variantes Aura; os grids deixam de reservar uma área vazia fixa e exibem
-as linhas carregadas. A aba Membros explica que o vínculo é ativado no aceite
-do convite e leva ao formulário de convite, sem criar membership diretamente.
+`/platform` separa Tenants, Membros e Papéis da plataforma em abas. A auditoria
+continua em `/platform/audit`, com navegação de ida e volta. Os formulários
+usam `FormLayout` responsivo; as ações primárias/destrutivas usam variantes
+Aura; os grids exibem somente as linhas carregadas. T24 une convites e
+memberships em Membros, com filtros e convite inline, sem criar membership
+diretamente.
 
 Evidências:
 
@@ -269,12 +269,15 @@ O checklist é um plano de inspeção, não uma afirmação de UAT visual execut
 
 ## Roteiro UAT T23 — pendente de execução pelo owner
 
-Execute esta validação somente depois de publicar o commit T22 e confirmar que
-o deploy terminou com sucesso. Codex não alterou o serviço Render nem fez
+Execute esta validação depois de publicar o commit que contém T24 e T25 e
+confirmar que o deploy terminou com sucesso. Codex não alterou o serviço Render nem fez
 deploy nesta rodada.
 
 ### Preparação
 
+- No projeto Supabase Auth, configure SMTP próprio e o template **Confirm sign up**
+  para entregar `{{ .Token }}` como código OTP; mantenha a confirmação de e-mail
+  habilitada e confirme uma entrega de teste antes do fluxo completo.
 - No Web Service do Render, configure
   `PLATFORM_INVITATION_BASE_URL=https://gestao-custo-e-producao.onrender.com`.
 - Mantenha `PLATFORM_INVITATION_DELIVERY_ENABLED=false`, salvo se você
@@ -288,21 +291,28 @@ deploy nesta rodada.
 
 ### Verificações
 
-- [ ] Confirme que o serviço implantou o commit T22 e que `/` permite entrar
+- [ ] Confirme que o serviço implantou o commit T24/T25 e que `/` permite entrar
       sem retornar repetidamente à tela inicial de login.
 - [ ] Entre em `/platform`; confirme que a conta está autorizada e que as abas
-      Tenants, Convites, Membros e Papéis da plataforma aparecem sem dados
-      operacionais de tenants.
-- [ ] Em aproximadamente 390 px e 1366 px, verifique abas, campos, botões,
-      grids, rolagem e foco por teclado conforme o checklist de T21 acima.
-- [ ] Crie um tenant de teste e um convite para a identidade operacional
-      controlada. Confirme que o convite fica pendente e que o link copiado
-      começa com a origem pública HTTPS e `/invitations/`, nunca `localhost`.
-- [ ] Abra o link numa janela privada sem sessão; confirme que o login retorna
-      ao mesmo caminho de convite e que abrir a rota não ativa a membership.
-- [ ] Autentique com a identidade cujo e-mail verificado corresponde ao
-      convite. Confirme que a membership só fica ativa depois da ação explícita
-      de confirmação e que o reuso do convite não cria outro vínculo.
+      Tenants, Membros e Papéis da plataforma aparecem sem dados operacionais
+      de tenants.
+- [ ] Em aproximadamente 390 px e 1366 px, verifique abas, filtros por tenant e
+      situação, cards sem rolagem horizontal, convite inline, botões, confirmações
+      de revogação e foco por teclado conforme T24 e o checklist de T21 acima.
+- [ ] Crie um tenant de teste e um convite para uma identidade operacional
+      controlada diretamente na aba Membros. Confirme o estado Convite pendente,
+      copie o link e confirme a origem pública HTTPS `/invitations/`, nunca
+      `localhost`.
+- [ ] Em janela privada, abra o link. Confirme que somente o e-mail convidado é
+      exibido como endereço imutável para cadastro e que abrir a rota não cria
+      identidade de domínio nem membership.
+- [ ] Cadastre uma conta Auth com o e-mail do convite. Confirme que o código OTP
+      é entregue no email; informe o código na própria tela e veja a confirmação
+      explícita para aceitar.
+- [ ] Com o owner conectado em Gmail e um convite para Outlook, use “Trocar de
+      conta”, continue no mesmo convite com a conta Outlook, verifique o OTP e
+      confirme que apenas o aceite explícito ativa a membership. Teste também o
+      fluxo de destinatário Gmail quando aplicável.
 - [ ] Confirme que a identidade operacional consegue acesso ao tenant
       provisionado; confirme que a administração da plataforma não passa a
       expor pedidos, estoque, produção, custos ou indicadores desse tenant.
@@ -401,3 +411,45 @@ A documentação pública atual descreve o Email API em teste grátis como até
 da conta específica do owner não foi consultado. Portanto a aplicação fica
 com `PLATFORM_INVITATION_DELIVERY_ENABLED=false`; o owner deve confirmar no
 painel que a conta permanece em condição de custo zero antes de habilitar.
+
+
+## Complemento — T24/T25: implementação local e gate bloqueado
+
+**Data:** 25 de setembro de 2026
+
+**Escopo:** T24 / F01-21 e T25 / F01-22
+
+**Estado:** implementadas no workspace; publicação solicitada. Gate Maven e UAT
+publicada permanecem pendentes.
+
+T24 substitui Convites/Membros por uma aba única **Membros**, com filtros por
+tenant e situação, registros compostos em cards, formulário de convite inline,
+link copiável, confirmação de revogação e IDs como fallback quando não existe
+e-mail associado. T25 acrescenta onboarding sob convite válido: e-mail imutável,
+cadastro/login Auth, OTP por e-mail e reenvio, troca de sessão preservando o
+convite e aceite explícito. A confirmação do OTP valida JWT/subject e consulta
+o perfil `/user` antes de criar a sessão autenticada da aplicação. O cadastro e
+a verificação não chamam os casos de uso de identidade/membership; somente o
+`InvitationAcceptanceService` existente é invocado no aceite.
+
+Evidência local disponível:
+
+- `git diff --check` passou.
+- O checklist `.checks/f01-t24-t25.md` identifica os testes focados de UI,
+  contrato HTTP Supabase, consulta de convite, validação de perfil e aceite.
+- Nenhum teste Maven foi executado nesta sessão: `java` não existe no WSL e
+  `JAVA_HOME` não está configurado; o comando bloqueou antes de compilar/executar.
+- Docker Desktop não está integrado a esta distribuição WSL; o gate que exige
+  PostgreSQL local não pôde ser iniciado. Nenhuma imagem, migration, schema ou
+  volume foi alterado.
+- Nenhuma chamada, configuração ou alteração foi feita no Supabase ou Render;
+  nenhuma conta/Auth ou email real foi criada/enviado.
+
+Antes do UAT publicado, o owner precisa configurar SMTP próprio em Supabase Auth
+e o template **Confirm sign up** com `{{ .Token }}`; o email deve continuar
+confirmado antes de login. A tela espera código OTP e o remetente hospedado
+padrão não é uma garantia para enviar a destinatários externos. A UAT da T23
+deve testar destinatários Gmail e Outlook, troca owner Gmail → destinatário
+Outlook, continuação do mesmo convite, aceite e ativação de membership, além da
+inspeção visual em aproximadamente 390 px e 1366 px. A revisão independente e
+a execução em ambiente com Java 21/PostgreSQL continuam pendentes.

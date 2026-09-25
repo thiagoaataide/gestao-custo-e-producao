@@ -9,6 +9,8 @@ import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -36,6 +38,12 @@ public class SupabaseResourceServerSecurityConfiguration {
                 new SupabaseJwkSetApiKeyInterceptor(properties.publishableKey());
         restTemplate.getInterceptors().add(apiKeyInterceptor);
         return restTemplate;
+    }
+
+    @Bean
+    AuthenticationManager supabaseAuthenticationManager(
+            SupabasePasswordAuthenticationProvider passwordAuthenticationProvider) {
+        return new ProviderManager(passwordAuthenticationProvider);
     }
 
     @Bean

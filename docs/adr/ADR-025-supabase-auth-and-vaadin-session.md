@@ -44,10 +44,12 @@ Logout invalidates the local Spring session and requests Supabase Auth logout
 with the `local` scope. A provider failure must not keep the local application
 session alive.
 
-The V0 login page has no public registration or password-reset action. Account
-creation and tenant/platform provisioning remain separate from authentication.
-The existing Resource Server continues to validate bearer tokens for requests
-that use that contract; it is not the browser's Vaadin session mechanism.
+The V0 login page has no general public registration or password-reset action.
+Registration initiated from a valid tenant invitation is defined separately by
+ADR-026. Account creation remains separate from tenant/platform provisioning:
+an Auth account alone grants no platform or tenant access. The existing
+Resource Server continues to validate bearer tokens for requests that use that
+contract; it is not the browser's Vaadin session mechanism.
 
 ## Alternatives considered
 

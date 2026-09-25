@@ -155,13 +155,14 @@ sequenceDiagram
   papéis administrativos e auditoria.
 - **Regra:** a UI chama casos de uso; não consulta `JdbcTemplate`, JPA ou
   Supabase diretamente.
-- **Apresentação administrativa (T21):** `/platform` organiza os recursos em
-  quatro abas — Tenants, Convites, Membros e Papéis da plataforma. Auditoria
-  permanece na rota `/platform/audit`, acessível por navegação explícita.
-  A aba Membros informa que a membership nasce no aceite do convite e oferece
-  um atalho para Convites; não existe criação direta de membership pela UI.
-  Formulários usam layout responsivo e grades dimensionadas ao conteúdo, sem
-  alterar autorização ou regras de domínio.
+- **Apresentação administrativa (T21/T24):** a interação e os estados da tela
+  `/platform` estão especificados em
+  `.specs/features/f-01-platform-provisioning/ui-spec.md`. Tenants e papéis da
+  plataforma mantêm suas abas; membros e convites são acompanhados em uma única
+  aba Membros, com filtro por tenant e convite criado na mesma página. Auditoria
+  permanece na rota `/platform/audit`. O modelo de domínio continua separando
+  convite pendente de membership ativa e não permite criação direta de
+  membership pela UI.
 
 ### `tenant operations`
 
@@ -386,8 +387,12 @@ efetivas antes de adicionar qualquer dependência ou segredo.
 
 ## Complemento de desenho para o fechamento da F-01
 
-### Rota e continuidade da aceitação
+### Rota, cadastro e continuidade da aceitação
 
+- O fluxo atual de login/retorno da rota `/invitations/{token}` atende contas
+  Supabase existentes. O cadastro restrito ao convite, a verificação e a troca
+  segura da sessão são definidos em `invitation-onboarding-spec.md` e ADR-026;
+  T25 os implementa sem ampliar a T24 administrativa.
 - Registrar a rota Vaadin pública `/invitations/{token}` e encaminhar a
   confirmação ao `InvitationAcceptanceService` já existente.
 - A leitura por GET não altera o convite. A membership só é ativada após ação

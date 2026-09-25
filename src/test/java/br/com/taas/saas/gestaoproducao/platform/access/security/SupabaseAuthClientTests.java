@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.headerDoesNotExist;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
@@ -45,6 +46,76 @@ class SupabaseAuthClientTests {
         assertThat(session.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(session.refreshToken()).isEqualTo(REFRESH_TOKEN);
         assertThat(session.subject()).isEqualTo(SUBJECT);
+        server.verify();
+    }
+
+    @Test
+    void signsUpWithInvitationEmailUsingOnlyPublicApiKey() {
+        RestTemplate restTemplate = restTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        server.expect(requestTo(ISSUER + "/signup"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("apikey", PUBLISHABLE_KEY))
+                .andExpect(headerDoesNotExist("Authorization"))
+                .andExpect(content().json("""
+                        {"email":"invitee@example.com","password":"sensitive-password"}
+                        """))
+                .andRespond(withSuccess(
+                        """
+                        {"id":"new-subject","email":"invitee@example.com"}
+                        """,
+                        MediaType.APPLICATION_JSON));
+
+        client(restTemplate).signUpWithPassword(" Invitee@Example.com ", "sensitive-password");
+
+        server.verify();
+    }
+
+    @Test
+    void verifiesSignupEmailOtpAndReturnsVerifiedSession() {
+        RestTemplate restTemplate = restTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        server.expect(requestTo(ISSUER + "/verify"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("apikey", PUBLISHABLE_KEY))
+                .andExpect(headerDoesNotExist("Authorization"))
+                .andExpect(content().json("""
+                        {"email":"invitee@example.com","token":"123456","type":"email"}
+                        """))
+                .andRespond(withSuccess(
+                        """
+                        {
+                          "access_token":"verified-access",
+                          "refresh_token":"verified-refresh",
+                          "user":{"id":"subject-123","email":"invitee@example.com","email_confirmed_at":"2026-09-25T00:00:00Z"}
+                        }
+                        """,
+                        MediaType.APPLICATION_JSON));
+
+        SupabaseAuthClient.SupabaseAuthSession session =
+                client(restTemplate).verifyEmailOtp("Invitee@Example.com", "123456");
+
+        assertThat(session.subject()).isEqualTo(SUBJECT);
+        assertThat(session.accessToken()).isEqualTo("verified-access");
+        assertThat(session.refreshToken()).isEqualTo("verified-refresh");
+        server.verify();
+    }
+
+    @Test
+    void resendsOtpForAnExistingUnverifiedSignup() {
+        RestTemplate restTemplate = restTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        server.expect(requestTo(ISSUER + "/resend"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("apikey", PUBLISHABLE_KEY))
+                .andExpect(headerDoesNotExist("Authorization"))
+                .andExpect(content().json("""
+                        {"email":"invitee@example.com","type":"signup"}
+                        """))
+                .andRespond(withStatus(HttpStatus.NO_CONTENT));
+
+        client(restTemplate).resendSignupEmailOtp("Invitee@Example.com");
+
         server.verify();
     }
 

@@ -30,6 +30,9 @@ public final class SupabaseAuthClient {
     private final RestOperations restOperations;
     private final String tokenEndpoint;
     private final String logoutEndpoint;
+    private final String signupEndpoint;
+    private final String verifyEndpoint;
+    private final String resendEndpoint;
 
     @Autowired
     public SupabaseAuthClient(
@@ -46,6 +49,9 @@ public final class SupabaseAuthClient {
         }
         this.tokenEndpoint = base + "/token";
         this.logoutEndpoint = base + "/logout?scope=local";
+        this.signupEndpoint = base + "/signup";
+        this.verifyEndpoint = base + "/verify";
+        this.resendEndpoint = base + "/resend";
     }
 
     public SupabaseAuthSession signInWithPassword(String email, String password) {
@@ -59,6 +65,96 @@ public final class SupabaseAuthClient {
     public SupabaseAuthSession refresh(String refreshToken) {
         requireText(refreshToken, "refreshToken");
         return exchangeToken(REFRESH_GRANT, new RefreshRequest(refreshToken));
+    }
+
+    /** Creates only a Supabase Auth account; it never provisions local identity or membership. */
+    public void signUpWithPassword(String email, String password) {
+        String normalizedEmail = normalizeEmail(email);
+        requireText(password, "password");
+        try {
+            ResponseEntity<SupabaseSignupResponse> response = restOperations.exchange(
+                    URI.create(signupEndpoint),
+                    HttpMethod.POST,
+                    new HttpEntity<>(new SignupRequest(normalizedEmail, password)),
+                    SupabaseSignupResponse.class);
+            SupabaseSignupResponse body = response.getBody();
+            if (!response.getStatusCode().is2xxSuccessful()
+                    || body == null
+                    || body.id() == null
+                    || body.id().isBlank()
+                    || body.email() == null
+                    || !normalizeEmail(body.email()).equals(normalizedEmail)) {
+                throw new InvalidAuthResponseException();
+            }
+        } catch (HttpStatusCodeException exception) {
+            if (exception.getStatusCode().is4xxClientError()) {
+                throw new SignupRejectedException();
+            }
+            throw new ProviderUnavailableException();
+        } catch (RestClientException exception) {
+            throw new ProviderUnavailableException();
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidAuthResponseException();
+        }
+    }
+
+    /** Re-sends the email signup OTP for an existing but unverified Auth account. */
+    public void resendSignupEmailOtp(String email) {
+        String normalizedEmail = normalizeEmail(email);
+        try {
+            ResponseEntity<Void> response = restOperations.exchange(
+                    URI.create(resendEndpoint),
+                    HttpMethod.POST,
+                    new HttpEntity<>(new ResendSignupOtpRequest(normalizedEmail, "signup")),
+                    Void.class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new ProviderUnavailableException();
+            }
+        } catch (HttpStatusCodeException exception) {
+            if (exception.getStatusCode().is4xxClientError()) {
+                throw new SignupRejectedException();
+            }
+            throw new ProviderUnavailableException();
+        } catch (RestClientException exception) {
+            throw new ProviderUnavailableException();
+        }
+    }
+
+    /** Verifies the universal email OTP and returns the resulting provider session. */
+    public SupabaseAuthSession verifyEmailOtp(String email, String otp) {
+        String normalizedEmail = normalizeEmail(email);
+        requireText(otp, "otp");
+        try {
+            ResponseEntity<SupabaseAuthResponse> response = restOperations.exchange(
+                    URI.create(verifyEndpoint),
+                    HttpMethod.POST,
+                    new HttpEntity<>(new VerifyEmailOtpRequest(normalizedEmail, otp.trim(), "email")),
+                    SupabaseAuthResponse.class);
+            SupabaseAuthResponse body = response.getBody();
+            if (!response.getStatusCode().is2xxSuccessful()
+                    || body == null
+                    || body.user() == null
+                    || body.user().id() == null
+                    || body.user().email() == null
+                    || !normalizeEmail(body.user().email()).equals(normalizedEmail)
+                    || body.user().emailConfirmedAt() == null
+                    || body.user().emailConfirmedAt().isBlank()) {
+                throw new InvalidAuthResponseException();
+            }
+            return new SupabaseAuthSession(
+                    body.accessToken(), body.refreshToken(), body.user().id());
+        } catch (HttpStatusCodeException exception) {
+            if (exception.getStatusCode().value() == 400
+                    || exception.getStatusCode().value() == 401
+                    || exception.getStatusCode().value() == 422) {
+                throw new OtpRejectedException();
+            }
+            throw new ProviderUnavailableException();
+        } catch (RestClientException exception) {
+            throw new ProviderUnavailableException();
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidAuthResponseException();
+        }
     }
 
     public void signOutLocal(String accessToken) {
@@ -113,6 +209,11 @@ public final class SupabaseAuthClient {
         return value;
     }
 
+    private static String normalizeEmail(String email) {
+        requireText(email, "email");
+        return email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     public record SupabaseAuthSession(
             String accessToken,
             String refreshToken,
@@ -139,10 +240,31 @@ public final class SupabaseAuthClient {
         private static final long serialVersionUID = 1L;
     }
 
+    public static final class SignupRejectedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+    }
+
+    public static final class OtpRejectedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+    }
+
     private record PasswordSignInRequest(String email, String password) {
     }
 
     private record RefreshRequest(@JsonProperty("refresh_token") String refreshToken) {
+    }
+
+    private record SignupRequest(String email, String password) {
+    }
+
+    private record VerifyEmailOtpRequest(String email, String token, String type) {
+    }
+
+    private record ResendSignupOtpRequest(String email, String type) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record SupabaseSignupResponse(String id, String email) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -153,6 +275,9 @@ public final class SupabaseAuthClient {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record SupabaseUser(String id) {
+    private record SupabaseUser(
+            String id,
+            String email,
+            @JsonProperty("email_confirmed_at") String emailConfirmedAt) {
     }
 }

@@ -61,7 +61,8 @@ As ambiguidades de produto relevantes foram resolvidas durante a especificação
 | Ciclo de vida do tenant | `ACTIVE` permite operação, `SUSPENDED` bloqueia operação temporariamente e `CLOSED` é terminal. | Diferencia pausa de encerramento e preserva os dados. | Sim |
 | Ações de ciclo de vida | Apenas o `PLATFORM_OWNER` pode suspender, reativar ou fechar tenants. | Concentra ações de maior impacto no responsável principal. | Sim |
 | Auditoria | Criação, ciclo de vida, convites e memberships geram eventos consultáveis por administradores da plataforma. | Permite rastreabilidade sem expor dados operacionais. | Sim |
-| E-mail automático | O envio é opcional; falha de envio não desfaz o convite criado. | O link copiado permanece como caminho garantido. | Sim |
+| E-mail automático do convite | O envio é opcional; falha de envio não desfaz o convite criado. | O link copiado permanece como caminho garantido. | Sim |
+| Destinatário sem conta Auth | Pode cadastrar-se somente por convite válido; conta Auth não cria membership e o aceite exige e-mail verificado e confirmação explícita. | Permite onboarding por Outlook/Gmail sem abrir cadastro geral nem conceder tenant antes do aceite. | Sim — ADR-026 |
 
 **Open questions:** nenhuma questão de produto permanece aberta para esta
 especificação. O design deverá detalhar os contratos internos, a forma de
@@ -205,10 +206,25 @@ dados de negócio.
    administrativo.
 5. **WHEN** uma membership é ativada **THEN** ela SHALL sempre referenciar um
    tenant existente e SHALL usar somente o papel `TENANT_USER` na V0.
+6. **WHEN** um administrador consulta os acessos em `/platform` **THEN** a
+   aplicação SHALL apresentar memberships e convites na mesma aba Membros,
+   permitir filtrar por tenant e situação, e SHALL apresentar convites ainda
+   não aceitos como pendentes, sem conceder acesso operacional.
+7. **WHEN** um administrador escolhe adicionar alguém na aba Membros **THEN**
+   SHALL informar tenant disponível e e-mail no formulário da mesma página;
+   após criar o convite, SHALL permanecer nessa página, mostrar o estado
+   pendente e permitir copiar o link retornado.
+8. **WHEN** um convite aceito corresponde a uma membership apresentada **THEN**
+   a lista SHALL mostrar uma única linha ativa com e-mail reconhecível, tenant,
+   papel e situação, sem duplicar a linha como convite aceito.
+9. **WHEN** um administrador revoga uma membership ou convite **THEN** SHALL ver
+   antes da mutação uma confirmação com o e-mail/identidade e tenant afetados;
+   cancelar SHALL preservar o estado atual.
 
 **Teste independente:** criar, revogar e consultar papéis de plataforma e
-memberships, verificando que o owner é único e que o tenant user não recebe
-permissões administrativas.
+memberships, verificar que o owner é único e que o tenant user não recebe
+permissões administrativas, e filtrar acessos ativos/pendentes na mesma aba sem
+duplicar um convite aceito.
 
 ### P1: Auditar operações administrativas ⭐ MVP
 
@@ -291,12 +307,14 @@ dados operacionais.
 | F01-18 | Abrir, autenticar e aceitar o convite pela rota pública preservando o destino após login | Convidar | F01-07 a F01-10 | Automated verification passed — T18; published UAT pending |
 | F01-19 | Gerar links pela origem pública correta e impedir `localhost` em ambiente publicado | Convidar | F01-07, F01-09 | Pending — T19 |
 | F01-20 | Apresentar a administração com hierarquia visual e layout responsivo | Todas | V0; F01-14, F01-15 | Pending — T21 |
+| F01-21 | Unificar membros e convites pendentes em uma lista filtrável por tenant, com convite na própria página | Memberships | Decisão de UX F-01; PRD 4.2; F01-07 a F01-13 | Pending — T24 |
+| F01-22 | Permitir cadastro Supabase iniciado por convite, exigir OTP de e-mail para destinatários não verificados em qualquer provedor e ativar membership só após aceite explícito | Convidar | PRD 4.2; ADR-026; F01-07, F01-08, F01-10, F01-16 | Pending — T25 |
 
-**Coverage:** 20 requisitos definidos e mapeados para tarefas. F01-01 a
+**Coverage:** 22 requisitos definidos e mapeados para tarefas. F01-01 a
 F01-16 permanecem verificados; F01-17 passou pelo gate automatizado da T17 e
 F01-18 pelo gate automatizado da T18. F01-19 e F01-20 aguardam implementação;
 a revisão independente e a UAT publicada de F01-17/F01-18 também permanecem
-pendentes.
+pendentes. F01-21 aguarda T24; F01-22 aguarda T25.
 
 ## Critérios de sucesso
 

@@ -351,6 +351,37 @@
 - **Date**: 2026-09-23
 - **Status**: implemented locally; full isolated verification recorded in F-00 `validation.md`; live Supabase/Render UAT pending
 
+### AD-027
+- **Decision**: Platform administrators manage active tenant memberships and
+  pending invitations through one `Membros` page, filterable by tenant and
+  status. Adding a person from that page creates a pending invitation; domain
+  invitations and memberships remain separate, and only acceptance activates
+  access.
+- **Reason**: Let administrators see the full access lifecycle and invite from
+  the place where they manage members, without implying that an unaccepted
+  invitation grants tenant access.
+- **Trade-off**: The platform UI combines records from two domain concepts and
+  must keep their distinct states and actions clear.
+- **Scope**: F-01 Platform Administration UI; no change to invitation
+  authentication, tenant authorization, or operational roles.
+- **Date**: 2026-09-24
+- **Status**: active; T24 implemented locally; automated verification and published visual UAT pending
+
+### AD-028
+- **Decision**: A valid tenant invitation may start registration for its exact
+  recipient email. Creating a Supabase Auth user alone does not create the
+  domain identity or membership; verified email plus explicit invitation
+  acceptance creates/associates domain identity and active membership.
+- **Reason**: An invited Outlook/Gmail recipient must be able to onboard without
+  a pre-existing Auth account, while a platform owner signed into a different
+  account must not accept on the recipient's behalf.
+- **Trade-off**: F-01 adds invitation-preserving signup, email verification,
+  account switching, and a production Auth email-delivery prerequisite.
+- **Scope**: F-01 public invitation/onboarding flow; no general signup, no
+  self-created tenant, no tenant access before acceptance.
+- **Date**: 2026-09-25
+- **Status**: active; T25 implemented locally; automated verification and published email UAT pending; universal email OTP selected for invitation recipients whose address is not already verified by Supabase
+
 ## Temporary test containers
 
 Registre aqui cada container descartável criado para uma validação isolada e
@@ -364,7 +395,7 @@ volume e rede tiveram a ausência confirmada.
 ## Handoff
 
 - **Feature**: F-01 — Fechamento de provisionamento da plataforma.
-- **Phase / Task**: T19–T22 implementadas e verificadas; T23 pendente.
+- **Phase / Task**: T19–T22 implementadas e verificadas; T24 (UI) e T25 (cadastro/OTP por convite) implementadas localmente; T23 aguarda verificação independente e UAT publicada.
 - **Completed**: F-00 encerrada; T1–T16 da F-01 verificadas, T17 passou pelo
   gate automatizado (177 testes), T18 passou pelo gate completo (182 testes) e
   T19 passou por `mvnw.cmd verify` (186 testes), T20 passou por
@@ -374,8 +405,7 @@ volume e rede tiveram a ausência confirmada.
   especificação da F-01 agora registra F01-18 a F01-20 e a revisão de status.
 - T22 passou por `mvnw.cmd clean verify` (193 testes), incluindo regressão de
   origem pública do convite, aceite, membership, RLS e auditoria.
-- **In progress**: Fechamento da F-01 reaberto após a validação publicada. A
-  lacuna restante é a revisão independente e UAT final. T20
+- **In progress**: T24/T25 implementadas localmente; o gate Maven ficou bloqueado porque esta sessão não dispõe de Java 21 nem de integração Docker. A lacuna restante inclui executar os testes, fazer revisão independente e concluir UAT publicada. T20
   adicionou o adapter opcional, ainda desabilitado até o owner confirmar
   elegibilidade sem custo no SendGrid. O serviço compartilhado local
   `gestao-producao-postgres-1` está ativo usando um volume preexistente com
@@ -386,17 +416,18 @@ volume e rede tiveram a ausência confirmada.
   A rota/retorno do convite foi implementada e verificada localmente; a UAT
   publicada continua pendente. O diretório não rastreado da F-02 pertence ao
   usuário e deve ser preservado.
-- **Next step**: Executar T23 com revisão independente e roteiro de UAT; não
-  declarar F-01 concluída antes
-  da revisão independente e UAT no Render. Depois, retomar o planejamento da
+- **Next step**: Executar o gate Maven com Java 21/PostgreSQL, revisar o diff independentemente e executar T23 no Render, incluindo cadastro OTP real e inspeção visual de Membros. Não declarar F-01
+  concluída antes da revisão independente e UAT no Render. Depois, retomar o
+  planejamento da
   F-02 sem presumir autorização para implementar suas tasks; quando houver
   autorização, preservar seus gates e confirmar PDFBox antes da T11, incluindo
   a atualização correspondente de `AGENTS.md`.
-- **External prerequisites**: Projeto dedicado de OCR externo com credencial
-  privada, limite de uso e amostras reais para aferir lista manuscrita e
-  comprovante. Google Cloud Vision e seus limites são propostas técnicas.
+- **External prerequisites**: F-01 T25 requer SMTP próprio e template Confirm sign up do Supabase Auth com
+  `{{ .Token }}` antes de UAT publicada. F-02 requer projeto
+  dedicado de OCR externo com credencial privada, limite de uso e amostras reais
+  para aferir lista manuscrita e comprovante; Google Cloud Vision e seus limites
+  são propostas técnicas.
 - **Preserve local changes**: Alterações em `docs/PRD-V0.md`,
   `docs/ROADMAP-V0.md` e arquivos não rastreados da F-02 pertencem ao
   planejamento e não devem ser incluídos nos commits de fechamento da F-01.
-- **Branch**: `main`; commits de fechamento locais ainda não foram enviados ao
-  remoto.
+- **Branch**: `main`; commits T24/T25 aguardam revisão final e push autorizado pelo owner.
