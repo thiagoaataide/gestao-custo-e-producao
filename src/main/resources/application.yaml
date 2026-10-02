@@ -34,6 +34,10 @@ server:
         secure: ${SESSION_COOKIE_SECURE:true}
         same-site: lax
 supabase:
+  storage:
+    url: ${SUPABASE_STORAGE_URL:}
+    bucket: ${SUPABASE_STORAGE_BUCKET:}
+    secret-key: ${SUPABASE_STORAGE_SECRET_KEY:}
   jwt:
     issuer: ${SUPABASE_JWT_ISSUER}
     jwk-set-uri: ${SUPABASE_JWT_JWK_SET_URI}

@@ -234,7 +234,7 @@ quando forem implementadas.
 | Componente | Decisão atual | Regra para definir a versão |
 | --- | --- | --- |
 | Supabase Auth | Resource Server JWT mais REST de password sign-in, refresh e logout local para sessão Vaadin server-side; sem SDK de cliente ou credencial administrativa no backend | ADR-025; protocolo REST/JWT e validação com o decoder existente |
-| Supabase Storage | armazenamento de objetos | registrar versão do cliente/SDK escolhido |
+| Supabase Storage | API REST privada pelo `RestClient` do Spring Boot; sem SDK adicional | API `/storage/v1/object`, upload sem upsert e segredo somente no backend |
 | Spring Cloud | não é necessário no esqueleto atual | só adicionar se uma necessidade da V0 exigir |
 | Implementação JTA | não definida para a V0 | não adicionar sem requisito de transação distribuída |
 | Plataforma de hospedagem | custo zero, pausas e cold starts aceitos | registrar versão/imagem/runtime do provedor |
@@ -333,6 +333,11 @@ de produção no `application.yaml`:
 O `spring.flyway.url` usa o mesmo `DB_URL`, mas mantém usuário e senha
 separados. O perfil `test` possui defaults locais controlados para executar o
 Compose descartável; eles não devem ser usados como segredo de implantação.
+
+O Storage é opcional no startup. Para usar importação de documentos, configure
+no ambiente backend `SUPABASE_STORAGE_URL`, `SUPABASE_STORAGE_BUCKET` e
+`SUPABASE_STORAGE_SECRET_KEY`; o bucket deve ser privado e a chave nunca deve
+ser enviada ao navegador.
 
 Para validar a fundação localmente, o PostgreSQL deve ser iniciado com
 `docker compose --env-file .env.local.example up -d`; depois, com Java 21 ativo,

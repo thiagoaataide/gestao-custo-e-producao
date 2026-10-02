@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01–T09 concluídas.
+**Status:** Em execução; T01–T10 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -624,3 +624,44 @@ Storage ou processamento de PDF, reservados às T10 e T11.
 
 **Veredito de adequação:** cobertura suficiente para estrutura persistente,
 isolamento multi-tenant, unicidade, idempotência e proteção de dados da T09.
+
+### T10 — preparo e leitura de documentos privados
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** raiz JPA `ImportDocument`, portas de repositório e `DocumentStore`,
+  serviço tenant-scoped e adapter REST para Supabase Storage. Upload aceita
+  somente PDF/JPEG/PNG reconhecidos por assinatura e até 6 MiB, gera chave
+  opaca, usa `x-upsert=false` e persiste `PREPARING` antes da chamada remota;
+  só muda para `READY` após sucesso. A leitura recebe ID, consulta metadados
+  sob RLS e valida hash, tamanho e MIME dos bytes recuperados. O builder HTTP
+  usa Spring já existente, sem nova dependência.
+- **Gate direcionado:** 7 testes de serviço, 5 contratos HTTP e 3 integrações
+  PostgreSQL aprovados. Incluem falha de Storage sem disponibilizar documento,
+  isolamento entre tenants, caminho não arbitrário, bucket privado pelo endpoint
+  autenticado, upload sem sobrescrita e verificação de integridade.
+- **Gate completo:** `mvn -B verify` em PostgreSQL 17 novo e isolado
+  (`f02_t10_final_20261002`), Java 21.0.12 — 272 testes aprovados, sem falhas,
+  erros ou skips; empacotamento Maven aprovado.
+- **Limite da validação:** os contratos usaram servidor HTTP simulado e as
+  integrações usaram `DocumentStore` em memória. Nenhuma chamada ou credencial
+  Supabase/Render foi utilizada. Antes da validação hospedada, configure um
+  bucket Storage como privado e defina `SUPABASE_STORAGE_URL`,
+  `SUPABASE_STORAGE_BUCKET` e `SUPABASE_STORAGE_SECRET_KEY` no Render.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T10 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Arquivo é limitado e MIME deriva de assinatura real. | `ImportDocumentServiceTests.java:83–94` — arquivo não suportado e maior que 6 MiB rejeitados sem criar registro. | Somente imagem/PDF aceitos dentro do limite. | Sim |
+| Upload grava chave opaca sem permitir sobrescrita e mantém Storage privado. | `SupabaseDocumentStoreAdapterTests.java:49–69` — rota de objeto, `x-upsert=false`, headers backend e tipo real verificados. | Objeto original não é substituído e não há URL pública. | Sim |
+| O documento só fica pronto depois que o Storage confirma o upload. | `ImportDocumentIntegrationTests.java:52–67` — estado `READY` após sucesso e `PREPARING` persistido em falha. | Falha externa não deixa documento legível/confirmável. | Sim |
+| A consulta pelo ID isola tenant e só então busca o objeto. | `ImportDocumentIntegrationTests.java:69–76` e `ImportDocumentServiceTests.java:110–125` — tenant B não recebe documento nem dispara download; ID ausente não chama Storage. | Chave de objeto não é fornecida pelo cliente nem acessível por tenant diferente. | Sim |
+| Integridade dos bytes baixados é revalidada. | `ImportDocumentServiceTests.java:127–137` — conteúdo alterado causa `DocumentIntegrityException`. | Hash, tamanho e MIME coincidem com os metadados persistidos. | Sim |
+
+**Check C — testes necessários:** 15 cenários novos cobrem validação, serviço,
+contrato REST e persistência/isolamento PostgreSQL; chamadas a serviços pagos
+ou hospedados ficam fora do gate local determinístico.
+
+**Veredito de adequação:** cobertura suficiente para o fluxo server-side de
+preparo e leitura privada previsto na T10; a aceitação hospedada depende da
+configuração externa anotada acima.
