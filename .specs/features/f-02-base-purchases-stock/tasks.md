@@ -468,3 +468,31 @@ testes.
 **Veredito de adequação:** cobertura suficiente para a base persistente de
 catálogo e configuração operacional do tenant, sem criar regras de domínio
 antecipadas para insumo ou estabelecimento.
+
+### T05 — domínio de insumo e quantidade
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** raiz JPA `Ingredient` com registro e renomeação protegidos,
+  Value Object de nome que normaliza acentos/espaços e exige variante para o
+  nome genérico `açúcar`; unidades-base e conversão exata de `kg/g`, `l/ml` e
+  `un`. Não há setters públicos de negócio.
+- **Gate direcionado:** 6 testes unitários de domínio aprovados.
+- **Gate completo:** `mvnw -B verify` em banco PostgreSQL 17 novo,
+  Java 21.0.12 — 236 testes aprovados, sem falhas, erros ou skips; pacote
+  Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T05 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Nome do insumo é obrigatório, limpo e normalizado sem confundir variantes. | `IngredientTests.java:17–56` — nome exibido/normalizado, nome vazio rejeitado, `açúcar` genérico rejeitado, cristal e mascavo com identidades distintas; renomeação preserva ID, tenant e unidade-base. | Nome específico, variantes separadas e estado de identidade preservado. | Sim |
+| Quantidade de peso converte para gramas sem perda de precisão. | `IngredientTests.java:60–66` — `2 kg + 278 g` resulta em `2278 g`; `1 kg` resulta em `1000 g`. | Conversão decimal exata de peso para a unidade-base. | Sim |
+| Volume e contagem respeitam suas unidades-base e limites. | `IngredientTests.java:71–81` — `1 l` vira `1000 ml`, `3 un` permanece inteiro; volume/peso não se combinam e `1,5 un` é rejeitado. | Converter apenas unidades da mesma grandeza e manter unidade contável inteira. | Sim |
+
+**Check C — testes necessários:** seis cenários unitários cobrem identidade,
+normalização e variantes do insumo, rename, conversões e limites de unidade;
+nenhum depende de banco, UI ou regra fora de F02-01, F02-02 e F02-12.
+
+**Veredito de adequação:** cobertura suficiente para o comportamento de domínio
+de insumo e quantidade, mantendo normalização e conversão fora da camada de
+apresentação.
