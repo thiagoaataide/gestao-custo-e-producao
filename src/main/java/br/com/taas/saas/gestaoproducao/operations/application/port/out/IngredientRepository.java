@@ -11,6 +11,8 @@ public interface IngredientRepository {
 
     Optional<Ingredient> findByTenantIdAndName(UUID tenantId, IngredientName name);
 
+    Optional<Ingredient> findByTenantIdAndId(UUID tenantId, UUID ingredientId);
+
     List<Ingredient> findSimilarByTenantId(UUID tenantId, IngredientName name, int limit);
 
     Ingredient save(Ingredient ingredient);

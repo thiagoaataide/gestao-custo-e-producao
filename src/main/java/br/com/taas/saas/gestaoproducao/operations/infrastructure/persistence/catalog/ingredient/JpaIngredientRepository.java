@@ -29,6 +29,13 @@ public class JpaIngredientRepository implements IngredientRepository {
     }
 
     @Override
+    public Optional<Ingredient> findByTenantIdAndId(UUID tenantId, UUID ingredientId) {
+        return repository.findByTenantIdAndId(
+                Objects.requireNonNull(tenantId, "tenantId must not be null"),
+                Objects.requireNonNull(ingredientId, "ingredientId must not be null"));
+    }
+
+    @Override
     public List<Ingredient> findSimilarByTenantId(UUID tenantId, IngredientName name, int limit) {
         if (limit < 1) {
             throw new IllegalArgumentException("limit must be positive");

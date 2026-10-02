@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01–T06 concluídas.
+**Status:** Em execução; T01–T07 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -526,3 +526,35 @@ vazia sob PostgreSQL real e RLS ativo.
 **Veredito de adequação:** cobertura suficiente para o adapter de persistência
 e busca previsto na T06. A consulta parcial é uma heurística sem extensão
 PostgreSQL; não bloqueia cadastro e não substitui a unicidade exata.
+
+### T07 — comandos e consultas do catálogo de insumos
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** commands de cadastro e renomeação, consulta de candidatos e
+  DTOs de aplicação. A identidade autenticada resolve o tenant e a operação
+  entra pelo `TenantScopedTransactionExecutor`; o caso de uso invoca as
+  operações `Ingredient.register`/`rename`, bloqueia nome normalizado exato e
+  retorna candidatos semelhantes como aviso, sem bloquear cadastro. Renomear
+  mantém ID e unidade-base. Não cria saldo ou entrada de estoque.
+- **Gate direcionado:** 4 testes unitários da aplicação + 4 cenários de
+  integração PostgreSQL aprovados.
+- **Gate completo:** `mvn -B verify` em banco PostgreSQL 17 novo
+  (`f02_t07_final_20261002`), Java 21.0.12 — 248 testes aprovados, sem falhas,
+  erros ou skips; pacote Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T07 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Cadastro cria o insumo e bloqueia nome idêntico normalizado no tenant. | `IngredientCatalogCommandServiceTests.java:57–68`; `IngredientCatalogCommandIntegrationTests.java:42–53`. | Sem duplicidade exata no mesmo tenant. | Sim |
+| Similaridade é aviso e permite cadastrar variante/nome ampliado. | `IngredientCatalogCommandServiceTests.java:71–85`; `IngredientCatalogCommandIntegrationTests.java:56–72`. | Candidato é retornado e nova linha persiste. | Sim |
+| Renomeação usa operação de domínio e preserva identidade/unidade. | `IngredientCatalogCommandServiceTests.java:88–104`; `IngredientCatalogCommandIntegrationTests.java:75–89`. | ID e unidade-base permanecem, sem setters. | Sim |
+| Acesso sem membership operacional válido é negado antes de persistir. | `IngredientCatalogCommandServiceTests.java:107–119`; `IngredientCatalogCommandIntegrationTests.java:92–102`. | Nenhum insumo é criado para identidade sem tenant. | Sim |
+
+**Check C — testes necessários:** oito cenários unitários e de integração
+cobrem duplicidade, similaridade não bloqueante, renomeação, identidade,
+unidade-base e autorização com RLS ativo em PostgreSQL real.
+
+**Veredito de adequação:** cobertura suficiente para a aplicação do catálogo
+no escopo T07; as regras de domínio permanecem na entidade e o command não
+cria quantidade, saldo inicial ou movimento.
