@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01–T10 concluídas.
+**Status:** Em execução; T01–T11 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -23,8 +23,8 @@ revalidação.
   `src/main/resources/application.yaml`; não incluí-las automaticamente
   em commits de implementação.
 - Revisar documentação oficial da versão efetiva antes de alterar dependência,
-  migration ou configuração. PDFBox 3.0.8 é proposta, não dependência atual.
-  Toda adição exige atualizar `AGENTS.md`, árvore efetiva e compatibilidade.
+  migration ou configuração. PDFBox 3.0.8 foi adotado na T11 após confirmação
+  oficial; toda adição exige atualizar `AGENTS.md`, árvore efetiva e compatibilidade.
 - Para mudanças de banco, criar migration Flyway versionada, script de
   reversão controlada, grants, índices e RLS. Nunca usar Supabase CLI como
   segundo histórico nem depender de `flyway undo`.
@@ -665,3 +665,45 @@ ou hospedados ficam fora do gate local determinístico.
 **Veredito de adequação:** cobertura suficiente para o fluxo server-side de
 preparo e leitura privada previsto na T10; a aceitação hospedada depende da
 configuração externa anotada acima.
+
+### T11 — extração de texto e renderização limitada de PDF
+
+- **Estado:** concluída; commit atômico próprio.
+- **Decisão de dependência:** Apache PDFBox `3.0.8`, versão atual confirmada
+  no site oficial. A documentação informa Java mínimo 8 e teste upstream até
+  Java 19; a compatibilidade com Java 21 foi validada no build completo do
+  projeto. A API 3.x usa `Loader`/`RandomAccessReadBuffer`; o cache de streams
+  usa arquivos temporários. Árvore efetiva: `pdfbox`, `pdfbox-io` e `fontbox`,
+  todos em `3.0.8`.
+- **Entrega:** interface de aplicação e adapter PDFBox extraem texto digital
+  por página e renderizam somente páginas sem texto para PNG em tons de cinza.
+  Limites: 5 páginas, 150 DPI, 8 megapixels por página, 12 MiB de PNGs por
+  documento e 100.000 caracteres extraídos por página. PDFs acima de 6 MiB,
+  inválidos, criptografados, com excesso de páginas, dimensões ou texto são
+  recusados com erro sem detalhes do parser. O documento é sempre fechado; o
+  adapter não chama OCR nem altera compras/estoque.
+- **Gate direcionado:** 6 testes novos aprovados para texto digital, PDF misto
+  (texto + página escaneada), PNG renderizado, limite de páginas, página acima
+  do limite de pixels/texto e PDF malformado.
+- **Gate completo:** `mvn -B verify` em PostgreSQL 17 novo e isolado
+  (`f02_t11_release_20261002`), Java 21.0.12 — 279 testes aprovados, sem falhas,
+  erros ou skips; empacotamento Maven aprovado.
+- **Validação de dependência:** `dependency:tree` confirmou apenas
+  `org.apache.pdfbox:pdfbox`, `pdfbox-io` e `fontbox`, todos em `3.0.8`; o
+  effective POM foi gerado em `target/effective-pom.xml`.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T11 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| PDF digital fornece texto e não cria página OCR desnecessária. | `PdfBoxDocumentProcessorTests.java:24–31` — texto esperado e lista OCR vazia. | Texto é extraído antes de usar OCR. | Sim |
+| PDF misto extrai páginas digitais e renderiza apenas as escaneadas. | `PdfBoxDocumentProcessorTests.java:33–43` — página 1 textual; página 2 PNG; OCR limitado à página 2. | Só página sem texto digital segue para OCR. | Sim |
+| Limites de páginas, pixels, texto e formato inválido bloqueiam processamento. | `PdfBoxDocumentProcessorTests.java:45–74` — excesso de páginas, PDF malformado, página enorme e texto acima do máximo rejeitados. | Não executar renderização descontrolada nem propagar erro interno. | Sim |
+
+**Check C — testes necessários:** os seis testes unitários cobrem extração,
+roteamento por página, conteúdo renderizado e recusas dos principais limites;
+nenhum Vision, serviço hospedado ou compra/estoque é chamado nesta tarefa.
+
+**Veredito de adequação:** cobertura suficiente para extração local e preparo
+limitado das páginas destinadas ao OCR na T12, mantendo a revisão humana fora
+do escopo desta tarefa.

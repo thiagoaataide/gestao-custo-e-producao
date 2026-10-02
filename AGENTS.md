@@ -114,6 +114,7 @@ Estes são os context paths oficiais que devem ser usados como ponto de partida:
 | Vaadin | https://vaadin.com/docs/latest/ |
 | PostgreSQL JDBC | https://jdbc.postgresql.org/documentation/ |
 | Flyway | https://documentation.red-gate.com/flyway |
+| Apache PDFBox | https://pdfbox.apache.org/3.0/ |
 | Supabase | https://supabase.com/docs |
 | Docker | https://docs.docker.com/ |
 | Eclipse Temurin | https://adoptium.net/ |
@@ -223,6 +224,7 @@ atualize esta tabela se houver divergência.
 | PostgreSQL JDBC | `org.postgresql:postgresql` | 42.7.13 | dependência direta de runtime |
 | Flyway Core | `org.flywaydb:flyway-core` | 12.4.0 | transitivo do starter Flyway, Community |
 | Flyway PostgreSQL | `org.flywaydb:flyway-database-postgresql` | 12.4.0 | dependência direta do banco PostgreSQL |
+| Apache PDFBox | `org.apache.pdfbox:pdfbox` | 3.0.8 | dependência direta; extração e renderização PDF limitada; Java 21 validado pelo gate do projeto |
 
 ### Componentes planejados ou condicionais
 

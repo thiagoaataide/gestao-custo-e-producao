@@ -322,6 +322,12 @@ preço pode gerar cobrança. Sem cota, o arquivo segue para preenchimento
 manual. Esses limites são configuráveis e precisam ser validados com
 documentos reais antes da execução.
 
+Na T11, o processamento local limita a extração a 100.000 caracteres por
+página, renderiza somente páginas sem texto digital a 150 DPI em tons de cinza,
+recusa uma página acima de 8 megapixels e limita o PNG total a 12 MiB. O
+`PDDocument` é fechado por escopo e o cache de streams usa arquivos temporários;
+o OCR permanece fora deste processamento.
+
 ### Contratos de entrada da UI
 
 O produto usa Vaadin Flow: não há necessidade de criar API pública nova para
