@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01 e T02 concluídas.
+**Status:** Em execução; T01–T06 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -496,3 +496,33 @@ nenhum depende de banco, UI ou regra fora de F02-01, F02-02 e F02-12.
 **Veredito de adequação:** cobertura suficiente para o comportamento de domínio
 de insumo e quantidade, mantendo normalização e conversão fora da camada de
 apresentação.
+
+### T06 — persistência e busca de insumos
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** porta `IngredientRepository`, adapter Spring Data JPA para
+  salvar e buscar por nome normalizado no tenant, e consulta de candidatos
+  semelhantes por substring normalizada, limitada e ordenada. A consulta exige
+  tenant explícito e continua protegida pelo RLS da transação. Similaridade é
+  apenas candidata/aviso; a unicidade exata segue protegida pelo índice da T04.
+- **Gate direcionado:** 4 cenários PostgreSQL aprovados.
+- **Gate completo:** `mvn -B verify` em banco PostgreSQL 17 novo
+  (`f02_t06_final3_20261002`), Java 21.0.12 — 240 testes aprovados, sem falhas,
+  erros ou skips; pacote Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T06 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Busca exata encontra o insumo persistido pelo nome normalizado. | `IngredientRepositoryIntegrationTests.java:38–50` — salva no tenant A e recupera a mesma identidade pela chave normalizada. | Lookup exato tenant-scoped. | Sim |
+| Busca semelhante lista candidatos distintos do nome exato e limita o resultado. | `IngredientRepositoryIntegrationTests.java:55–77` — dois nomes contendo o fragmento, nome exato excluído e limite 1 respeitado. | Similaridade apenas informa candidatos; busca é limitada. | Sim |
+| Consulta respeita o tenant solicitado e o contexto RLS ativo. | `IngredientRepositoryIntegrationTests.java:80–107` — leitura do tenant B não retorna o insumo A mesmo com tenant A informado. | Nenhum candidato de outro tenant é exposto. | Sim |
+| Consulta sem correspondências retorna lista vazia. | `IngredientRepositoryIntegrationTests.java:110–116`. | Ausência de candidato não altera nem falha a consulta. | Sim |
+
+**Check C — testes necessários:** os quatro cenários de integração exercitam
+persistência, busca exata, candidatos/limite, isolamento por tenant e resposta
+vazia sob PostgreSQL real e RLS ativo.
+
+**Veredito de adequação:** cobertura suficiente para o adapter de persistência
+e busca previsto na T06. A consulta parcial é uma heurística sem extensão
+PostgreSQL; não bloqueia cadastro e não substitui a unicidade exata.
