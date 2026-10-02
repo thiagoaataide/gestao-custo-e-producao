@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01–T07 concluídas.
+**Status:** Em execução; T01–T08 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -558,3 +558,34 @@ unidade-base e autorização com RLS ativo em PostgreSQL real.
 **Veredito de adequação:** cobertura suficiente para a aplicação do catálogo
 no escopo T07; as regras de domínio permanecem na entidade e o command não
 cria quantidade, saldo inicial ou movimento.
+
+### T08 — cadastro e consulta de estabelecimentos
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** entidade JPA `Establishment` com registro, nome exibido limpo e
+  chave normalizada; porta e adapter JPA para busca exata, ID e listagem
+  ordenada; serviço de cadastro/lista derivando o tenant da identidade e
+  executando sob `TenantScopedTransactionExecutor`. Sem similaridade,
+  metadados ou estado artificial.
+- **Gate direcionado:** 2 testes de domínio + 3 integrações PostgreSQL
+  aprovados.
+- **Gate completo:** `mvn -B verify` em banco PostgreSQL 17 novo
+  (`f02_t08_final_20261002`), Java 21.0.12 — 253 testes aprovados, sem falhas,
+  erros ou skips; pacote Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T08 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Nome é obrigatório, removendo espaços externos e gerando chave normalizada. | `EstablishmentTests.java:14–20` e `:23–27`. | Nome exibível limpo; nome vazio rejeitado. | Sim |
+| Cadastro e consulta usam o tenant autenticado. | `EstablishmentCatalogIntegrationTests.java:30–39` — cadastro seguido de listagem retorna mesma identidade/nome. | Estabelecimento disponível ao tenant corrente. | Sim |
+| Nome normalizado duplicado é impedido no mesmo tenant. | `EstablishmentCatalogIntegrationTests.java:42–49` — segunda gravação com caixa diferente recebe conflito. | Unicidade consistente com índice do banco. | Sim |
+| Sem membership válida, cadastro e consulta são negados. | `EstablishmentCatalogIntegrationTests.java:52–59`. | Nenhum acesso operacional sem contexto autorizado. | Sim |
+
+**Check C — testes necessários:** cinco cenários de domínio e integração
+cobrem nome vazio/normalização, persistência/lista, duplicidade e autorização
+com RLS PostgreSQL ativo.
+
+**Veredito de adequação:** cobertura suficiente para o cadastro mínimo e a
+seleção futura do estabelecimento na compra, sem antecipar regras não
+definidas para o agregado.
