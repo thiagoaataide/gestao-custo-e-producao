@@ -1,6 +1,8 @@
 package br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -108,6 +110,18 @@ public class OperationalManagerAssignmentService {
         recordAudit(command.actorIdentityId(), saved.id(),
                 AuditAction.OPERATIONAL_MANAGER_REVOKED, AuditResult.SUCCESS, command.occurredAt());
         return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OperationalManagerAssignmentView> list(UUID actorIdentityId) {
+        Objects.requireNonNull(actorIdentityId, "actorIdentityId must not be null");
+        platformAuthorizationService.requirePlatformAccess(actorIdentityId);
+        return assignmentRepository.findAll().stream()
+                .sorted(Comparator.comparing(OperationalManagerAssignment::assignedAt)
+                        .thenComparing(OperationalManagerAssignment::id))
+                .map(assignment -> new OperationalManagerAssignmentView(
+                        assignment.id(), assignment.membershipId(), assignment.status().name(), assignment.assignedAt()))
+                .toList();
     }
 
     private void requirePlatformAccess(

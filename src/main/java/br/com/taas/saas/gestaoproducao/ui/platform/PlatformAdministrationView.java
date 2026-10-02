@@ -57,6 +57,10 @@ import br.com.taas.saas.gestaoproducao.platform.administration.application.membe
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.PlatformMembershipAdminService;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.PlatformRoleAdministrationView;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.RevokeMembershipCommand;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.AssignOperationalManagerCommand;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.OperationalManagerAssignmentService;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.OperationalManagerAssignmentView;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.RevokeOperationalManagerCommand;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.role.GrantPlatformAdminCommand;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.role.RevokePlatformAdminCommand;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.tenant.ChangeTenantStatusCommand;
@@ -88,6 +92,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
     private final InvitationCommandService invitationCommandService;
     private final InvitationProvisioningQueryService invitationQueryService;
     private final PlatformMembershipAdminService membershipAdminService;
+    private final OperationalManagerAssignmentService operationalAssignmentService;
     private final PlatformActorIdentityResolver actorIdentityResolver;
     private final PlatformAuthorizationService authorizationService;
     private final AuthenticationContext authenticationContext;
@@ -117,6 +122,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
             InvitationCommandService invitationCommandService,
             InvitationProvisioningQueryService invitationQueryService,
             PlatformMembershipAdminService membershipAdminService,
+            OperationalManagerAssignmentService operationalAssignmentService,
             PlatformActorIdentityResolver actorIdentityResolver,
             PlatformAuthorizationService authorizationService,
             AuthenticationContext authenticationContext) {
@@ -125,6 +131,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
         this.invitationCommandService = Objects.requireNonNull(invitationCommandService);
         this.invitationQueryService = Objects.requireNonNull(invitationQueryService);
         this.membershipAdminService = Objects.requireNonNull(membershipAdminService);
+        this.operationalAssignmentService = Objects.requireNonNull(operationalAssignmentService);
         this.actorIdentityResolver = Objects.requireNonNull(actorIdentityResolver);
         this.authorizationService = Objects.requireNonNull(authorizationService);
         this.authenticationContext = Objects.requireNonNull(authenticationContext);
@@ -138,6 +145,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
         this.invitationCommandService = null;
         this.invitationQueryService = null;
         this.membershipAdminService = null;
+        this.operationalAssignmentService = null;
         this.actorIdentityResolver = null;
         this.authorizationService = null;
         this.authenticationContext = null;
@@ -152,11 +160,24 @@ public final class PlatformAdministrationView extends VerticalLayout {
             InvitationCommandService invitationCommandService,
             InvitationProvisioningQueryService invitationQueryService,
             PlatformMembershipAdminService membershipAdminService) {
+        this(state, actorIdentityId, tenantQueryService, invitationCommandService,
+                invitationQueryService, membershipAdminService, null);
+    }
+
+    PlatformAdministrationView(
+            PlatformAdministrationViewState state,
+            UUID actorIdentityId,
+            TenantProvisioningQueryService tenantQueryService,
+            InvitationCommandService invitationCommandService,
+            InvitationProvisioningQueryService invitationQueryService,
+            PlatformMembershipAdminService membershipAdminService,
+            OperationalManagerAssignmentService operationalAssignmentService) {
         this.tenantCommandService = null;
         this.tenantQueryService = tenantQueryService;
         this.invitationCommandService = invitationCommandService;
         this.invitationQueryService = invitationQueryService;
         this.membershipAdminService = membershipAdminService;
+        this.operationalAssignmentService = operationalAssignmentService;
         this.actorIdentityResolver = null;
         this.authorizationService = null;
         this.authenticationContext = null;
@@ -181,7 +202,8 @@ public final class PlatformAdministrationView extends VerticalLayout {
                     owner,
                     tenantQueryService.listTenants(actorIdentityId),
                     invitationQueryService.listInvitations(actorIdentityId),
-                    membershipAdminService.view(actorIdentityId));
+                    membershipAdminService.view(actorIdentityId),
+                    assignmentViews());
         } catch (PlatformAuthorizationDeniedException | IllegalArgumentException exception) {
             return PlatformAdministrationViewState.denied();
         }
@@ -424,8 +446,59 @@ public final class PlatformAdministrationView extends VerticalLayout {
         Component actions = row.invitation() != null
                 ? invitationActions(row.invitation())
                 : membershipActions(row.membership());
+        if (row.membership() != null && row.membership().role() == MembershipRole.TENANT_USER) {
+            OperationalManagerAssignmentView assignment = assignmentFor(row.membership());
+            card.add(new Span(assignment == null
+                    ? "Responsável operacional: não designado"
+                    : "Responsável operacional: " + ("ACTIVE".equals(assignment.status())
+                            ? "ativo" : "revogado")));
+            card.add(operationalAssignmentActions(row.membership(), assignment));
+        }
         card.add(actions);
         return card;
+    }
+
+    private OperationalManagerAssignmentView assignmentFor(MembershipAdministrationView membership) {
+        return state.operationalAssignments().stream()
+                .filter(assignment -> assignment.membershipId().equals(membership.id()))
+                .max(java.util.Comparator.comparing(OperationalManagerAssignmentView::assignedAt))
+                .orElse(null);
+    }
+
+    private Component operationalAssignmentActions(
+            MembershipAdministrationView membership, OperationalManagerAssignmentView assignment) {
+        if (membership.status() != MembershipStatus.ACTIVE) {
+            return new Span("Designação indisponível para acesso revogado");
+        }
+        if (assignment != null && "ACTIVE".equals(assignment.status())) {
+            Button revoke = new Button("Revogar responsável operacional", event -> {
+                try {
+                    operationalAssignmentService.revoke(new RevokeOperationalManagerCommand(
+                            actorIdentityId, assignment.id(), Instant.now()));
+                    notifyUser("Designação operacional revogada.");
+                    refresh();
+                } catch (PlatformAuthorizationDeniedException exception) {
+                    notifyUser("Acesso negado: você não tem permissão para alterar a designação.");
+                } catch (RuntimeException exception) {
+                    notifyUser("Não foi possível revogar a designação operacional.");
+                }
+            });
+            revoke.addThemeVariants(ButtonVariant.AURA_DANGER);
+            return revoke;
+        }
+        Button assign = new Button("Designar responsável operacional", event -> {
+            try {
+                operationalAssignmentService.assign(new AssignOperationalManagerCommand(
+                        actorIdentityId, membership.id(), Instant.now()));
+                notifyUser("Responsável operacional designado.");
+                refresh();
+            } catch (PlatformAuthorizationDeniedException exception) {
+                notifyUser("Acesso negado: você não tem permissão para alterar a designação.");
+            } catch (RuntimeException exception) {
+                notifyUser("Não foi possível designar o responsável operacional.");
+            }
+        });
+        return assign;
     }
 
     private Component invitationActions(InvitationAdministrationView invitation) {
@@ -702,13 +775,20 @@ public final class PlatformAdministrationView extends VerticalLayout {
                 state.owner(),
                 tenantQueryService.listTenants(actorIdentityId),
                 invitationQueryService.listInvitations(actorIdentityId),
-                membershipAdminService.view(actorIdentityId));
+                membershipAdminService.view(actorIdentityId),
+                assignmentViews());
         tenantGrid.setItems(state.tenants());
         invitationTenant.setItems(state.tenants().stream().filter(Tenant::isAvailable).toList());
         memberTenantFilter.setItems(state.tenants());
         renderMemberRows();
         roleGrid.setItems(state.membershipAdministration().platformRoles());
         updateTenantMembershipSummary();
+    }
+
+    private List<OperationalManagerAssignmentView> assignmentViews() {
+        return operationalAssignmentService == null
+                ? List.of()
+                : operationalAssignmentService.list(actorIdentityId);
     }
 
     private Set<UUID> activeMembershipTenantIds() {

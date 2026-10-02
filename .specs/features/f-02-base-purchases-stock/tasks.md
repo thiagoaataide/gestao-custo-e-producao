@@ -407,3 +407,30 @@ unicidade e trilha previstos para T02; nenhum testa regra fora da feature.
 
 **Veredito de adequação:** cobertura suficiente para T02, incluindo negação,
 membership pendente, duplicidade, tenant incorreto e revogação.
+
+### T03 — controle da designação na administração
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** lista de designações autorizada a administradores; a tela de
+  membros mostra estado ativo/revogado e permite designar ou revogar para
+  membership ativa. Tentativas sem autorização mostram mensagem explícita.
+- **Gate direcionado:** 3 cenários novos aprovados; suíte da tela: 10 testes,
+  sem falhas, erros ou skips.
+- **Gate completo:** `mvnw -B verify` em banco PostgreSQL 17 novo,
+  Java 21.0.12 — 226 testes aprovados, sem falhas, erros ou skips; pacote
+  Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T03 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Membership ativa pode receber designação e a tela atualiza para ativo. | `PlatformAdministrationViewIntegrationTests.java:305–310` — estado inicial não designado; após ação mostra `Responsável operacional: ativo`. | Designação aparece na administração e fica ativa. | Sim |
+| Revogação mantém a associação no histórico e mostra estado revogado. | `PlatformAdministrationViewIntegrationTests.java:335–340` — estado ativo antes da ação e revogado depois; o estado ativo deixa de aparecer. | Registro permanece disponível como revogado. | Sim |
+| A recusa da autorização é comunicada ao usuário. | `PlatformAdministrationViewIntegrationTests.java:344–363` — serviço lança `PlatformAuthorizationDeniedException`; `Notification.show` recebe mensagem de acesso negado. | Nenhuma ação sem autorização; mensagem clara na tela. | Sim |
+
+**Check C — testes necessários:** os três cenários de integração exercitam a
+administração da designação, a preservação do estado após revogação e o
+tratamento visível de autorização negada; todos correspondem a F02-24.
+
+**Veredito de adequação:** cobertura suficiente para o controle da designação
+na tela existente, sem expor dados operacionais à administração da plataforma.

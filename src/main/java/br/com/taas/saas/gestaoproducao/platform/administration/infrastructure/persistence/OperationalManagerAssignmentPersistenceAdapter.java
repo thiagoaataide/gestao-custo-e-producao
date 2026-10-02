@@ -1,6 +1,7 @@
 package br.com.taas.saas.gestaoproducao.platform.administration.infrastructure.persistence;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -29,6 +30,11 @@ public class OperationalManagerAssignmentPersistenceAdapter
     public Optional<OperationalManagerAssignment> findActiveByMembershipId(UUID membershipId) {
         return repository.findByMembershipIdAndStatus(
                 membershipId, OperationalManagerAssignmentStatus.ACTIVE);
+    }
+
+    @Override
+    public List<OperationalManagerAssignment> findAll() {
+        return repository.findAll();
     }
 
     @Override

@@ -3,6 +3,8 @@ package br.com.taas.saas.gestaoproducao.ui.platform;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +39,12 @@ import br.com.taas.saas.gestaoproducao.platform.administration.application.invit
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.MembershipAdministrationView;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.PlatformMembershipAdminService;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.membership.PlatformMembershipAdministrationView;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.AssignOperationalManagerCommand;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.OperationalManagerAssignmentService;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.OperationalManagerAssignmentView;
+import br.com.taas.saas.gestaoproducao.platform.administration.application.operationalassignment.RevokeOperationalManagerCommand;
+import br.com.taas.saas.gestaoproducao.platform.administration.domain.model.operationalassignment.OperationalManagerAssignment;
+import br.com.taas.saas.gestaoproducao.platform.access.application.PlatformAuthorizationDeniedException;
 import br.com.taas.saas.gestaoproducao.platform.administration.application.tenant.TenantProvisioningQueryService;
 import br.com.taas.saas.gestaoproducao.platform.identity.model.Invitation;
 import br.com.taas.saas.gestaoproducao.platform.identity.model.InvitationStatus;
@@ -275,12 +283,127 @@ class PlatformAdministrationViewIntegrationTests {
                 .doesNotContain("Conceder PLATFORM_ADMIN");
     }
 
+    @Test
+    void activeMembershipCanBeAssignedAsOperationalManagerAndStatusRefreshes() {
+        UI ui = new UI();
+        UI.setCurrent(ui);
+        Tenant tenant = tenant(TENANT_ID, "Tenant A");
+        MembershipAdministrationView member = membership(MEMBERSHIP_ID, IDENTITY_ID, TENANT_ID,
+                MembershipStatus.ACTIVE);
+        OperationalManagerAssignmentService assignments = mock(OperationalManagerAssignmentService.class);
+        when(assignments.list(ACTOR_ID)).thenReturn(List.of());
+        OperationalManagerAssignment assigned = OperationalManagerAssignment.assign(
+                UUID.randomUUID(), TENANT_ID, MEMBERSHIP_ID, ACTOR_ID, CREATED_AT.plusSeconds(1));
+        when(assignments.assign(any(AssignOperationalManagerCommand.class))).thenAnswer(invocation -> {
+            when(assignments.list(ACTOR_ID)).thenReturn(List.of(assignmentView(assigned)));
+            return assigned;
+        });
+        PlatformAdministrationView view = platformViewWithAssignments(tenant, member, assignments);
+        ui.add(view);
+        component(view, TabSheet.class).setSelectedIndex(1);
+
+        assertThat(textOf(view)).contains("Responsável operacional: não designado");
+        button(view, "Designar responsável operacional").click();
+
+        verify(assignments).assign(any(AssignOperationalManagerCommand.class));
+        assertThat(textOf(view)).contains("Responsável operacional: ativo")
+                .doesNotContain("Responsável operacional: não designado");
+    }
+
+    @Test
+    void activeOperationalAssignmentCanBeRevokedAndRemainsVisibleAsRevoked() {
+        UI ui = new UI();
+        UI.setCurrent(ui);
+        MembershipAdministrationView member = membership(MEMBERSHIP_ID, IDENTITY_ID, TENANT_ID,
+                MembershipStatus.ACTIVE);
+        OperationalManagerAssignmentService assignments = mock(OperationalManagerAssignmentService.class);
+        OperationalManagerAssignment active = OperationalManagerAssignment.assign(
+                UUID.randomUUID(), TENANT_ID, MEMBERSHIP_ID, ACTOR_ID, CREATED_AT);
+        when(assignments.list(ACTOR_ID)).thenReturn(List.of(assignmentView(active)));
+        OperationalManagerAssignment revoked = OperationalManagerAssignment.assign(
+                active.id(), TENANT_ID, MEMBERSHIP_ID, ACTOR_ID, CREATED_AT);
+        revoked.revoke(ACTOR_ID, CREATED_AT.plusSeconds(1));
+        when(assignments.revoke(any(RevokeOperationalManagerCommand.class))).thenAnswer(invocation -> {
+            when(assignments.list(ACTOR_ID)).thenReturn(List.of(assignmentView(revoked)));
+            return revoked;
+        });
+        PlatformAdministrationView view = platformViewWithAssignments(
+                tenant(TENANT_ID, "Tenant A"), member, assignments, List.of(active));
+        ui.add(view);
+        component(view, TabSheet.class).setSelectedIndex(1);
+
+        assertThat(textOf(view)).contains("Responsável operacional: ativo");
+        button(view, "Revogar responsável operacional").click();
+
+        verify(assignments).revoke(any(RevokeOperationalManagerCommand.class));
+        assertThat(textOf(view)).contains("Responsável operacional: revogado")
+                .doesNotContain("Responsável operacional: ativo");
+    }
+
+    @Test
+    void deniedOperationalAssignmentShowsAccessDeniedMessage() {
+        UI ui = new UI();
+        UI.setCurrent(ui);
+        MembershipAdministrationView member = membership(MEMBERSHIP_ID, IDENTITY_ID, TENANT_ID,
+                MembershipStatus.ACTIVE);
+        OperationalManagerAssignmentService assignments = mock(OperationalManagerAssignmentService.class);
+        when(assignments.list(ACTOR_ID)).thenReturn(List.of());
+        doThrow(new PlatformAuthorizationDeniedException())
+                .when(assignments).assign(any(AssignOperationalManagerCommand.class));
+        PlatformAdministrationView view = platformViewWithAssignments(
+                tenant(TENANT_ID, "Tenant A"), member, assignments);
+        ui.add(view);
+        component(view, TabSheet.class).setSelectedIndex(1);
+
+        try (var notifications = mockStatic(com.vaadin.flow.component.notification.Notification.class)) {
+            button(view, "Designar responsável operacional").click();
+            notifications.verify(() -> com.vaadin.flow.component.notification.Notification.show(
+                    "Acesso negado: você não tem permissão para alterar a designação.", 5_000,
+                    com.vaadin.flow.component.notification.Notification.Position.MIDDLE));
+        }
+        verify(assignments).assign(any(AssignOperationalManagerCommand.class));
+    }
+
     private static PlatformAdministrationViewState state(
             List<Tenant> tenants,
             List<InvitationAdministrationView> invitations,
             List<MembershipAdministrationView> memberships) {
         return new PlatformAdministrationViewState(true, true, tenants, invitations,
                 new PlatformMembershipAdministrationView(List.of(), memberships));
+    }
+
+    private static PlatformAdministrationView platformViewWithAssignments(
+            Tenant tenant,
+            MembershipAdministrationView membership,
+            OperationalManagerAssignmentService assignments) {
+        return platformViewWithAssignments(tenant, membership, assignments, List.of());
+    }
+
+    private static OperationalManagerAssignmentView assignmentView(OperationalManagerAssignment assignment) {
+        return new OperationalManagerAssignmentView(assignment.id(), assignment.membershipId(),
+                assignment.status().name(), assignment.assignedAt());
+    }
+
+    private static PlatformAdministrationView platformViewWithAssignments(
+            Tenant tenant,
+            MembershipAdministrationView membership,
+            OperationalManagerAssignmentService assignments,
+            List<OperationalManagerAssignment> initialAssignments) {
+        TenantProvisioningQueryService tenantQuery = mock(TenantProvisioningQueryService.class);
+        InvitationCommandService invitationCommands = mock(InvitationCommandService.class);
+        InvitationProvisioningQueryService invitationQuery = mock(InvitationProvisioningQueryService.class);
+        PlatformMembershipAdminService memberships = mock(PlatformMembershipAdminService.class);
+        when(tenantQuery.listTenants(ACTOR_ID)).thenReturn(List.of(tenant));
+        when(invitationQuery.listInvitations(ACTOR_ID)).thenReturn(List.of());
+        when(memberships.view(ACTOR_ID)).thenReturn(new PlatformMembershipAdministrationView(
+                List.of(), List.of(membership)));
+        PlatformAdministrationViewState state = new PlatformAdministrationViewState(
+                true, true, List.of(tenant), List.of(),
+                new PlatformMembershipAdministrationView(List.of(), List.of(membership)),
+                initialAssignments.stream().map(PlatformAdministrationViewIntegrationTests::assignmentView).toList());
+        return new PlatformAdministrationView(
+                state, ACTOR_ID,
+                tenantQuery, invitationCommands, invitationQuery, memberships, assignments);
     }
 
     private static Tenant tenant(UUID id, String name) {
