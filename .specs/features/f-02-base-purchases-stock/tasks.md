@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01 concluída.
+**Status:** Em execução; T01 e T02 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -377,3 +377,33 @@ auditoria); não há teste sem requisito correspondente.
 
 **Veredito de adequação:** cobertura suficiente e restrita à migration,
 integridade e auditoria da designação operacional.
+
+### T02 — modelo, comandos e contrato de autorização
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** raiz de domínio JPA com transições de revogação; serviço de
+  concessão/revogação protegido pela autorização de plataforma; auditoria na
+  mesma transação; query publicada para operações retorna somente a decisão
+  para identidade e tenant.
+- **Gate direcionado:** 8 cenários novos aprovados.
+- **Gate completo:** `mvnw -B verify` em banco PostgreSQL 17 novo,
+  Java 21.0.12 — 223 testes aprovados, sem falhas, erros ou skips; pacote
+  Maven aprovado. Baseline anterior à F-02: 212 testes.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T02 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| A raiz expressa concessão e revogação, mantendo ator e instante no histórico. | `OperationalManagerAssignmentTests.java:28–34` — `assertThat(assignment.status()).isEqualTo(REVOKED)`, `assertThat(assignment.assignedBy()).isEqualTo(ACTOR_ID)`, `assertThat(assignment.revokedBy()).isEqualTo(revokedBy)`; integração `OperationalManagerAssignmentIntegrationTests.java:76` — estado `ACTIVE`. | Transição `ACTIVE` para `REVOKED`, mantendo dados de concessão e registrando dados de revogação. | Sim |
+| A raiz bloqueia repetição da revogação e instante anterior à concessão. | `OperationalManagerAssignmentTests.java:41–45` — asserções `isInstanceOf(IllegalArgumentException.class)` e `isInstanceOf(IllegalStateException.class)`. | Operações inválidas não alteram a atribuição. | Sim |
+| Concessão exige acesso de plataforma, membership ativa e grava auditoria de sucesso. | `OperationalManagerAssignmentIntegrationTests.java:76–84` — status `ACTIVE`, tenant esperado, query `.isTrue()`, evento `.hasSize(1)` e target type `OPERATIONAL_ASSIGNMENT`; pendente em `:123–130` é rejeitada e não persistida. | Apenas membership ativa recebe designação; concessão bem-sucedida é auditada. | Sim |
+| Ator sem acesso é negado, auditado e não cria designação. | `OperationalManagerAssignmentIntegrationTests.java:108–116` — exceção `PlatformAuthorizationDeniedException`, evento negado `.hasSize(1)`, repositório `.isEmpty()`. | Negação sem mutação operacional, com trilha de auditoria. | Sim |
+| Designação ativa duplicada é negada sem substituir a original. | `OperationalManagerAssignmentIntegrationTests.java:139–148` — exceção de validação, ID ativo igual a `original.id()` e auditoria de falha `.hasSize(1)`. | Uma designação ativa por membership; a original permanece. | Sim |
+| Query publicada valida identidade, tenant, membership ativa e designação ativa. | `OperationalManagerAssignmentIntegrationTests.java:78–79` — `.isTrue()` para associação ativa; `:99–100` — `.isFalse()` após revogação; `:157–168` — falso para outro tenant e membership revogada. | Só identidade membro ativa no tenant solicitado com designação ativa recebe autorização. | Sim |
+
+**Check C — testes necessários:** os dois testes de domínio e os seis testes
+de integração mapeiam para transições, autorização, membership ativa,
+unicidade e trilha previstos para T02; nenhum testa regra fora da feature.
+
+**Veredito de adequação:** cobertura suficiente para T02, incluindo negação,
+membership pendente, duplicidade, tenant incorreto e revogação.
