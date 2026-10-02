@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Em execução; T01–T08 concluídas.
+**Status:** Em execução; T01–T09 concluídas.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -589,3 +589,38 @@ com RLS PostgreSQL ativo.
 **Veredito de adequação:** cobertura suficiente para o cadastro mínimo e a
 seleção futura do estabelecimento na compra, sem antecipar regras não
 definidas para o agregado.
+
+### T09 — persistência de documentos, compras e OCR
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** migration V5 cria documentos de origem, compras, itens,
+  revisões imutáveis, uso idempotente de OCR e quota mensal global. Chaves
+  fiscais e hashes de documentos permanecem reservados após cancelamento;
+  tabelas operacionais aplicam FKs compostas, RLS `ENABLE` + `FORCE`, índices
+  por tenant e grants mínimos para `app_runtime`.
+- **Gate direcionado:** 5 cenários PostgreSQL aprovados, cobrindo isolamento,
+  integridade, reserva de chave/hash após cancelamento, idempotência e limites
+  de privilégios.
+- **Gate completo:** `mvn -B verify` em PostgreSQL 17 novo e isolado, Java
+  21.0.12 — 258 testes aprovados, sem falhas, erros ou skips; pacote Maven
+  aprovado.
+- **Reversão:** em banco descartável com dados, o script parou no guard e não
+  removeu tabelas. Em banco descartável vazio, removeu as seis tabelas da T09;
+  `operations.tenant_settings` da T04 permaneceu.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T09 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| RLS isola documentos, compras, itens, revisões e OCR por tenant e contexto ausente. | `OperationsPurchasingMigrationIntegrationTests.java:32–68` — leitura invisível e atualização cruzada sem linhas. | Um tenant não lê nem altera dados do outro; sem contexto não há exposição. | Sim |
+| Relações impedem associação cruzada de tenant e dados inválidos. | `OperationsPurchasingMigrationIntegrationTests.java:72–98` — FKs compostas e constraints rejeitam inserções inválidas. | Vínculos de compra, estabelecimento e insumo permanecem no mesmo tenant. | Sim |
+| Chave fiscal e hash continuam reservados após cancelamento e são tenant-scoped. | `OperationsPurchasingMigrationIntegrationTests.java:103–137` — duplicata no tenant rejeitada; outro tenant permitido. | Cancelamento não libera a chave/hash no tenant original. | Sim |
+| Uso de OCR é idempotente por página e quota global tem acesso restrito. | `OperationsPurchasingMigrationIntegrationTests.java:143–188` — duplicidade por página rejeitada e privilégios conferidos. | Não contar a mesma página duas vezes; runtime não altera a quota global. | Sim |
+| Dados documentais e revisões são protegidos contra exclusão/alteração indevida. | `OperationsPurchasingMigrationIntegrationTests.java:192–220` — DELETE não concedido; chave de storage não mutável. | Documento original e revisões permanecem imutáveis para runtime. | Sim |
+
+**Check C — testes necessários:** os cinco cenários direcionados cobrem os
+critérios planejados da migration e dos privilégios, sem exercitar fluxos de
+Storage ou processamento de PDF, reservados às T10 e T11.
+
+**Veredito de adequação:** cobertura suficiente para estrutura persistente,
+isolamento multi-tenant, unicidade, idempotência e proteção de dados da T09.
