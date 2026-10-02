@@ -92,7 +92,7 @@ public class SupabaseResourceServerSecurityConfiguration {
                 .authenticationProvider(passwordAuthenticationProvider)
                 .addFilterAfter(sessionRefreshFilter, BearerTokenAuthenticationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login").permitAll()
+                        .requestMatchers("/", "/login", "/invitations/**").permitAll()
                         .requestMatchers(VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher())
                         .permitAll()
                         .anyRequest().authenticated())

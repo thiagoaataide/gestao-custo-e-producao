@@ -329,7 +329,7 @@ public final class PlatformAdministrationView extends VerticalLayout {
         Button create = new Button("Criar convite", event -> createInvitation());
         stylePrimaryAction(create);
         HorizontalLayout formActions = new HorizontalLayout(cancel, create);
-        formActions.setFlexWrap(FlexLayout.FlexWrap.WRAP);
+        formActions.setWrap(true);
         invitationForm.add(responsiveForm(invitationTenant, invitationEmail), formActions);
         section.add(invitationForm);
 

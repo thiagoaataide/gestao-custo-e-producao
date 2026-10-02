@@ -58,7 +58,7 @@ class InvitationAcceptanceViewTests {
 
         verify(fixture.onboardingQuery).invitedEmail(org.mockito.ArgumentMatchers.eq(TOKEN), any());
         verify(fixture.invitationAuthService).signUp(INVITED_EMAIL, "not-a-real-password");
-        assertThat(textOf(view)).contains(INVITED_EMAIL, "Enviamos um código");
+        assertThat(textOf(view)).contains(INVITED_EMAIL, "digite o código enviado");
         assertThat(field(view, "E-mail do convite").isReadOnly()).isTrue();
         assertThat(field(view, "E-mail do convite").getValue()).isEqualTo(INVITED_EMAIL);
         verifyNoInteractions(fixture.acceptanceService);

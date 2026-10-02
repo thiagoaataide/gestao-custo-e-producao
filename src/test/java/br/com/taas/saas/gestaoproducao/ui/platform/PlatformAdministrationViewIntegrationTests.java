@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -124,6 +125,8 @@ class PlatformAdministrationViewIntegrationTests {
 
     @Test
     void invitingFromMembersKeepsPendingInvitationInline() {
+        UI ui = new UI();
+        UI.setCurrent(ui);
         Tenant tenant = tenant(TENANT_ID, "Tenant A");
         InvitationCommandService commandService = mock(InvitationCommandService.class);
         InvitationProvisioningQueryService invitationQuery = mock(InvitationProvisioningQueryService.class);
@@ -142,6 +145,7 @@ class PlatformAdministrationViewIntegrationTests {
         PlatformAdministrationView view = new PlatformAdministrationView(
                 state(List.of(tenant), List.of(), List.of()), ACTOR_ID,
                 tenantQuery, commandService, invitationQuery, membershipAdmin);
+        ui.add(view);
         when(commandService.createInvitation(any(CreateInvitationCommand.class))).thenAnswer(invocation -> {
             invitations.add(pendingView);
             return new InvitationLinkResult(created, "https://app.example/invitations/secret");
@@ -150,7 +154,7 @@ class PlatformAdministrationViewIntegrationTests {
         TabSheet tabs = component(view, TabSheet.class);
         tabs.setSelectedIndex(1);
         button(view, "Adicionar membro").click();
-        ComboBox<?> tenantField = combo(view, "Tenant", true);
+        ComboBox<?> tenantField = combo(view, "Tenant", false);
         selectComboLabel(tenantField, "Tenant A");
         EmailField email = (EmailField) allComponents(view)
                 .filter(EmailField.class::isInstance)
@@ -171,6 +175,8 @@ class PlatformAdministrationViewIntegrationTests {
 
     @Test
     void revocationRequiresConfirmationAndRefreshesMembersList() {
+        UI ui = new UI();
+        UI.setCurrent(ui);
         Tenant tenant = tenant(TENANT_ID, "Tenant A");
         InvitationCommandService commandService = mock(InvitationCommandService.class);
         InvitationProvisioningQueryService invitationQuery = mock(InvitationProvisioningQueryService.class);
@@ -204,6 +210,8 @@ class PlatformAdministrationViewIntegrationTests {
         PlatformAdministrationView view = new PlatformAdministrationView(
                 state(List.of(tenant), List.of(pending, accepted), List.of(active)), ACTOR_ID,
                 tenantQuery, commandService, invitationQuery, membershipAdmin);
+        ui.add(view);
+        component(view, TabSheet.class).setSelectedIndex(1);
 
         button(view, "Revogar convite").click();
         assertThat(view.pendingRevocationDialog()).isNotNull();
@@ -326,12 +334,12 @@ class PlatformAdministrationViewIntegrationTests {
     }
 
     private static ComboBox<?> combo(PlatformAdministrationView view, String label, boolean firstMatch) {
-        List<ComboBox<?>> matches = allComponents(view)
+        List<? extends ComboBox<?>> matches = allComponents(view)
                 .filter(ComboBox.class::isInstance)
-                .map(ComboBox.class::cast)
+                .map(field -> (ComboBox<?>) field)
                 .filter(field -> label.equals(field.getLabel()))
                 .toList();
-        return matches.get(0);
+        return firstMatch ? matches.getFirst() : matches.getLast();
     }
 
     private static Button button(Component component, String text) {
@@ -344,9 +352,14 @@ class PlatformAdministrationViewIntegrationTests {
     }
 
     private static Button dialogButton(Dialog dialog, String text) {
-        return button(dialog.getFooter(), text);
+        return dialog.getFooter().getElement().getChildren()
+                .map(element -> element.getComponent().orElse(null))
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .filter(button -> text.equals(button.getText()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Dialog button not found: " + text));
     }
-
     private static <T extends Component> T component(Component root, Class<T> type) {
         return allComponents(root).filter(type::isInstance).map(type::cast).findFirst().orElseThrow();
     }
@@ -363,6 +376,11 @@ class PlatformAdministrationViewIntegrationTests {
     }
 
     private static java.util.stream.Stream<Component> childComponents(Component component) {
+        if (component instanceof TabSheet tabs) {
+            return java.util.stream.IntStream.range(0, tabs.getTabCount())
+                    .mapToObj(tabs::getTabAt)
+                    .map(tabs::getComponent);
+        }
         return component.getChildren();
     }
 }
