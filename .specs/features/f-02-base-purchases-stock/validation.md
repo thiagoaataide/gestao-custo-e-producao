@@ -8,7 +8,7 @@ não declara OCR real nem validação hospedada.
 ### Revisão independente do comportamento
 
 - A raiz de PDFBox fica em `infrastructure`; a aplicação depende de
-  `PdfDocumentProcessor`, e o adapter não chama Google Vision.
+  `PdfDocumentProcessor`, sem chamada a provedor externo de OCR nesta tarefa.
 - O tipo é validado pela assinatura PDF, limite herdado de 6 MiB e máximo de 5
   páginas antes da extração/renderização.
 - Extração usa writer limitado a 100.000 caracteres por página. Renderização

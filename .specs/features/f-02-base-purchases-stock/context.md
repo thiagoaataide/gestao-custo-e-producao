@@ -87,9 +87,10 @@ interpretada como regra de domínio por estar ambígua.
 
 ## Margem para o design
 
-- O usuário escolheu serviço externo com franquia gratuita e limite de uso
-  para OCR. `design.md` propõe Google Cloud Vision com projeto dedicado e
-  teto próprio; provedor e limites técnicos são propostas para revisão.
+- Decisão do usuário em 2 de outubro de 2026: usar OCR.space Free API na T12,
+  com chave privada no backend. A aplicação deve depender de uma porta de OCR
+  para permitir substituição futura do provedor; limites do plano e fallback
+  manual ficam registrados em `design.md` e `tasks.md`.
 - Definir contratos, armazenamento de anexos e tratamento de indisponibilidade,
   mantendo a revisão humana obrigatória.
 - Definir representação da designação operacional e da trilha de correções,

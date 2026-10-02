@@ -425,8 +425,8 @@ volume e rede tiveram a ausência confirmada.
 - **External prerequisites**: F-01 T25 requer SMTP próprio e template Confirm sign up do Supabase Auth com
   `{{ .Token }}` antes de UAT publicada. F-02 requer projeto
   dedicado de OCR externo com credencial privada, limite de uso e amostras reais
-  para aferir lista manuscrita e comprovante; Google Cloud Vision e seus limites
-  são propostas técnicas.
+  para aferir lista manuscrita e comprovante; OCR.space Free API foi escolhido
+  para a T12, sujeito à validação de qualidade e dos limites com imagens reais.
 - **Preserve local changes**: Alterações em `docs/PRD-V0.md`,
   `docs/ROADMAP-V0.md` e arquivos não rastreados da F-02 pertencem ao
   planejamento e não devem ser incluídos nos commits de fechamento da F-01.

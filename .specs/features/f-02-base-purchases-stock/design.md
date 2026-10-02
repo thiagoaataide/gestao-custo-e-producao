@@ -56,7 +56,7 @@ operations/
   application/{catalog, importing, purchasing, stock}/
   infrastructure/
     persistence/{catalog, importing, purchasing, stock}/
-    integration/{storage, vision, platform-authorization}/
+    integration/{storage, ocr, platform-authorization}/
   presentation/{catalog, importing, purchasing, stock}/
 ```
 
@@ -100,7 +100,7 @@ flowchart LR
   C --> S[Porta de documentos]
   S --> B[Supabase Storage privado]
   C --> O[Porta de OCR]
-  O --> G[Google Cloud Vision]
+  O --> G[OCR.space Free API]
   A[Administração da plataforma] --> M[Designação operacional]
   M --> PM[(Metadados platform)]
 ```
@@ -136,7 +136,7 @@ revisados, sem chamar Storage ou OCR durante a transação de estoque.
 | --- | --- | --- |
 | Designação operacional em `platform` | Conceder/revogar a permissão a membership ativa do tenant e auditar a ação. | `PlatformMembershipAdminService`, auditoria administrativa; sem consulta operacional. |
 | Catálogo em `operations/catalog` | Insumo, nome normalizado, unidade-base e estabelecimento. | `TenantScopedTransactionExecutor`; regras no domínio. |
-| Importação em `operations/importing` | Arquivo, hash, estado de preparo, OCR, sugestões e revisão. | Portas para Storage e Vision; nenhum acesso direto do domínio a HTTP. |
+| Importação em `operations/importing` | Arquivo, hash, estado de preparo, OCR, sugestões e revisão. | Portas para Storage e provedor de OCR; nenhum acesso direto do domínio a HTTP. |
 | Compras em `operations/purchasing` | Compra, item, seleção parcial, preço, desconto, duplicidade, revisão e cancelamento. | Commands/queries separados conforme ADR-024. |
 | Estoque em `operations/stock` | Entrada identificável, movimento, saldo físico e aproveitável, trava de origem. | Porta única reutilizada por F-07 para toda saída futura. |
 | UI em `ui/operations` | Guiar upload, revisão, confirmação e consulta; apresentar erro sem persistir estado parcial. | Padrão Vaadin já usado nas telas de plataforma. |
@@ -145,7 +145,7 @@ As portas de aplicação necessárias são: `DocumentStore` (gravar/ler/retirar
 arquivo por chave opaca), `TextRecognition` (texto por imagem), repositórios
 de agregado e projeções de consulta. Não criar interface para cada classe do
 domínio. O adaptador de Storage usa API HTTP no backend; o de OCR usa a API
-HTTP do Vision. Nenhum segredo chega ao navegador.
+HTTP do provedor OCR. Nenhum segredo chega ao navegador.
 
 ### Modelo tático pragmático
 
@@ -173,7 +173,7 @@ As raízes e limites iniciais são:
 | Módulo | Raiz / modelo | Limite e referências |
 | --- | --- | --- |
 | `catalog` | `Ingredient`; `Establishment` como entidade simples | Nome normalizado, grandeza e unidade-base são protegidos pelo insumo. Estabelecimento pode ter somente operações justificadas por regras reais. Unicidade por tenant continua garantida no banco e verificada pelo caso de uso. |
-| `importing` | `ImportDocument` como raiz do preparo e revisão; candidatos de OCR como Value Objects | O documento controla transições do próprio estado. Storage, Vision e cota são coordenados fora da entidade; o objeto original permanece imutável. |
+| `importing` | `ImportDocument` como raiz do preparo e revisão; candidatos de OCR como Value Objects | O documento controla transições do próprio estado. Storage, OCR e cota são coordenados fora da entidade; o objeto original permanece imutável. |
 | `purchasing` | `Purchase` como raiz; `PurchaseItem` como entidade filha; revisões como registros imutáveis | A compra protege seleção, confirmação e mudanças coerentes de seus itens. Documento, estabelecimento e insumo são referenciados por ID, não por grafos JPA entre agregados. |
 | `stock` | `StockEntry` como raiz da origem; `StockMovement` como registro imutável identificado pela entrada | O saldo é derivado dos movimentos. O adapter carrega/trava uma origem e calcula seu saldo dentro da transação; a raiz valida a movimentação solicitada. Não carregar uma coleção histórica ilimitada de movimentos na entidade. |
 | `platform` | `OperationalManagerAssignment` como raiz da designação | Conceder/revogar e validar o estado pertencem ao modelo; a associação com membership é por ID. A restrição de uma designação ativa também é garantida no banco. |
@@ -241,8 +241,9 @@ event sourcing.
 | `operations.purchase_revision` | `id`, compra/item, ação, antes/depois, motivo, autor e instante. Não substitui movimentos de estoque. |
 | `operations.stock_entry` | `id`, `tenant_id`, insumo, tipo compra/saldo inicial/ajuste, item de origem opcional, datas aplicáveis, custo total conhecido ou `NULL`. |
 | `operations.stock_movement` | `id`, `tenant_id`, entrada, tipo, direção, quantidade-base positiva, motivo quando exigido, autor e instante. Sem `UPDATE`/`DELETE` operacional. |
-| `operations.ocr_usage` | `id`, `tenant_id`, mês, documento/página, reserva de unidade, estado e instante para cota e repetição segura. |
-| `platform.ocr_monthly_quota` | Mês e unidades globais reservadas; acesso interno restrito ao backend para limitar o projeto Google compartilhado. |
+| `operations.ocr_usage` | `id`, `tenant_id`, mês, dia UTC, documento/página/tentativa, reserva de uma requisição, estado e instante. T12 remove a unicidade apenas por documento/página e registra cada chamada externa; timeout ambíguo fica `UNCERTAIN` e continua consumindo cota. |
+| `platform.ocr_monthly_quota` | Mês e requisições Engine 3 globalmente reservadas, com limite inicial 2.500; acesso interno restrito ao backend. |
+| `platform.ocr_daily_quota` | Dia UTC e requisições globalmente reservadas, com limite inicial 500 para o IP de saída compartilhado; acesso interno restrito ao backend. |
 
 Todas as tabelas `operations` têm `tenant_id`, índices de consulta por
 tenant e RLS `ENABLE` + `FORCE`, com políticas e grants explícitos para
@@ -302,25 +303,49 @@ de compras confirmadas não são removidos por essa limpeza.
 
 ### OCR escolhido
 
-Google Cloud Vision `DOCUMENT_TEXT_DETECTION` por imagem/página, usando
-projeto dedicado e credencial apenas no backend. O PDF primeiro tenta extração
-de texto digital; páginas que dependem de OCR são renderizadas localmente com
-Apache PDFBox 3.0.8 e enviadas como imagens. Isso evita um bucket adicional
-do Google Cloud para o fluxo assíncrono de PDF. O Vision retorna texto; um
-parser determinístico propõe campos/linhas, sempre mostrando incerteza e
-exigindo seleção humana. Texto não reconhecido permanece editável. O original
-fica no Supabase, não em armazenamento do Vision.
+O usuário escolheu OCR.space Free API na decisão de 2 de outubro de 2026. A
+aplicação define uma porta de saída de OCR; a infraestrutura implementa um
+adapter HTTP para OCR.space. A chave `OCR_SPACE_API_KEY` fica em variável de
+ambiente privada no backend, nunca no Git nem no navegador. O caso de uso e o
+domínio não dependem do SDK, endpoint ou formato proprietário do provedor.
 
-Limite inicial proposto: arquivo de até 6 MB, PDF de até 5 páginas e **900
-páginas OCR por mês no projeto**, com reserva transacional antes da chamada.
-Repetir leitura do mesmo documento reutiliza resultado quando disponível.
-Falha ou timeout ambíguo não devolve a reserva automaticamente, para não
-ultrapassar a franquia por cobrança incerta. A cota é global e o projeto
-Google deve ser dedicado: a franquia publicada é de 1.000 unidades mensais
-para Document Text Detection, mas uso externo ao aplicativo ou mudança de
-preço pode gerar cobrança. Sem cota, o arquivo segue para preenchimento
-manual. Esses limites são configuráveis e precisam ser validados com
-documentos reais antes da execução.
+O PDF primeiro tenta extração de texto digital; páginas que dependem de OCR
+são renderizadas localmente com Apache PDFBox 3.0.8 e enviadas como imagens,
+uma requisição por página. Isso evita upload do original ao provedor e evita
+usar a API de PDF multipágina do OCR.space: o limite de três páginas por PDF
+não se aplica às imagens individuais. O limite publicado é **1 MB por arquivo
+da API**; o adapter aplica um teto conservador de 1.000.000 bytes a cada imagem
+enviada. Imagem acima do limite não é enviada; o original permanece anexado e
+a pessoa recebe caminho de revisão manual.
+PDFBox mantém os limites locais de 6 MiB por original, cinco páginas, 150 DPI,
+8 megapixels por página e 12 MiB somados de PNGs.
+
+A T12 usará OCR.space **Engine 3**, pois o provedor o indica para escrita à
+mão, tabelas e mais de 200 idiomas. A língua é Português (`por`), saída em
+texto sem overlay e `isTable=true` para preservar linhas de recibos/notas. O
+parser determinístico propõe campos/linhas, mostra incerteza e exige revisão
+humana. OCR nunca confirma compra nem cria movimento de estoque. O original
+fica no Supabase; apenas as imagens das páginas necessárias são enviadas ao
+OCR.space.
+
+O plano Free publica **500 requisições por dia por IP**, **25.000 conversões
+mensais para Engines 1/2** e outras **2.500 conversões mensais para Engine 3**.
+Como o aplicativo usará Engine 3, a cota mensal interna inicial é 2.500; cada
+página que precisa de OCR equivale a uma conversão/requisição. Uma migration
+T12 adapta o contador mensal existente (atualmente preparado para 900) e cria
+contador global diário, com reserva transacional antes da chamada. Contadores
+são globais entre tenants e instâncias. Chamadas de outros sistemas no mesmo
+IP/quota do provedor podem reduzir a disponibilidade real; o limite do
+provedor permanece autoridade final. Sem cota, key ou disponibilidade, o
+arquivo continua anexado e segue para revisão/transcrição manual.
+
+Cada chamada externa tem seu próprio registro e reserva. T12 não faz retry
+automático. Uma falha/timeout ambíguo fica `UNCERTAIN` e não devolve a unidade,
+pois o provedor pode ter contado a requisição; uma nova tentativa explícita
+reserva outra unidade. A repetição de uma chamada já concluída e persistida é
+resolvida pelo fluxo de revisão da T13, que reutiliza o resultado sem nova
+requisição. Limites e qualidade serão aferidos com imagens reais na aceitação
+da T25; o plano gratuito não tem SLA e o provedor pode alterar as condições.
 
 Na T11, o processamento local limita a extração a 100.000 caracteres por
 página, renderiza somente páginas sem texto digital a 150 DPI em tons de cinza,
@@ -343,7 +368,7 @@ ao tenant autorizado. A UI nunca envia `tenant_id` como autoridade.
 | --- | --- |
 | Arquivo/tipo/página/tamanho inválido | Rejeita preparo com mensagem específica; sem compra ou movimento. |
 | Storage indisponível | Documento não fica `READY`; retry seguro, sem estoque. |
-| Vision indisponível ou cota esgotada | Mantém arquivo e abre revisão manual; sem confirmação automática. |
+| OCR.space indisponível, chave ausente, imagem acima de 1 MB ou cota esgotada | Mantém arquivo e abre revisão/transcrição manual; sem confirmação automática. |
 | Chave fiscal ou hash já usado | Avisa e bloqueia segunda confirmação no tenant; índice único fecha corrida. |
 | Documento semelhante | Avisa e exige decisão humana; sem bloqueio automático. |
 | Permissão insuficiente | Nega alteração confirmada ou ajuste, com trilha de tentativa quando aplicável. |
@@ -363,7 +388,7 @@ tratamento de dados do provedor e credenciais do projeto.
 | Só há `TENANT_USER` na F-01. | `platform/identity/model/MembershipRole.java` | Correção/ajuste não têm permissão específica. | Designação em metadados de membership, sem promover plataforma a operador. |
 | Executor permite contexto já resolvido. | `tenancy/application/TenantScopedTransactionExecutor.java` | Uso incorreto pode contornar a resolução da identidade. | UI e comandos F-02 entram pelo overload com `ExternalSubject`; testes de acesso cruzado. |
 | Storage não participa da transação ACID. | ADR-018 e docs do Supabase | Pode haver preparo/objeto órfão. | Estado de preparo, chave opaca, retry e reconciliação; confirmação somente no banco. |
-| PDF convertido em imagem consome memória/CPU. | API PDFBox e limite Vision | Documento grande pode afetar o runtime gratuito. | Limites de 6 MB/5 páginas, processamento por página e teste de memória. |
+| PDF convertido em imagem consome memória/CPU e pode exceder o limite de upload do OCR.space. | PDFBox e limite de 1 MB por arquivo da API | Documento grande pode afetar o runtime gratuito ou não caber na API. | Limites de 6 MB/5 páginas e processamento por página; imagem acima de 1 MB segue para revisão manual, sem upload ao OCR. |
 | Testes de integração usam PostgreSQL real. | `src/test/.../integration` e `AGENTS.md` | Banco compartilhado antigo pode contaminar gates. | Banco isolado novo por gate completo. |
 | Chave privilegiada de Storage contorna RLS. | Documentação oficial Supabase | Falha no adaptador pode expor arquivo de outro tenant. | Backend exclusivo, busca por ID sob RLS, nenhuma chave de objeto arbitrária. |
 
@@ -371,9 +396,9 @@ tratamento de dados do provedor e credenciais do projeto.
 
 | Opção | Avaliação |
 | --- | --- |
-| **Google Vision por imagem/página** | Escolhida: reconhece texto denso e manuscrito, usa franquia gratuita por unidade e evita GCS adicional ao converter PDF localmente. Exige credencial, cota e transferência externa. |
-| OCR local | Sem cobrança por página, mas qualidade de manuscrito precisa de validação e aumenta dependências/runtime do container; não adotado para a F-02. |
-| Enviar PDF diretamente ao Vision | Exige operação assíncrona e entrada/saída no Google Cloud Storage; aumenta infraestrutura além do Supabase Storage já previsto. |
+| **OCR.space Free API, Engine 3** | Escolhida pelo usuário para o primeiro estágio: cota publicada de 2.500 conversões Engine 3/mês e 500 requisições/dia por IP; Engine 3 declara suporte forte a escrita à mão e tabelas. Exige chave, depende de serviço externo sem SLA grátis e envia imagens de página a terceiro. |
+| Tesseract local | Sem cobrança por página nem envio ao OCR SaaS, mas qualidade de manuscrito e custo de CPU/memória no Render precisam ser aferidos; mantido como alternativa futura. |
+| OCR.space recebendo PDF multipágina | Não escolhido: o fluxo envia imagens página a página, compatível com cota por requisição e sem depender do limite de três páginas por PDF do plano grátis. |
 | Saldo mutável em coluna | Consulta barata, mas facilita divergência com histórico. O livro de movimentos continua fonte; otimização só após medição. |
 
 ## Plano de implementação, validação e reversão
@@ -408,9 +433,8 @@ na edição Community nem apagar histórico operacional.
 - [Supabase Storage privado](https://supabase.com/docs/guides/storage/buckets/fundamentals),
   [controle de acesso](https://supabase.com/docs/guides/storage/security/access-control)
   e [upload padrão](https://supabase.com/docs/guides/storage/uploads/standard-uploads).
-- [Vision OCR/manuscrito](https://docs.cloud.google.com/vision/docs/handwriting),
-  [preços](https://cloud.google.com/vision/pricing),
-  [cotas](https://docs.cloud.google.com/vision/quotas) e
-  [uso dos dados](https://docs.cloud.google.com/vision/docs/data-usage).
+- [OCR.space Free API: limites, parâmetros de imagem, idiomas, Engine 3 e cotas](https://ocr.space/ocrapi),
+  [cadastro da chave grátis](https://ocr.space/ocrapi/freekey) e
+  [FAQ de privacidade e disponibilidade](https://ocr.space/faq).
 - [PDFBox 3.0.8](https://pdfbox.apache.org/3.0/getting-started.html) e
   [Flyway Community/Undo](https://documentation.red-gate.com/flyway/learn-more-about-flyway/feature-summary).

@@ -30,7 +30,7 @@ revalidação.
   segundo histórico nem depender de `flyway undo`.
 - Comandos operacionais entram por identidade autenticada e
   `TenantScopedTransactionExecutor`. O RLS com `app_runtime` é testado em
-  PostgreSQL real. Chave do Storage e chave do Vision só no backend.
+  PostgreSQL real. Chaves do Storage e do OCR.space ficam somente no backend.
 - O gate completo usa **banco PostgreSQL isolado e novo**, não o banco local
   compartilhado que precede V2. O histórico de testes da F-01 fechou em 155;
   registrar a contagem real no início da execução e garantir que não caia.
@@ -199,13 +199,36 @@ insumo/estabelecimento não atravessam tenant. Cada tarefa gera um commit
 | **T09** | Migration + reversão de documento preparado, compra, itens, revisões, uso de OCR e contador global; índices de chave/hash e RLS operacional. | T04 | F02-07, F02-15 a F02-17, F02-30 | Integração PostgreSQL / 5 cenários |
 | **T10** | Porta e adapter de Supabase Storage privado mais fluxo de preparar/ler documento por ID autorizado; hash, tipo real, tamanho e chave opaca. | T09 | F02-07, F02-09, F02-30, F02-31 | Contrato + integração / 6 cenários |
 | **T11** | Extração de texto digital e renderização limitada de PDF para páginas de OCR com PDFBox; validar Java 21, limites e memória. | T10 | F02-04, F02-07, F02-08 | Unitário + contrato / 4 cenários |
-| **T12** | Adapter Vision `DOCUMENT_TEXT_DETECTION` por página e contador mensal com reserva segura/retry; sem confirmação automática. | T11 | F02-04, F02-08, F02-31 | Contrato + integração / 6 cenários |
+| **T12** | Porta de OCR + adapter HTTP do OCR.space Free API com Engine 3, entrada de até 1.000.000 bytes por imagem/página e contadores globais concorrentes (500 requisições/dia por IP e 2.500 conversões Engine 3/mês); tentativa ambígua consome cota, retry gera nova tentativa; sem confirmação automática. | T11 | F02-04, F02-08, F02-31 | Contrato + integração / 8 cenários |
 | **T13** | Value Objects de candidatos e commands que aplicam revisão/transições válidas em `ImportDocument`; parser determinístico; falha do OCR permite preenchimento humano sem confirmar compra/estoque. | T12, T07 | F02-04 a F02-06, F02-08 a F02-10 | Domínio + aplicação: unitário e integração / 7 cenários |
 
 **Concluído quando:** arquivo original é recuperável apenas pelo tenant;
 imagem, PDF digitado e PDF escaneado produzem candidatos revisáveis; cota e
 falhas nunca geram insumo/compra/estoque sozinhos. Cada tarefa inclui testes e
 um commit próprio.
+
+#### Contrato executável da T12
+
+- A aplicação chama uma porta de OCR; somente o adapter de infraestrutura
+  conhece HTTP, endpoint e formato do OCR.space.
+- O adapter usa Engine 3, idioma `por`, `isTable=true` e sem overlay; uma
+  imagem de página corresponde a uma requisição. Páginas com texto extraído
+  pela T11 não consomem cota.
+- `OCR_SPACE_API_KEY` é configuração privada do backend. Sem chave, o sistema
+  não chama o serviço, preserva o anexo e oferece revisão manual.
+- Cada imagem enviada tem no máximo 1.000.000 bytes. Imagem acima do limite não é enviada;
+  o original continua anexado e a pessoa pode transcrever manualmente.
+- A migration da T12 adapta o registro de tentativas por página e cria contador
+  diário global; reserva mensal e diária é atômica entre tenants/instâncias:
+  no máximo 2.500 conversões Engine 3 por mês e 500 requisições por dia UTC.
+- Resposta concluída pode ser reutilizada pelo fluxo T13. Timeout ambíguo fica
+  `UNCERTAIN`, não devolve reserva e não dispara retry automático. Nova tentativa
+  explícita cria outro registro e reserva outra unidade.
+- O gate usa fake HTTP e PostgreSQL isolado; cobre resposta válida, texto vazio,
+  erro HTTP/JSON, chave ausente, arquivo acima do limite, cotas mensal/diária,
+  concorrência de reserva e timeout ambíguo/retry. Não chama OCR.space real.
+- Nenhuma resposta de OCR cria ou confirma compra, item ou movimento de estoque;
+  erro/indisponibilidade deixa o anexo disponível para revisão/transcrição.
 
 ### Fase 3 — Estoque
 
@@ -319,7 +342,7 @@ grafo; não juntar commits. T25 é exclusivamente validação cruzada.
 | T09 | Migration | Integração | Integração | Confere |
 | T10 | Storage | Contrato + integração | Contrato + integração | Confere |
 | T11 | PDF | Unitário + contrato | Unitário + contrato | Confere |
-| T12 | Vision/cota | Contrato + integração | Contrato + integração | Confere |
+| T12 | OCR.space/cotas | Contrato + integração | Contrato + integração | Confere |
 | T13 | Parser/aplicação | Unitário + integração | Unitário + integração | Confere |
 | T14 | Migration | Integração | Integração | Confere |
 | T15 | Domínio/aplicação | Unitário + integração | Unitário + integração | Confere |
@@ -336,10 +359,12 @@ grafo; não juntar commits. T25 é exclusivamente validação cruzada.
 
 ## Condições por tarefa
 
-- T01–T11 não dependem de provisionar nem chamar o Google Cloud Vision. Antes
-  da T12, confirmar projeto dedicado, credencial privada e limites de uso; nunca
-  registrar segredos no Git. A franquia gratuita proposta não garante custo
-  zero para usos adicionais.
+- T01–T11 não dependem de provisionar nem chamar OCR.space. T12 usa OCR.space
+  Free API e exige `OCR_SPACE_API_KEY` privada somente no backend; nunca
+  registrar segredo no Git. A chave/quota deve estar presente para habilitar
+  a chamada real; testes locais usam fakes. Limites gratuitos são do provedor,
+  sujeitos a alteração, e podem ser compartilhados por chamadas externas no
+  mesmo IP.
 - Testes com lista manuscrita, lista digitada e comprovante real pertencem à
   aceitação do fluxo OCR em T25. O gate local usa fakes e fixtures sem serviço
   externo.
@@ -702,7 +727,7 @@ configuração externa anotada acima.
 
 **Check C — testes necessários:** os seis testes unitários cobrem extração,
 roteamento por página, conteúdo renderizado e recusas dos principais limites;
-nenhum Vision, serviço hospedado ou compra/estoque é chamado nesta tarefa.
+nenhum provedor OCR, serviço hospedado ou compra/estoque é chamado nesta tarefa.
 
 **Veredito de adequação:** cobertura suficiente para extração local e preparo
 limitado das páginas destinadas ao OCR na T12, mantendo a revisão humana fora
