@@ -4,5 +4,6 @@ public enum AuditTargetType {
     TENANT,
     INVITATION,
     MEMBERSHIP,
-    PLATFORM_ROLE
+    PLATFORM_ROLE,
+    OPERATIONAL_ASSIGNMENT
 }

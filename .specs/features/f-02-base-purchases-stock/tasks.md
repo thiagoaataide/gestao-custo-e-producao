@@ -1,6 +1,6 @@
 # F-02 — Tarefas de implementação
 
-**Status:** Planejadas; nenhuma tarefa executada.
+**Status:** Em execução; T01 concluída.
 **Design:** [design.md](design.md)
 **Spec:** [spec.md](spec.md)
 **Escopo:** somente V0. Cada Txx é um incremento coeso com testes no mesmo
@@ -347,3 +347,33 @@ grafo; não juntar commits. T25 é exclusivamente validação cruzada.
   `spec.md`; a falha do OCR já tem comportamento confirmado.
 - Definir e registrar a versão efetiva do PDFBox e qualquer nova dependência
   em `AGENTS.md` ao iniciar T11, com documentação oficial e build de Java 21.
+
+## Registro de execução
+
+### T01 — designação operacional
+
+- **Estado:** concluída; commit atômico próprio.
+- **Gate de referência:** `mvnw -B verify` em banco PostgreSQL 17 novo,
+  Java 21.0.12 — 212 testes aprovados, sem falhas, erros ou skips.
+- **Gate T01:** `mvnw -B verify` em outro banco novo — 215 testes aprovados,
+  sem falhas, erros ou skips; empacotamento Maven aprovado.
+- **Reversão:** V1, V2, V3 e o script manual de reversão V3 executados em banco
+  descartável; tabela, função e constraint auxiliar removidas (`true` na
+  consulta de verificação).
+- **Testes T01:** 3 cenários novos; nenhum teste existente foi removido ou
+  ignorado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T01 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| Membership ativa pode ser designada e não recebe designação ativa duplicada. | `OperationalManagerAssignmentMigrationIntegrationTests.java:31` — `assertThat(assignmentStatus(membership.id())).isEqualTo("ACTIVE")`; linha 32 — `assertThatThrownBy(() -> insertAssignment(membership)).isInstanceOf(DataAccessException.class)` | Estado `ACTIVE`; segunda designação rejeitada. | Sim |
+| Membership pendente e associação com tenant incorreto são rejeitadas. | `OperationalManagerAssignmentMigrationIntegrationTests.java:40` e `:45` — cada `assertThatThrownBy(...).isInstanceOf(DataAccessException.class)` | Nenhuma designação é criada para membership não ativa ou de outro tenant. | Sim |
+| Revogação mantém estado e trilha de auditoria de concessão/revogação. | `OperationalManagerAssignmentMigrationIntegrationTests.java:78` — `assertThat(persistedStatus).isEqualTo("REVOKED")`; linhas 79–80 — cada contagem de evento `.isOne()` | Registro revogado permanece; um evento de concessão e um de revogação existem. | Sim |
+
+**Check C — testes necessários:** os três cenários acima correspondem aos
+critérios da T01 (membership ativa, integridade tenant/membership, histórico e
+auditoria); não há teste sem requisito correspondente.
+
+**Veredito de adequação:** cobertura suficiente e restrita à migration,
+integridade e auditoria da designação operacional.
