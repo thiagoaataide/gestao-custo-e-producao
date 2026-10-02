@@ -434,3 +434,37 @@ tratamento visível de autorização negada; todos correspondem a F02-24.
 
 **Veredito de adequação:** cobertura suficiente para o controle da designação
 na tela existente, sem expor dados operacionais à administração da plataforma.
+
+### T04 — base do catálogo operacional
+
+- **Estado:** concluída; commit atômico próprio.
+- **Entrega:** migration cria catálogo de insumos e estabelecimentos com
+  unicidade por tenant, FKs e constraints; aplica RLS `ENABLE` + `FORCE`,
+  grants restritos a `app_runtime` e zona operacional padrão
+  `America/Sao_Paulo` em `tenant_settings`. A reversão interrompe se houver
+  dados de catálogo ou sobreposição de zona.
+- **Gate direcionado:** 4 cenários PostgreSQL aprovados, sem falhas, erros ou
+  skips.
+- **Reversão:** migration e script manual executados em banco descartável;
+  ambas as tabelas e a coluna de zona removidas (`true` na consulta final).
+- **Gate completo:** `mvnw -B verify` em banco PostgreSQL 17 novo,
+  Java 21.0.12 — 230 testes aprovados, sem falhas, erros ou skips; pacote
+  Maven aprovado.
+
+**Check A — cobertura suficiente:**
+
+| Critério da T04 | Evidência (`arquivo:linha` e asserção) | Resultado esperado pela spec | Coberto? |
+| --- | --- | --- | --- |
+| RLS separa leitura e escrita de insumos e estabelecimentos por tenant, inclusive sem contexto. | `OperationsCatalogMigrationIntegrationTests.java:31–68` — contagens invisíveis; `UPDATE`/`DELETE` cruzados retornam zero; `INSERT` cruzado lança `DataAccessException`. | Um tenant não lê ou altera linhas do outro; contexto ausente não expõe linhas. | Sim |
+| Chave normalizada é única dentro do tenant, mas permite o mesmo nome em outro tenant. | `OperationsCatalogMigrationIntegrationTests.java:73–95` — duplicatas lançam `DataAccessException`; tenant B grava o mesmo nome normalizado. | Impedir duplicidade apenas no escopo do tenant. | Sim |
+| Unidade-base deve corresponder à grandeza e o tenant referenciado deve existir. | `OperationsCatalogMigrationIntegrationTests.java:100–120` — combinações inválidas e tenant inexistente falham; `g`, `ml` e `un` válidos passam. | Restringir o catálogo às três unidades-base especificadas. | Sim |
+| Tenant tem zona piloto por padrão e pode ter sobreposição não vazia sob RLS. | `OperationsCatalogMigrationIntegrationTests.java:125–142` — padrão `America/Sao_Paulo`, atualização para `America/Manaus` e rejeição de valor vazio. | Persistir a zona em metadados isolados por tenant. | Sim |
+
+**Check C — testes necessários:** quatro cenários PostgreSQL cobrem os
+critérios planejados de RLS, unicidade, integridade de unidade/tenant e zona;
+a reversão foi exercitada em banco separado vazio para não remover dados dos
+testes.
+
+**Veredito de adequação:** cobertura suficiente para a base persistente de
+catálogo e configuração operacional do tenant, sem criar regras de domínio
+antecipadas para insumo ou estabelecimento.
